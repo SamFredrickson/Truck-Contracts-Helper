@@ -68,13 +68,19 @@ Utils.TextColoredRGB = function(text)
     end
 end
 
+Utils.in_array = function(needle, array)
+    for _, value in pairs(array) do
+        if needle == value then
+            return true
+        end
+    end
+    return false
+end
+
+Utils.getPlayerCarModelId = function()
+    local handle = storeCarCharIsInNoSave(PLAYER_PED)
+    local id = getCarModel(handle)
+    return id
+end
+
 return Utils
-
--- for capture in text:gmatch("({AE433D}%d%. {FFFFFF}%W+ №%d %-%> %W+{A9A9A9}%W+{33AA33}%d+ из %d+ т%.	{A9A9A9}[A-Za-z0-9%s%-]+)") do
---     print(capture)
--- end
-
--- for capture in text:gmatch("({AE433D}%d%. {FFFFFF}%W+ №%d %-%> %W+{A9A9A9}%W+{33AA33}%d+ из %d+ т%.	{A9A9A9}[A-Za-z0-9%s%-]+)") do
---     local id, source, destination, cargo, amountFirst, amountSecond, company = capture:match("{AE433D}(%d+)%. {FFFFFF}(%W+ №%d+) %-%> (%W+){A9A9A9}(%W+){33AA33}(%d+) из (%d+) т%.	{A9A9A9}([A-Za-z0-9%s%-]+)")
---     print(source)
--- end

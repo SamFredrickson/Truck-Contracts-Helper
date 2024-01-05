@@ -7,6 +7,7 @@ local sampev = require "samp.events"
 local imgui = require "mimgui"
 
 local MainWindow = require 'tch.gui.windows.main'
+local DemoWindow = require 'tch.gui.windows.demo'
 local Red = require 'tch.gui.themes.red'
 local MenuDialogue = require 'tch.samp.dialogues.menu'
 local ContractsDialogue = require 'tch.samp.dialogues.contracts'
@@ -26,6 +27,7 @@ local menuDialogue = MenuDialogue.new()
 local contractsDialogue = ContractsDialogue.new()
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
+local demoWindow = DemoWindow.new()
 
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
