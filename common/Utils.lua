@@ -83,4 +83,8 @@ Utils.getPlayerCarModelId = function()
     return id
 end
 
+Utils.isPlayerDriving = function()
+    return isCharInAnyCar(PLAYER_PED) and getDriverOfCar(storeCarCharIsInNoSave(PLAYER_PED)) == PLAYER_PED
+end
+
 return Utils
