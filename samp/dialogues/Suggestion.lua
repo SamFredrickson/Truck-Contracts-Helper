@@ -1,9 +1,9 @@
 local Dialogue = require 'tch.samp.dialogues.dialogue'
 
--- РџСЂРµРґР»РѕР¶РµРЅРёРµ Рѕ РїРѕРІС‚РѕСЂРЅРѕРј РІР·СЏС‚РёРё РєРѕРЅС‚СЂР°РєС‚Р°
+-- Предложение о повторном взятии контракта
 local Suggestion = {
     new = function()
-        local id, title = 32700, "Р”Р°Р»СЊРЅРѕР±РѕР№С‰РёРє | {AE433D}РљРѕРЅС‚СЂР°РєС‚С‹"
+        local id, title = 32700, "Дальнобойщик | {AE433D}Контракты"
         local self = Dialogue.new(id, title)
         return self
     end

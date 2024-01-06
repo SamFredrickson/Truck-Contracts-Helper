@@ -1,6 +1,4 @@
 local constants = require 'tch.constants'
-local moonloader = require "moonloader"
-local inicfg = require "inicfg"
 local encoding = require "encoding"
 local vkeys = require "vkeys"
 local sampev = require "samp.events"
@@ -11,6 +9,8 @@ local DemoWindow = require 'tch.gui.windows.demo'
 local Red = require 'tch.gui.themes.red'
 local MenuDialogue = require 'tch.samp.dialogues.menu'
 local ContractsDialogue = require 'tch.samp.dialogues.contracts'
+local SuggestionDialogue = require 'tch.samp.dialogues.suggestion'
+local DocumentsDialogue = require 'tch.samp.dialogues.documents'
 local Contract = require 'tch.entities.contracts.contract'
 
 script_author(constants.SCRIPT_INFO.AUTHOR)
@@ -25,6 +25,8 @@ local u8 = encoding.UTF8
 
 local menuDialogue = MenuDialogue.new()
 local contractsDialogue = ContractsDialogue.new()
+local suggestionDialogue = SuggestionDialogue.new()
+local documentsDialogue = DocumentsDialogue.new()
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
 local demoWindow = DemoWindow.new()
@@ -65,6 +67,11 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = true -- устанавливаем данный флаг в "true", чтобы не вызвать циклическое открытие
 		sampSendDialogResponse(id, 0, _, _)
 		mainWindow.contracts = Contract.makeListFromText(text)
+		return false
+	end
+
+	-- Скрывать диалоги, которые появляеются при загрузке или выгрузке
+	if SuggestionDialogue.title == title or DocumentsDialogue.title == title then 
 		return false
 	end
 end
