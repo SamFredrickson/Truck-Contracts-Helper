@@ -42,17 +42,16 @@ local Main = {
                 )
 
                 if imgui.CollapsingHeader(u8(title)) then
-                    if imgui.Button(string.format("GPS ##%d", contract.id)) then
-                    end
-                    imgui.SameLine()
-                    if imgui.Button(string.format(u8"Взять контракт ##%d", contract.id)) then
+                    if imgui.Button(string.format(u8"Взять контракт ##%d", contract.id)) and MenuDialogue.isTakingAllowed(self.window[0]) then
+                       MenuDialogue.take(contract.id)
                     end
                     imgui.SameLine()
                     if imgui.Button(string.format(u8"Загрузить ##%d", contract.id)) then
+                        MenuDialogue.load()
                     end
                     imgui.SameLine()
                     if imgui.Button(string.format(u8"Сообщить о контракте (/j) ##%d", contract.id)) then
-                        
+                        MenuDialogue.report(contract)
                     end
                 end
               end

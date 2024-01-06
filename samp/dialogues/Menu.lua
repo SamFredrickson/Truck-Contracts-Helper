@@ -21,23 +21,10 @@ local Menu = {
     end,
     FLAGS = {
 		IS_PARSING_CONTRACTS_LAST_STEP = false,
-        IS_TAKING_CONTRACT = false,
+        CONTRACT = { IS_TAKING = false, ID = 0 },
         IS_PARSING_CONTRACTS = false
 	}
 }
-
-function isParsingAllowed()
-    if isCharInAnyCar(PLAYER_PED) then
-        local modelId = Utils.getPlayerCarModelId()
-        return hideCursor
-        and not sampIsDialogActive()
-        and not sampIsChatInputActive()
-        and not sampTextdrawIsExists(constants.TEXTDRAWS.CONTRACTS.PRICE) -- ебаный костыль на проверку запущенного контракта
-        and Utils.in_array(modelId, trucks)
-        and self.window[0]
-    end
-    return false
-end
 
 Menu.isSearchingAllowed = function(playerCursor, window)
     if Utils.isPlayerDriving() then
@@ -51,9 +38,42 @@ Menu.isSearchingAllowed = function(playerCursor, window)
     end
 end
 
+Menu.isTakingAllowed = function(window)
+    if Utils.isPlayerDriving() then
+        local modelId = Utils.getPlayerCarModelId()
+        return window
+        and not sampIsDialogActive()
+        and not sampIsChatInputActive()
+        and not sampTextdrawIsExists(constants.TEXTDRAWS.CONTRACTS.PRICE) -- ебаный костыль на проверку запущенного контракта
+        and Utils.in_array(modelId, trucks)
+    end
+end
+
 Menu.search = function()
     Menu.FLAGS.IS_PARSING_CONTRACTS = true
     sampSendChat('/tmenu')
+end
+
+Menu.take = function(id)
+    Menu.FLAGS.CONTRACT.IS_TAKING = true
+    Menu.FLAGS.CONTRACT.ID = id
+    sampSendChat('/tmenu')
+end
+
+Menu.load = function(id)
+    sampSendChat('/tload')
+end
+
+Menu.report = function(contract)
+    local message = string.format(
+        "/j Внимание! Доступен контракт %d. %s -> %s [%d / %d]",
+        contract.id,
+        contract.source,
+        contract.destination,
+        contract.amount.first,
+        contract.amount.second
+    )
+    sampSendChat(message)
 end
 
 return Menu
