@@ -70,8 +70,20 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		return false
 	end
 
+	if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
+		sampSendDialogResponse(id, 1, 0, _)
+		return false
+	end
+
+	if contractsDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
+		MenuDialogue.FLAGS.CONTRACT.IS_TAKING = false
+		sampSendDialogResponse(id, 1, MenuDialogue.FLAGS.CONTRACT.ID - 1, _)
+		return false
+	end
+
 	-- Скрывать диалоги, которые появляеются при загрузке или выгрузке
-	if SuggestionDialogue.title == title or DocumentsDialogue.title == title then 
+	if suggestionDialogue.title == title or documentsDialogue.title == title then
+		sampSendDialogResponse(id, 0, _, _)
 		return false
 	end
 end
