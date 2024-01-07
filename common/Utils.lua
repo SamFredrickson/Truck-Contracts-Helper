@@ -87,4 +87,9 @@ Utils.isPlayerDriving = function()
     return isCharInAnyCar(PLAYER_PED) and getDriverOfCar(storeCarCharIsInNoSave(PLAYER_PED)) == PLAYER_PED
 end
 
+Utils.getDistanceBetweenPlayerAndCoords = function(coords)
+    local x, y, z = getCharCoordinates(PLAYER_PED)
+    return getDistanceBetweenCoords3d(x, y, z, coords.x, coords.y, coords.z)
+end
+
 return Utils

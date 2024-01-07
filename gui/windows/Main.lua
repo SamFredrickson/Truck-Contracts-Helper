@@ -76,6 +76,17 @@ local Main = {
 
         lua_thread.create(function()
             while true do
+                wait(0)
+                if MenuDialogue.isUnloadingAllowed() then
+                    MenuDialogue.FLAGS.IS_UNLOADING = true
+                    MenuDialogue.unload()
+                    wait(1000)
+                end
+            end
+        end)
+
+        lua_thread.create(function()
+            while true do
                 wait(40)
                 if isKeyDown(VK_SHIFT) and isKeyDown(VK_C) then
                     while isKeyDown(VK_SHIFT) and isKeyDown(VK_C) do wait(80) end
