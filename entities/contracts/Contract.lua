@@ -27,7 +27,7 @@ Contract.getPriorities = function(source, destination)
             return { value.sort, value.top }
         end
     end
-    return { 8, false }
+    return { 10, false }
 end
 
 Contract.sort = function(contracts)
@@ -41,9 +41,16 @@ Contract.makeListFromText = function(text)
     local list = {}
 
     for contract in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
-        local id, source, destination, cargo, amountFirst, amountSecond, company = contract:match(constants.REGEXP.SINGLE_CONTRACT)
-        local amount = { first = amountFirst, second = amountSecond }
-        local sort, top = table.unpack(Contract.getPriorities(source, destination))
+        local id, source, destination, cargo, amountFirst, amountSecond, company 
+            = contract:match(constants.REGEXP.SINGLE_CONTRACT)
+
+        local amount = { 
+            first = amountFirst, 
+            second = amountSecond 
+        }
+        
+        local priorities = Contract.getPriorities(source, destination)
+        local sort, top = table.unpack(priorities)
 
         local entity = Contract.new(
             id,
