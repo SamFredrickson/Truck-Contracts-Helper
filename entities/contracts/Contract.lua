@@ -27,7 +27,7 @@ Contract.getPriorities = function(source, destination)
             return { value.sort, value.top }
         end
     end
-    return { 6, false }
+    return { 8, false }
 end
 
 Contract.sort = function(contracts)
