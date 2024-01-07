@@ -31,6 +31,7 @@ local contract = Contract.new()
 local mainWindow = MainWindow.new()
 local demoWindow = DemoWindow.new()
 
+
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
     Red.new()
@@ -82,8 +83,20 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 	end
 
 	-- Скрывать диалоги, которые появляеются при загрузке или выгрузке
-	if suggestionDialogue.title == title or documentsDialogue.title == title then
+	if documentsDialogue.title == title then
 		sampSendDialogResponse(id, 0, _, _)
 		return false
+	end
+
+	if suggestionDialogue.title == title then
+		sampSendDialogResponse(id, 0, _, _)
+		return false
+	end
+end
+
+function sampev.onServerMessage(color, text)
+	if MenuDialogue.FLAGS.IS_UNLOADING and text:find("Вы успешно доставили груз") then
+		MenuDialogue.FLAGS.IS_UNLOADING = false
+		return true
 	end
 end
