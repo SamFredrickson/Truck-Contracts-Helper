@@ -17,21 +17,21 @@ local Main = {
 
         local sizes = imgui.ImVec2(410, 370)
         local posX, posY = getScreenResolution()
-        local title = u8"Список контрактов"
         local hideCursor = true
         self.contracts = {}
 
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
+              local windowTitle = string.format(u8"Список контрактов (%d)", #self.contracts)
               imgui.SetNextWindowPos(imgui.ImVec2(posX / 2, posY / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
               imgui.SetNextWindowSize(sizes, imgui.Cond.FirstUseEver)
-              imgui.Begin(title, self.window, imgui.WindowFlags.NoResize)
+              imgui.Begin(windowTitle, self.window, imgui.WindowFlags.NoResize)
               player.HideCursor = hideCursor
 
               for number, contract in ipairs(self.contracts) do
 
-                local title = string.format(
+                local headerTitle = string.format(
                     "%s%d. %s -> %s[%d / %d]", 
                     contract.top and "[TOP] " or "",
                     contract.id, 
@@ -41,7 +41,7 @@ local Main = {
                     contract.amount.second
                 )
 
-                if imgui.CollapsingHeader(u8(title)) then
+                if imgui.CollapsingHeader(u8(headerTitle)) then
                     if imgui.Button(string.format(u8"Взять контракт ##%d", contract.id)) and MenuDialogue.isTakingAllowed(self.window[0]) then
                        MenuDialogue.take(contract.id)
                     end
