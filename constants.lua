@@ -38,8 +38,8 @@ local CONTRACTS = {
     { source = "Строительный завод №1", destination = "Порт СФ", sort = 5, top = true },
     { source = "Строительный завод №1", destination = "Порт ЛС", sort = 6, top = false },
     { source = "Лесопилка №1", destination = "Порт ЛС", sort = 7, top = false },
-    { source = "Склад угля №2", destination = "Порт ЛС", sort = 8, top = false },
-    { source = "Лесопилка №2", destination = "Порт ЛС", sort = 9, top = false }
+    { source = "Лесопилка №2", destination = "Порт ЛС", sort = 8, top = false },
+    { source = "Склад угля №2", destination = "Порт ЛС", sort = 9, top = false }
 }
 
 SCRIPT_INFO.NAME = string.format("Truck Contracts Helper %s (%d)", SCRIPT_INFO.VERSION, SCRIPT_INFO.VERSION_NUMBER)
