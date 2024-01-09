@@ -25,7 +25,7 @@ local Main = {
             function() return self.window[0] end,
             function(player)
               local windowTitle = string.format(u8"Список контрактов (%d)", #self.contracts)
-              imgui.SetNextWindowPos(imgui.ImVec2(posX / 2, posY / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
+              imgui.SetNextWindowPos(imgui.ImVec2(posX - 225, posY - 200), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
               imgui.SetNextWindowSize(sizes, imgui.Cond.FirstUseEver)
               imgui.Begin(windowTitle, self.window, imgui.WindowFlags.NoResize)
               player.HideCursor = self.hideCursor
