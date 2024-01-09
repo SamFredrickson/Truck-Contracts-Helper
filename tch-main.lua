@@ -41,6 +41,44 @@ function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
         while not isSampAvailable() do wait(100) end
 
+		sampRegisterChatCommand(
+            'tch.show',
+            function() mainWindow.toggle() end
+        )
+
+		-- Поток поиска контрактов раз в три секунды
+		lua_thread.create(function()
+            while true do
+                wait(3000)
+                if MenuDialogue.isSearchingAllowed(mainWindow.hideCursor, mainWindow.window[0]) then
+                    MenuDialogue.search()
+                end
+            end
+        end)
+
+		-- Поток проверки разгрузки фуры
+        lua_thread.create(function()
+            while true do
+                wait(0)
+                if MenuDialogue.isUnloadingAllowed() then
+                    MenuDialogue.FLAGS.IS_UNLOADING = true
+                    MenuDialogue.unload()
+                    wait(1000)
+                end
+            end
+        end)
+
+		-- Поток проверки нажатия горячей клавиши для активации курсора у окна
+        lua_thread.create(function()
+            while true do
+                wait(40)
+                if isKeyDown(VK_SHIFT) and isKeyDown(VK_C) then
+                    while isKeyDown(VK_SHIFT) and isKeyDown(VK_C) do wait(80) end
+					mainWindow.hideCursor = not mainWindow.hideCursor
+                end
+            end
+        end)
+
 		while true do
 			wait(-1)
 		end
@@ -79,6 +117,12 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 	if contractsDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
 		MenuDialogue.FLAGS.CONTRACT.IS_TAKING = false
 		sampSendDialogResponse(id, 1, MenuDialogue.FLAGS.CONTRACT.ID - 1, _)
+		return false
+	end
+
+	if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_CANCELING then
+		MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = false
+		sampSendDialogResponse(id, 1, 1, _)
 		return false
 	end
 

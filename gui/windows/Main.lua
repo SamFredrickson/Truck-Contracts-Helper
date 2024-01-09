@@ -17,7 +17,8 @@ local Main = {
 
         local sizes = imgui.ImVec2(410, 370)
         local posX, posY = getScreenResolution()
-        local hideCursor = true
+
+        self.hideCursor = true
         self.contracts = {}
 
         imgui.OnFrame(
@@ -27,7 +28,7 @@ local Main = {
               imgui.SetNextWindowPos(imgui.ImVec2(posX / 2, posY / 2), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
               imgui.SetNextWindowSize(sizes, imgui.Cond.FirstUseEver)
               imgui.Begin(windowTitle, self.window, imgui.WindowFlags.NoResize)
-              player.HideCursor = hideCursor
+              player.HideCursor = self.hideCursor
 
               for number, contract in ipairs(self.contracts) do
 
@@ -46,12 +47,24 @@ local Main = {
                        MenuDialogue.take(contract.id)
                     end
                     imgui.SameLine()
+                    if imgui.Button(string.format(u8"Взять контракт и загрузить ##%d", contract.id)) and MenuDialogue.isTakingAllowed(self.window[0]) then
+                        lua_thread.create(function()
+                            MenuDialogue.take(contract.id)
+                            wait(1000)
+                            MenuDialogue.load()
+                            return
+                        end)
+                     end
+                    imgui.SameLine()
                     if imgui.Button(string.format(u8"Загрузить ##%d", contract.id)) then
                         MenuDialogue.load()
                     end
                     imgui.SameLine()
-                    if imgui.Button(string.format(u8"Сообщить о контракте (/j) ##%d", contract.id)) then
-                        MenuDialogue.report(contract)
+                    if imgui.Button(string.format(u8"GPS ##%d", contract.id)) then
+                        print("GPS")
+                    end
+                    if imgui.Button(string.format(u8"Отменить ##%d", contract.id)) then
+                        MenuDialogue.cancel()
                     end
                 end
               end
@@ -59,41 +72,6 @@ local Main = {
               imgui.End()
             end
         )
-
-        sampRegisterChatCommand(
-            'tch.show',
-            function() self.toggle() end
-        )
-        
-        lua_thread.create(function()
-            while true do
-                wait(3000)
-                if MenuDialogue.isSearchingAllowed(hideCursor, self.window[0]) then
-                    MenuDialogue.search()
-                end
-            end
-        end)
-
-        lua_thread.create(function()
-            while true do
-                wait(0)
-                if MenuDialogue.isUnloadingAllowed() then
-                    MenuDialogue.FLAGS.IS_UNLOADING = true
-                    MenuDialogue.unload()
-                    wait(1000)
-                end
-            end
-        end)
-
-        lua_thread.create(function()
-            while true do
-                wait(40)
-                if isKeyDown(VK_SHIFT) and isKeyDown(VK_C) then
-                    while isKeyDown(VK_SHIFT) and isKeyDown(VK_C) do wait(80) end
-                    hideCursor = not hideCursor
-                end
-            end
-        end)
 
         return self
     end

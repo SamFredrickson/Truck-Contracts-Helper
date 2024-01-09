@@ -26,7 +26,6 @@ local Red = {
         imgui.GetStyle().TabBorderSize = 1
         imgui.GetStyle().WindowRounding = 8
         imgui.GetStyle().ChildRounding = 8
-        imgui.GetStyle().FrameRounding = 8
         imgui.GetStyle().PopupRounding = 8
         imgui.GetStyle().ScrollbarRounding = 8
         imgui.GetStyle().GrabRounding = 8

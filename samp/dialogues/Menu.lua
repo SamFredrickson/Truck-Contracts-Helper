@@ -32,7 +32,7 @@ local Menu = {
     end,
     FLAGS = {
 		IS_PARSING_CONTRACTS_LAST_STEP = false,
-        CONTRACT = { IS_TAKING = false, ID = 0 },
+        CONTRACT = { IS_TAKING = false, IS_CANCELING = false, ID = 0 },
         IS_PARSING_CONTRACTS = false,
         IS_UNLOADING = false
 	}
@@ -83,6 +83,11 @@ end
 Menu.take = function(id)
     Menu.FLAGS.CONTRACT.IS_TAKING = true
     Menu.FLAGS.CONTRACT.ID = id
+    sampSendChat('/tmenu')
+end
+
+Menu.cancel = function()
+    Menu.FLAGS.CONTRACT.IS_CANCELING = true
     sampSendChat('/tmenu')
 end
 
