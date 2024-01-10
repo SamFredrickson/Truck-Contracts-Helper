@@ -60,10 +60,7 @@ local Main = {
                         MenuDialogue.load()
                     end
                     imgui.SameLine()
-                    if imgui.Button(string.format(u8"GPS ##%d", contract.id)) then
-                        print("GPS")
-                    end
-                    if imgui.Button(string.format(u8"Отменить ##%d", contract.id)) then
+                    if imgui.Button(string.format(u8"Отм ##%d", contract.id)) then
                         MenuDialogue.cancel()
                     end
                 end
