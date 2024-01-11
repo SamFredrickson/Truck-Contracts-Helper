@@ -11,6 +11,11 @@ local Linerunner = require 'tch.entities.vehicles.linerunner'
 local Tanker = require 'tch.entities.vehicles.tanker'
 local RoadTrain = require 'tch.entities.vehicles.roadtrain'
 
+local Petrol = require 'tch.entities.vehicles.trailers.petrol'
+local Flat = require 'tch.entities.vehicles.trailers.articles.flat'
+local White = require 'tch.entities.vehicles.trailers.articles.white'
+local Yellow = require 'tch.entities.vehicles.trailers.articles.yellow'
+
 local PortLosSantos = require 'tch.entities.coords.portlossantos'
 local PortSanFierro = require 'tch.entities.coords.portsanfierro'
 
@@ -18,6 +23,13 @@ local trucks = {
     Linerunner.new().id, 
     Tanker.new().id, 
     RoadTrain.new().id 
+}
+
+local trailers = {
+    Petrol.new().id,
+    Flat.new().id,
+    White.new().id,
+    Yellow.new().id
 }
 
 local PortLosSantosCoords = PortLosSantos.new()
@@ -62,16 +74,20 @@ Menu.isTakingAllowed = function(window)
 end
 
 Menu.isUnloadingAllowed = function()
-    local isNearBy = (Utils.getDistanceBetweenPlayerAndCoords(PortSanFieroCoords) <= DISTANCE 
-        or Utils.getDistanceBetweenPlayerAndCoords(PortLosSantosCoords) <= DISTANCE)
-
-    if Utils.isPlayerDriving() and isNearBy then
+    if Utils.isPlayerDriving() then
+        local isNearBy = (Utils.getDistanceBetweenPlayerAndCoords(PortSanFieroCoords) <= DISTANCE 
+            or Utils.getDistanceBetweenPlayerAndCoords(PortLosSantosCoords) <= DISTANCE)
+        
         local modelId = Utils.getPlayerCarModelId()
-        return 
+        local isTrailerAttached = Utils.isPlayerCarAttachedToOneOfTrailers(trailers)
+
+        return
         not sampIsDialogActive()
         and not sampIsChatInputActive()
         and sampTextdrawIsExists(constants.TEXTDRAWS.CONTRACTS.PRICE) -- ебаный костыль на проверку запущенного контракта
         and Utils.in_array(modelId, trucks)
+        and isNearBy
+        and isTrailerAttached
     end
 end
 

@@ -16,7 +16,7 @@ Utils.TextColoredRGB = function(text)
     local designText = function(text__)
         local pos = imgui.GetCursorPos()
         if sampGetChatDisplayMode() == 2 then
-            for i = 1, 1 --[[Степень тени]] do
+            for i = 1, 1 --[[пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ]] do
                 imgui.SetCursorPos(imgui.ImVec2(pos.x + i, pos.y))
                 imgui.TextColored(imgui.ImVec4(0, 0, 0, 1), text__) -- shadow
                 imgui.SetCursorPos(imgui.ImVec2(pos.x - i, pos.y))
@@ -90,6 +90,21 @@ end
 Utils.getDistanceBetweenPlayerAndCoords = function(coords)
     local x, y, z = getCharCoordinates(PLAYER_PED)
     return getDistanceBetweenCoords3d(x, y, z, coords.x, coords.y, coords.z)
+end
+
+Utils.isOneOfVehiclesClosest = function(vehicleIds)
+  local vehicle, ped = storeClosestEntities(PLAYER_PED)
+  local modelId = getCarModel(vehicle)
+  return Utils.in_array(modelId, vehicleIds)
+end
+
+Utils.isPlayerCarAttachedToOneOfTrailers = function(trailers)
+    local car = storeCarCharIsInNoSave(PLAYER_PED)
+    for _, trailerId in pairs(trailers) do
+        local isAttached = isTrailerAttachedToCab(car, trailerId)
+        if isAttached then return true end
+    end
+    return false
 end
 
 return Utils

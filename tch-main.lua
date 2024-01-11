@@ -43,7 +43,7 @@ function main()
 
 		sampRegisterChatCommand(
             'tch.show',
-            function() mainWindow.toggle() end
+			function() mainWindow.toggle() end
         )
 
 		-- ѕоток поиска контрактов раз в три секунды
