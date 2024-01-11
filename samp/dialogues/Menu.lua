@@ -75,7 +75,7 @@ end
 
 Menu.isUnloadingAllowed = function()
     if Utils.isPlayerDriving() then
-        local isNearBy = (Utils.getDistanceBetweenPlayerAndCoords(PortSanFieroCoords) <= DISTANCE 
+        local isNearByUnloadingPoint = (Utils.getDistanceBetweenPlayerAndCoords(PortSanFieroCoords) <= DISTANCE 
             or Utils.getDistanceBetweenPlayerAndCoords(PortLosSantosCoords) <= DISTANCE)
         
         local modelId = Utils.getPlayerCarModelId()
@@ -86,7 +86,7 @@ Menu.isUnloadingAllowed = function()
         and not sampIsChatInputActive()
         and sampTextdrawIsExists(constants.TEXTDRAWS.CONTRACTS.PRICE) -- ебаный костыль на проверку запущенного контракта
         and Utils.in_array(modelId, trucks)
-        and isNearBy
+        and isNearByUnloadingPoint
         and isTrailerAttached
     end
 end
