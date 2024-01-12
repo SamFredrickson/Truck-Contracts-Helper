@@ -98,10 +98,10 @@ Utils.isOneOfVehiclesClosest = function(vehicleIds)
   return Utils.in_array(modelId, vehicleIds)
 end
 
-Utils.isPlayerCarAttachedToOneOfTrailers = function(trailers)
-    local car = storeCarCharIsInNoSave(PLAYER_PED)
-    for _, trailerId in pairs(trailers) do
-        local isAttached = isTrailerAttachedToCab(car, trailerId)
+Utils.isPlayerCarAttachedToTrailer = function()
+    local playerVehicleHandle = storeCarCharIsInNoSave(PLAYER_PED)
+    for key, vehicleHandle in ipairs(getAllVehicles()) do
+        local isAttached = isTrailerAttachedToCab(vehicleHandle, playerVehicleHandle)
         if isAttached then return true end
     end
     return false
