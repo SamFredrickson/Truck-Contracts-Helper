@@ -41,6 +41,8 @@ function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
         while not isSampAvailable() do wait(100) end
 
+		sampAddChatMessage("{FFFFFF}Список контрактов - {00CED1}/tch.show{FFFFFF}, страница скрипта: {00CED1}" .. thisScript().url)
+
 		sampRegisterChatCommand(
             'tch.show',
 			function() mainWindow.toggle() end
