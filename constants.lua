@@ -33,8 +33,8 @@ local TEXTDRAWS = {
 local CONTRACTS = {
     { source = "Нефтезавод №2", destination = "Порт СФ", sort = 1, top = true },
     { source = "Склад угля №2", destination = "Порт СФ", sort = 2, top = true },
-    { source = "Лесопилка №2", destination = "Порт СФ", sort = 3, top = true },
-    { source = "Лесопилка №1", destination = "Порт СФ", sort = 4, top = true },
+    { source = "Лесопилка №1", destination = "Порт СФ", sort = 3, top = true },
+    { source = "Лесопилка №2", destination = "Порт СФ", sort = 4, top = true },
     { source = "Строительный завод №1", destination = "Порт СФ", sort = 5, top = true },
     { source = "Строительный завод №1", destination = "Порт ЛС", sort = 6, top = false },
     { source = "Лесопилка №1", destination = "Порт ЛС", sort = 7, top = false },
