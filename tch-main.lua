@@ -74,8 +74,8 @@ function main()
         lua_thread.create(function()
             while true do
                 wait(40)
-                if isKeyDown(VK_SHIFT) and isKeyDown(VK_C) then
-                    while isKeyDown(VK_SHIFT) and isKeyDown(VK_C) do wait(80) end
+                if isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) then
+                    while isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) do wait(80) end
 					mainWindow.hideCursor = not mainWindow.hideCursor
                 end
             end
