@@ -1,5 +1,3 @@
-local moonloader = require "moonloader"
-
 local Command = {
     new = function(title)
         local self = {}

@@ -1,4 +1,3 @@
-local moonloader = require "moonloader"
 local imgui = require 'mimgui'
 local encoding = require "encoding"
 
@@ -62,6 +61,41 @@ local Main = {
                     imgui.SameLine()
                     if imgui.Button(string.format(u8"Отм ##%d", contract.id)) then
                         MenuDialogue.cancel()
+                    end
+                    if imgui.Button(string.format(u8"Доступен контракт (/j) ##%d", contract.id)) then
+                        local message = string.format(
+                            "/j Внимание! Доступен контракт %d. %s -> %s [%d / %d]",
+                            contract.id, 
+                            contract.source, 
+                            contract.destination,
+                            contract.amount.first,
+                            contract.amount.second
+                        )
+                        sampSendChat(message)
+                    end
+                    imgui.SameLine()
+                    if imgui.Button(string.format(u8"Советую (/j) ##%d", contract.id)) then
+                        local message = string.format(
+                            "/j Советую взять %d. %s -> %s [%d / %d]",
+                            contract.id, 
+                            contract.source, 
+                            contract.destination,
+                            contract.amount.first,
+                            contract.amount.second
+                        )
+                        sampSendChat(message)
+                    end
+                    imgui.SameLine()
+                    if imgui.Button(string.format(u8"Остаток (/j) ##%d", contract.id)) then
+                        local message = string.format(
+                            "/j У контракта %d. %s -> %s осталось %d из %d груза",
+                            contract.id, 
+                            contract.source, 
+                            contract.destination,
+                            contract.amount.first,
+                            contract.amount.second
+                        )
+                        sampSendChat(message)
                     end
                 end
               end

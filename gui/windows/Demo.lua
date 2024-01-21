@@ -1,4 +1,3 @@
-local moonloader = require "moonloader"
 local imgui = require 'mimgui'
 local encoding = require "encoding"
 
