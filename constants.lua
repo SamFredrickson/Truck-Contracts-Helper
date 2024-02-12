@@ -26,7 +26,18 @@ local REGEXP = {
 
 local TEXTDRAWS = {
     CONTRACTS = {
-        PRICE = 2186
+        PRICE = 2188
+    }
+}
+
+local CONFIG = {
+    PATH = "tch/settings.ini",
+    DEFAULT_SETTINGS = {
+        showMenuAfterTruckRented = false,
+        changeClistAfterTruckRented = 0,
+        autounload = true,
+        autoload = false,
+        drift = false
     }
 }
 
