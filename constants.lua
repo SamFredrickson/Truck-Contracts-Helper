@@ -37,7 +37,8 @@ local CONFIG = {
         changeClistAfterTruckRented = 0,
         autounload = true,
         autoload = false,
-        drift = false
+        drift = false,
+        unloadDistance = 15
     }
 }
 
@@ -53,12 +54,24 @@ local CONTRACTS = {
     { source = "Склад угля №2", destination = "Порт ЛС", sort = 9, top = false }
 }
 
-SCRIPT_INFO.NAME = string.format("Truck Contracts Helper %s (%d)", SCRIPT_INFO.VERSION, SCRIPT_INFO.VERSION_NUMBER)
+SCRIPT_INFO.NAME = string.format(
+    "Truck Contracts Helper %s (%d)", 
+    SCRIPT_INFO.VERSION, 
+    SCRIPT_INFO.VERSION_NUMBER
+)
+
+local COMMANDS = {
+    MENU    = "/tmenu",
+    LOAD    = "/tload",
+    UNLOAD  = "/tunload"
+}
 
 return {
     SCRIPT_INFO = SCRIPT_INFO,
     COLORS = COLORS,
     REGEXP = REGEXP,
     TEXTDRAWS = TEXTDRAWS,
-    CONTRACTS = CONTRACTS
+    CONTRACTS = CONTRACTS,
+    COMMANDS = COMMANDS,
+    CONFIG = CONFIG
 }
