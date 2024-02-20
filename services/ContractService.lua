@@ -158,7 +158,8 @@ local ContractService = {
                 and not sampIsChatInputActive()
                 and self.findActive(contracts)
                 and carsService.IsCarAttachedToTrailer(cars, car)
-                and (portLosSantosAndPlayerDistance or portSanFierroAndPlayerDistance) <= constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
+                and (portLosSantosAndPlayerDistance <= constants.CONFIG.DEFAULT_SETTINGS.unloadDistance 
+                or portSanFierroAndPlayerDistance <= constants.CONFIG.DEFAULT_SETTINGS.unloadDistance)
             end
         
             return false
