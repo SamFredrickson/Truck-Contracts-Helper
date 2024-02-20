@@ -12,6 +12,18 @@ local Player = {
         self.coords = Coords.new(x, y, z)
         self.handle = handle
 
+        self.IsWithinDistance = function(coords, distance)
+            local distanceBetweenCoords = getDistanceBetweenCoords3d(
+                self.coords.x,
+                self.coords.y,
+                self.coords.z,
+                coords.x,
+                coords.y,
+                coords.z
+            )
+            return distanceBetweenCoords <= distance
+        end
+
         return self
     end
 }

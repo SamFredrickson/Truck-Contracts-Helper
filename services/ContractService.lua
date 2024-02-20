@@ -134,32 +134,14 @@ local ContractService = {
                 player
             )
 
-            local portLosSantosAndPlayerDistance = getDistanceBetweenCoords3d(
-                player.coords.x,
-                player.coords.y,
-                player.coords.z,
-                portLosSantos.x,
-                portLosSantos.y,
-                portLosSantos.z
-            )
-
-            local portSanFierroAndPlayerDistance = getDistanceBetweenCoords3d(
-                player.coords.x,
-                player.coords.y,
-                player.coords.z,
-                portSanFierro.x,
-                portSanFierro.y,
-                portSanFierro.z
-            )
-
             if car and in_array(car.model, trucks) then
                 return #contracts > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
                 and self.findActive(contracts)
                 and carsService.IsCarAttachedToTrailer(cars, car)
-                and (portLosSantosAndPlayerDistance <= constants.CONFIG.DEFAULT_SETTINGS.unloadDistance 
-                or portSanFierroAndPlayerDistance <= constants.CONFIG.DEFAULT_SETTINGS.unloadDistance)
+                and (player.IsWithinDistance(portLosSantos, constants.CONFIG.DEFAULT_SETTINGS.unloadDistance) 
+                or player.IsWithinDistance(portSanFierro, constants.CONFIG.DEFAULT_SETTINGS.unloadDistance))
             end
         
             return false
