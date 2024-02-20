@@ -5,13 +5,17 @@ local sampev = require "samp.events"
 local imgui = require "mimgui"
 
 local MainWindow = require 'tch.gui.windows.main'
-local DemoWindow = require 'tch.gui.windows.demo'
 local Red = require 'tch.gui.themes.red'
 local MenuDialogue = require 'tch.samp.dialogues.menu'
 local ContractsDialogue = require 'tch.samp.dialogues.contracts'
 local SuggestionDialogue = require 'tch.samp.dialogues.suggestion'
 local DocumentsDialogue = require 'tch.samp.dialogues.documents'
 local Contract = require 'tch.entities.contracts.contract'
+local Message = require "tch.entities.chat.message"
+local ContractService = require "tch.services.contractservice"
+local ChatService = require "tch.services.chatservice"
+local ScheduleService = require "tch.services.scheduleservice"
+local ServerMessageService = require "tch.services.servermessageservice"
 
 script_author(constants.SCRIPT_INFO.AUTHOR)
 script_version(constants.SCRIPT_INFO.VERSION)
@@ -29,8 +33,10 @@ local suggestionDialogue = SuggestionDialogue.new()
 local documentsDialogue = DocumentsDialogue.new()
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
-local demoWindow = DemoWindow.new()
-
+local contractsService = ContractService.new()
+local chatService = ChatService.new()
+local scheduleService = ScheduleService.new()
+local serverMessageService = ServerMessageService.new()
 
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
@@ -41,45 +47,55 @@ function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
         while not isSampAvailable() do wait(100) end
 
-		sampAddChatMessage("{FFFFFF}Список контрактов - {00CED1}/tch.show{FFFFFF}, страница скрипта: {00CED1}" .. thisScript().url)
+		sampAddChatMessage(
+			"{FFFFFF}Список контрактов - {00CED1}/tch.show{FFFFFF}, страница скрипта: {00CED1}" .. 
+			thisScript().url, 0xFFFFFF
+		)
 
 		sampRegisterChatCommand(
             'tch.show',
 			function() mainWindow.toggle() end
         )
 
-		-- Поток поиска контрактов раз в три секунды
-		lua_thread.create(function()
-            while true do
-                wait(3000)
-                if MenuDialogue.isSearchingAllowed(mainWindow.hideCursor, mainWindow.window[0]) then
-                    MenuDialogue.search()
-                end
-            end
-        end)
+		scheduleService.create
+		(
+			function()
+				local contracts = ContractService.CONTRACTS
+				if mainWindow.window[0] 
+				and mainWindow.hideCursor 
+				and contractsService.CanSearch(contracts) then
+					MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
+					chatService.send(Message.new(
+						constants.COMMANDS.MENU
+					))
+				end
+			end, 
+			3000
+		):run()
 
-		-- Поток проверки разгрузки фуры
-        lua_thread.create(function()
-            while true do
-                wait(0)
-                if MenuDialogue.isUnloadingAllowed() then
-                    MenuDialogue.FLAGS.IS_UNLOADING = true
-                    MenuDialogue.unload()
-                    wait(1000)
-                end
-            end
-        end)
+		scheduleService.create
+		(
+			function()
+				local contracts = ContractService.CONTRACTS
+				if contractsService.CanUnload(contracts) then
+					chatService.send(Message.new(
+						constants.COMMANDS.UNLOAD
+					))
+					wait(1000)
+				end
+			end
+		):run()
 
-		-- Поток проверки нажатия горячей клавиши для активации курсора у окна
-        lua_thread.create(function()
-            while true do
-                wait(40)
-                if isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) then
+		scheduleService.create
+		(
+			function()
+				if isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) then
                     while isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) do wait(80) end
 					mainWindow.hideCursor = not mainWindow.hideCursor
                 end
-            end
-        end)
+			end,
+			40
+		):run()
 
 		while true do
 			wait(-1)
@@ -107,7 +123,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 	if contractsDialogue.title == title and MenuDialogue.FLAGS.IS_PARSING_CONTRACTS then
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = true -- устанавливаем данный флаг в "true", чтобы не вызвать циклическое открытие
 		sampSendDialogResponse(id, 0, _, _)
-		mainWindow.contracts = Contract.makeListFromText(text)
+		ContractService.CONTRACTS = contractsService.make(text)
 		return false
 	end
 
@@ -118,12 +134,28 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 
 	if contractsDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
 		MenuDialogue.FLAGS.CONTRACT.IS_TAKING = false
-		sampSendDialogResponse(id, 1, MenuDialogue.FLAGS.CONTRACT.ID - 1, _)
+		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+
+		local contract = contractsService.update(
+			contractId,
+			{ IsActive = true },
+			ContractService.CONTRACTS
+		)
+
+		sampSendDialogResponse(id, 1, contractId - 1, _)
 		return false
 	end
 
 	if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_CANCELING then
 		MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = false
+		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+
+		local contract = contractsService.update(
+			contractId,
+			{ IsActive = false },
+			ContractService.CONTRACTS
+		)
+		
 		sampSendDialogResponse(id, 1, 1, _)
 		return false
 	end
@@ -141,8 +173,29 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 end
 
 function sampev.onServerMessage(color, text)
-	if MenuDialogue.FLAGS.IS_UNLOADING and text:find("Вы успешно доставили груз") then
-		MenuDialogue.FLAGS.IS_UNLOADING = false
-		return true
+	if text:find(serverMessageService.findByCode("contract-canceled").message) then
+		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+		local contract = contractsService.update(
+			contractId,
+			{ IsActive = false },
+			ContractService.CONTRACTS
+		)
 	end
+	if text:find(serverMessageService.findByCode("delivery-success").message) then
+		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+		local contract = contractsService.update(
+			contractId,
+			{ IsActive = false },
+			ContractService.CONTRACTS
+		)
+	end
+end
+
+in_array = function(needle, array)
+    for _, value in pairs(array) do
+        if needle == value then
+            return true
+        end
+    end
+    return false
 end
