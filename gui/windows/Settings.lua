@@ -13,7 +13,7 @@ local pointsService = PointsService.new()
 local Settings = {
     new = function()
         local self = Window.new()
-        self.title = u8("Настройки и действия")
+        self.title = u8("Главное меню")
 
         local resX, resY = getScreenResolution()
         local windowPosition = imgui.ImVec2(resX / 2, resY / 2)
@@ -21,7 +21,7 @@ local Settings = {
 
         local active = 1
         local tabs = {
-            "Основные", 
+            "Основное", 
             "Контракты", 
             "Взаимодействие с\n       игроками"
         }
@@ -117,64 +117,76 @@ local Settings = {
                         imgui.EndChild()
                     end
                     if active == 2 then
-                        imgui.Columns(4)
-                        imgui.CenterColumnText(u8'Место') imgui.SetColumnWidth(-1, 240)
-                        imgui.NextColumn()
-                        imgui.CenterColumnText(u8'Топ') imgui.SetColumnWidth(-1, 40)
-                        imgui.NextColumn()
-                        imgui.CenterColumnText(u8'Сорт.') imgui.SetColumnWidth(-1, 40)
-                        imgui.NextColumn()
-                        imgui.CenterColumnText(u8'Опции')
-                        imgui.Columns(1)
-                        imgui.Separator()
+                        if imgui.BeginTabBar("Contract Tabs") then
+                            if imgui.BeginTabItem(u8"Сортировка") then
+                                imgui.Columns(4)
+                                imgui.CenterColumnText(u8'Место') imgui.SetColumnWidth(-1, 240)
+                                imgui.NextColumn()
+                                imgui.CenterColumnText(u8'Топ') imgui.SetColumnWidth(-1, 40)
+                                imgui.NextColumn()
+                                imgui.CenterColumnText(u8'Сорт.') imgui.SetColumnWidth(-1, 40)
+                                imgui.NextColumn()
+                                imgui.CenterColumnText(u8'Опции')
+                                imgui.Columns(1)
+                                imgui.Separator()
 
-                        for index, data in pairs(pointsService.get()) do
-                            imgui.Columns(4)
-                            imgui.CenterColumnText(string.format("%s -> %s", u8(data.point.source), u8(data.point.destination)))
-                            imgui.NextColumn()
-                            imgui.CenterColumnText(u8(data.point.top and "Да" or "Нет"))
-                            imgui.NextColumn()
-                            imgui.CenterColumnText(tostring(data.point.sort))
-                            imgui.NextColumn()
-                            if imgui.Button(u8"up##" .. data.id) then
-                               if data.point.sort > 1 then
-                                    local previous = pointsService.findBySort(data.point.sort - 1)
-                                    local current = data.point
+                                for index, data in pairs(pointsService.get()) do
+                                    imgui.Columns(4)
+                                    imgui.CenterColumnText(string.format("%s -> %s", u8(data.point.source), u8(data.point.destination)))
+                                    imgui.NextColumn()
+                                    imgui.CenterColumnText(u8(data.point.top and "Да" or "Нет"))
+                                    imgui.NextColumn()
+                                    imgui.CenterColumnText(tostring(data.point.sort))
+                                    imgui.NextColumn()
+                                    if imgui.Button(u8"up##" .. data.id) then
+                                        if data.point.sort > 1 then
+                                                local previous = pointsService.findBySort(data.point.sort - 1)
+                                                local current = data.point
 
-                                    pointsService.update(
-                                        data.id, 
-                                        { sort = previous.point.sort }
-                                    )
+                                                pointsService.update(
+                                                    data.id, 
+                                                    { sort = previous.point.sort }
+                                                )
 
-                                    pointsService.update(
-                                        previous.id, 
-                                        { sort = current.sort }
-                                    )
-                               end
+                                                pointsService.update(
+                                                    previous.id, 
+                                                    { sort = current.sort }
+                                                )
+                                            end
+                                        end
+                                    if imgui.IsItemHovered() then
+                                        imgui.SetTooltip(u8"Перемещает запись выше по списку.")
+                                    end
+                                    imgui.SameLine()
+                                    if imgui.Button(u8"dwn##" .. data.id) then
+                                        if data.point.sort < 16 then
+                                            local next = pointsService.findBySort(data.point.sort + 1)
+                                            local current = data.point
+
+                                            pointsService.update(
+                                                data.id, 
+                                                { sort = next.point.sort }
+                                            )
+
+                                            pointsService.update(
+                                                next.id, 
+                                                { sort = current.sort }
+                                            )
+                                        end
+                                    end
+                                    if imgui.IsItemHovered() then
+                                        imgui.SetTooltip(u8"Перемещает запись ниже по списку.")
+                                    end
+                                    imgui.SameLine()
+                                    if imgui.Button(u8"top##" .. data.id) then
+                                        pointsService.update(data.id, { top = not data.point.top })
+                                    end
+                                    if imgui.IsItemHovered() then
+                                        imgui.SetTooltip(u8"Ставит / убирает метку \"TOP\" у записи.")
+                                    end
+                                    imgui.Columns(1)
+                                end
                             end
-                            imgui.SameLine()
-                            if imgui.Button(u8"dwn##" .. data.id) then
-                                if data.point.sort < 16 then
-                                    local next = pointsService.findBySort(data.point.sort + 1)
-                                    local current = data.point
-
-                                    pointsService.update(
-                                        data.id, 
-                                        { sort = next.point.sort }
-                                    )
-
-                                    pointsService.update(
-                                        next.id, 
-                                        { sort = current.sort }
-                                    )
-                               end
-                            end
-                            imgui.SameLine()
-                            if imgui.Button(u8"top##" .. data.id) then
-                                pointsService.update(data.id, { top = not data.point.top })
-                            end
-                            imgui.Columns(1)
-                            imgui.Separator()
                         end
                     end
                     imgui.EndChild()

@@ -71,7 +71,7 @@ function main()
         while not isSampAvailable() do wait(100) end
 
 		sampAddChatMessage(
-			"{FFFFFF}Список контрактов - {00CED1}/tch.show{FFFFFF}, страница скрипта: {00CED1}" .. 
+			"{FFFFFF}Меню настроек - {00CED1}/tch.menu{FFFFFF}, страница скрипта: {00CED1}" .. 
 			thisScript().url, 0xFFFFFF
 		)
 
@@ -93,7 +93,7 @@ function main()
         )
 
 		sampRegisterChatCommand(
-            "tch.settings",
+            "tch.menu",
 			function() settingsWindow.toggle() end
         )
 
@@ -105,9 +105,8 @@ function main()
 				and mainWindow.hideCursor 
 				and contractsService.CanSearch(contracts) then
 					MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
-					chatService.send(Message.new(
-						constants.COMMANDS.MENU
-					))
+					local message = Message.new(constants.COMMANDS.MENU)
+					chatService.send(message)
 				end
 			end, 
 			3000
@@ -119,9 +118,8 @@ function main()
 				if config.data.settings.autounload then
 					local contracts = ContractService.CONTRACTS
 					if contractsService.CanUnload(contracts) then
-						chatService.send(Message.new(
-							constants.COMMANDS.UNLOAD
-						))
+						local message = Message.new(constants.COMMANDS.UNLOAD)
+						chatService.send(message)
 						wait(1000)
 					end
 				end
@@ -168,9 +166,7 @@ function main()
 							wait(1000)
 						end
 						if config.data.settings.autolock then
-							local message = Message.new(
-								constants.COMMANDS.LOCK
-							)
+							local message = Message.new(constants.COMMANDS.LOCK)
 							chatService.send(message)
 							wait(1000)
 						end
