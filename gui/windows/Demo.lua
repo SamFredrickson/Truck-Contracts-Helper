@@ -1,7 +1,7 @@
-local imgui = require 'mimgui'
+local imgui = require "mimgui"
 local encoding = require "encoding"
 
-local Window = require 'tch.gui.windows.window'
+local Window = require "tch.gui.windows.window"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8

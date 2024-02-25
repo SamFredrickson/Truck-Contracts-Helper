@@ -1,5 +1,5 @@
 local encoding = require "encoding"
-local constants = require "sht.constants"
+local constants = require "tch.constants"
 local inicfg = require "inicfg"
 
 encoding.default = "CP1251"

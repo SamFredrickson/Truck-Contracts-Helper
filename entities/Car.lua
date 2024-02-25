@@ -1,8 +1,9 @@
 local Player = require "tch.entities.player"
 
 local Car = {
-    new = function(name, model, health, speed, maxPassengers, handle)
+    new = function(id, name, model, health, speed, maxPassengers, handle)
         local self = {}
+        self.id = id
         self.name = name
         self.model = model
         self.health = health

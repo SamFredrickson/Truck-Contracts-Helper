@@ -4,18 +4,33 @@ local vkeys = require "vkeys"
 local sampev = require "samp.events"
 local imgui = require "mimgui"
 
-local MainWindow = require 'tch.gui.windows.main'
-local Red = require 'tch.gui.themes.red'
+local MainWindow = require "tch.gui.windows.main"
+local SettingsWindow = require "tch.gui.windows.settings"
+local Red = require "tch.gui.themes.red"
 local MenuDialogue = require 'tch.samp.dialogues.menu'
 local ContractsDialogue = require 'tch.samp.dialogues.contracts'
 local SuggestionDialogue = require 'tch.samp.dialogues.suggestion'
 local DocumentsDialogue = require 'tch.samp.dialogues.documents'
 local Contract = require 'tch.entities.contracts.contract'
 local Message = require "tch.entities.chat.message"
+local LocalMessage = require "tch.entities.chat.localmessage"
 local ContractService = require "tch.services.contractservice"
 local ChatService = require "tch.services.chatservice"
 local ScheduleService = require "tch.services.scheduleservice"
 local ServerMessageService = require "tch.services.servermessageservice"
+local PlayerService = require "tch.services.playerservice"
+local CarService = require "tch.services.carservice"
+local Config = require "tch.common.config"
+
+local Linerunner = require "tch.entities.vehicles.linerunner"
+local Tanker = require "tch.entities.vehicles.tanker"
+local RoadTrain = require "tch.entities.vehicles.roadtrain"
+
+local trucks = { 
+    Linerunner.new().id, 
+    Tanker.new().id, 
+    RoadTrain.new().id 
+}
 
 script_author(constants.SCRIPT_INFO.AUTHOR)
 script_version(constants.SCRIPT_INFO.VERSION)
@@ -26,17 +41,25 @@ script_name(constants.SCRIPT_INFO.NAME)
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
+local config = Config.new()
 
 local menuDialogue = MenuDialogue.new()
 local contractsDialogue = ContractsDialogue.new()
 local suggestionDialogue = SuggestionDialogue.new()
 local documentsDialogue = DocumentsDialogue.new()
+
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
+local settingsWindow = SettingsWindow.new()
+
 local contractsService = ContractService.new()
 local chatService = ChatService.new()
 local scheduleService = ScheduleService.new()
 local serverMessageService = ServerMessageService.new()
+local playerService = PlayerService.new()
+local carsService = CarService.new()
+
+local isSettingsApplied = false
 
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
@@ -52,9 +75,26 @@ function main()
 			thisScript().url, 0xFFFFFF
 		)
 
+		if config.data.settings.truckRentedChoice == 1 then
+			lua_thread.create(function()
+				while true do
+					wait(10)
+					if sampIsLocalPlayerSpawned() then
+						mainWindow.activate()
+						return
+					end
+				end
+			end)
+		end
+
 		sampRegisterChatCommand(
             'tch.show',
 			function() mainWindow.toggle() end
+        )
+
+		sampRegisterChatCommand(
+            "tch.settings",
+			function() settingsWindow.toggle() end
         )
 
 		scheduleService.create
@@ -76,12 +116,14 @@ function main()
 		scheduleService.create
 		(
 			function()
-				local contracts = ContractService.CONTRACTS
-				if contractsService.CanUnload(contracts) then
-					chatService.send(Message.new(
-						constants.COMMANDS.UNLOAD
-					))
-					wait(1000)
+				if config.data.settings.autounload then
+					local contracts = ContractService.CONTRACTS
+					if contractsService.CanUnload(contracts) then
+						chatService.send(Message.new(
+							constants.COMMANDS.UNLOAD
+						))
+						wait(1000)
+					end
 				end
 			end
 		):run()
@@ -95,6 +137,89 @@ function main()
                 end
 			end,
 			40
+		):run()
+
+		scheduleService.create
+		(
+			function()
+				if not isSettingsApplied then
+					local cars = carsService.get()
+					local players = playerService.get()
+
+					local player = playerService.getByHandle(
+						players, 
+						PLAYER_PED
+					)
+				
+					local car = carsService.getByDriver(
+						cars,
+						player
+					)
+
+					if car and in_array(car.model, trucks) then
+						if config.data.settings.clistChoice > 0 then
+							local message = Message.new(
+								string.format(
+									constants.COMMANDS.CLIST, 
+									config.data.settings.clistChoice
+								)
+							)
+							chatService.send(message)
+							wait(1000)
+						end
+						if config.data.settings.autolock then
+							local message = Message.new(
+								constants.COMMANDS.LOCK
+							)
+							chatService.send(message)
+							wait(1000)
+						end
+						if config.data.settings.truckRentedChoice > 0 then
+							mainWindow.activate()
+						end
+						isSettingsApplied = true
+					end
+				end
+			end,
+			10
+		):run()
+
+		scheduleService.create
+		(
+			function()
+				if config.data.settings.drift then
+					local cars = carsService.get()
+					local players = playerService.get()
+
+					local player = playerService.getByHandle(
+						players, 
+						PLAYER_PED
+					)
+				
+					local car = carsService.getByDriver(
+						cars,
+						player
+					)
+
+					if car then
+						setCarCollision(car.handle, true)
+						if isKeyDown(vkeys.VK_SHIFT) 
+						and isVehicleOnAllWheels(car.handle)
+						and doesVehicleExist(car.handle) then
+							setCarCollision(car.handle, false)
+							if isCarInAirProper(car.handle) then
+								setCarCollision(car.handle, true)
+								if isKeyDown(vkeys.VK_A) then
+									addToCarRotationVelocity(car.handle, 0, 0, 0.1)
+								end
+								if isKeyDown(vkeys.VK_D) then
+									addToCarRotationVelocity(car.handle, 0, 0, -0.1)
+								end
+							end
+						end
+					end
+				end
+			end
 		):run()
 
 		while true do
@@ -160,10 +285,11 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		return false
 	end
 
-	-- Скрывать диалоги, которые появляеются при загрузке или выгрузке
-	if documentsDialogue.title == title then
-		sampSendDialogResponse(id, 0, _, _)
-		return false
+	if config.data.settings.documentsDialogue then
+		if documentsDialogue.title == title then
+			sampSendDialogResponse(id, 0, _, _)
+			return false
+		end
 	end
 
 	if suggestionDialogue.title == title then
@@ -191,6 +317,15 @@ function sampev.onServerMessage(color, text)
 	end
 end
 
+function sampev.onSendExitVehicle(vehicleId, isPassenger)
+	lua_thread.create(function()
+		while isCharInAnyCar(PLAYER_PED) do wait(0) end
+		mainWindow.deactivate()
+		isSettingsApplied = false
+		return
+	end)
+end
+
 in_array = function(needle, array)
     for _, value in pairs(array) do
         if needle == value then
@@ -198,4 +333,9 @@ in_array = function(needle, array)
         end
     end
     return false
+end
+
+function imgui.CenterColumnText(text)
+    imgui.SetCursorPosX((imgui.GetColumnOffset() + (imgui.GetColumnWidth() / 2)) - imgui.CalcTextSize(text).x / 2)
+    imgui.Text(text)
 end

@@ -12,6 +12,7 @@ local CarService = {
         self.get = function()
             local result = {}
             for _, handle in ipairs(getAllVehicles()) do
+                local _, id = sampGetVehicleIdByCarHandle(handle)
                 local model = getCarModel(handle)
                 local name = getNameOfVehicleModel(model):lower()
                 local health = getCarHealth(handle)
@@ -19,6 +20,7 @@ local CarService = {
                 local maxPassengers = getMaximumNumberOfPassengers(handle)
 
                 local car = Car.new(
+                    id,
                     name,
                     model,
                     health,
@@ -36,6 +38,15 @@ local CarService = {
             for _, car in pairs(cars) do
                 local carDriver = car.getDriver()
                 if carDriver and carDriver.handle == driver.handle then
+                    return car
+                end
+            end
+            return false
+        end
+
+        self.getByVehicleId = function(cars, vehicleId)
+            for _, car in pairs(cars) do
+                if car.id == vehicleId then
                     return car
                 end
             end

@@ -27,7 +27,7 @@ local Main = {
               local windowTitle = string.format(u8"Список контрактов (%d)", #ContractService.CONTRACTS)
               imgui.SetNextWindowPos(imgui.ImVec2(posX - 225, posY - 200), imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
               imgui.SetNextWindowSize(sizes, imgui.Cond.FirstUseEver)
-              imgui.Begin(windowTitle, self.window, imgui.WindowFlags.NoResize)
+              imgui.Begin(windowTitle, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
               player.HideCursor = self.hideCursor
 
               for number, contract in ipairs(ContractService.CONTRACTS) do

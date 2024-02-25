@@ -2,6 +2,7 @@ local Contract = require "tch.entities.contracts.contract"
 local Service = require "tch.services.service"
 local PlayerService = require "tch.services.playerservice"
 local CarService = require "tch.services.carservice"
+local PointsService = require "tch.services.pointsservice"
 local constants = require "tch.constants"
 local encoding = require "encoding"
 
@@ -14,8 +15,10 @@ local PortSanFierro = require "tch.entities.coords.portsanfierro"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
+
 local playerService = PlayerService.new()
 local carsService = CarService.new()
+local pointsService = PointsService.new()
 
 local trucks = { 
     Linerunner.new().id, 
@@ -43,7 +46,7 @@ local ContractService = {
                 
                 local priorities = self.getPriorities(source, destination)
                 local sort, top = table.unpack(priorities)
-        
+
                 local entity = Contract.new(
                     id,
                     sort,
@@ -57,7 +60,12 @@ local ContractService = {
 
                 table.insert(list, entity)
             end
-            return self.sort(list)
+
+            table.sort(list, function(a, b)
+                return a.sort < b.sort
+            end)
+
+            return list
         end
 
         self.findById = function(id, contracts)
@@ -161,19 +169,12 @@ local ContractService = {
         end
 
         self.getPriorities = function(source, destination)
-            for _, value in pairs(constants.CONTRACTS) do
-                if source:find(value.source) and destination:find(value.destination) then
-                    return { value.sort, value.top }
+            local data = pointsService.get()
+            for _, value in pairs(data) do
+                if source:find(value.point.source) and destination:find(value.point.destination) then
+                    return { value.point.sort, value.point.top }
                 end
             end
-            return { 10, false }
-        end
-
-        self.sort = function(contracts)
-            table.sort(contracts, function(a, b)
-                return a.sort < b.sort
-            end)
-            return contracts
         end
 
         return self
