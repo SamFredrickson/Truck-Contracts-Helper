@@ -18,6 +18,8 @@ local ContractService = require "tch.services.contractservice"
 local ChatService = require "tch.services.chatservice"
 local ScheduleService = require "tch.services.scheduleservice"
 local ServerMessageService = require "tch.services.servermessageservice"
+local DriverCoordinatesEntryService = require "tch.services.drivercoordinatesentryservice"
+local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesentry"
 local PlayerService = require "tch.services.playerservice"
 local CarService = require "tch.services.carservice"
 local Config = require "tch.common.config"
@@ -58,6 +60,7 @@ local scheduleService = ScheduleService.new()
 local serverMessageService = ServerMessageService.new()
 local playerService = PlayerService.new()
 local carsService = CarService.new()
+local driverCoordinatesService = DriverCoordinatesEntryService.new()
 
 local isSettingsApplied = false
 
@@ -95,6 +98,34 @@ function main()
 		sampRegisterChatCommand(
             "tch.menu",
 			function() settingsWindow.toggle() end
+        )
+
+		sampRegisterChatCommand(
+            "tch.coords.send",
+			function(args) 
+				if args == nil or args == "" then
+					local localMessage = LocalMessage.new("{00CED1}/tch.coords.send{FFFFFF} [текст сообщения]")
+					chatService.send(localMessage)
+					return
+				end
+
+				local player = playerService.getByHandle(
+					playerService.get(), 
+					PLAYER_PED
+				)
+
+				local message = Message.new(
+					string.format(
+						"/j %s %f|%f|%f", 
+						args, 
+						player.coords.x, 
+						player.coords.y, 
+						player.coords.z
+					)
+				)
+
+				chatService.send(message)
+			end
         )
 
 		scheduleService.create
@@ -218,6 +249,24 @@ function main()
 			end
 		):run()
 
+		scheduleService.create
+		(
+			function()
+				if #DriverCoordinatesEntryService.ENTRIES > 0 then
+					local player = playerService.getByHandle(
+						playerService.get(), 
+						PLAYER_PED
+					)
+					for _, entry in pairs(DriverCoordinatesEntryService.ENTRIES) do
+						local coords = { x = entry.x, y = entry.y, z = entry.z }
+						if player.IsWithinDistance(coords, 20) then
+							removeBlip(entry.blip)
+						end
+					end
+				end
+			end
+		):run()
+
 		while true do
 			wait(-1)
 		end
@@ -303,6 +352,7 @@ function sampev.onServerMessage(color, text)
 			ContractService.CONTRACTS
 		)
 	end
+
 	if text:find(serverMessageService.findByCode("delivery-success").message) then
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 		local contract = contractsService.update(
@@ -310,6 +360,42 @@ function sampev.onServerMessage(color, text)
 			{ IsActive = false },
 			ContractService.CONTRACTS
 		)
+	end
+
+	if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
+		local nickname, message, x, y, z = text:match(
+			serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
+		)
+		local driverCoordinatesEntry = DriverCoordinatesEntry.new(
+			nickname,
+			message,
+			x, y, z
+		)
+		local data = driverCoordinatesService.findByNickname(
+			DriverCoordinatesEntryService.ENTRIES,
+			nickname
+		)
+		if data then
+			driverCoordinatesService.update(
+				DriverCoordinatesEntryService.ENTRIES, 
+				data.id,
+				{ 
+					nickname = driverCoordinatesEntry.nickname, 
+					message = driverCoordinatesEntry.message,
+					x = driverCoordinatesEntry.x,
+					y = driverCoordinatesEntry.y, 
+					z = driverCoordinatesEntry.z
+				}
+			)
+			removeBlip(data.item.blip)
+		end
+
+		if not data then
+			driverCoordinatesService.create(
+				DriverCoordinatesEntryService.ENTRIES, 
+				driverCoordinatesEntry
+			)
+		end
 	end
 end
 
@@ -329,6 +415,10 @@ in_array = function(needle, array)
         end
     end
     return false
+end
+
+function floatify(number)
+    return string.format("%0.1f", number)
 end
 
 function imgui.CenterColumnText(text)

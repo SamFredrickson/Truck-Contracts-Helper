@@ -8,6 +8,7 @@ local ChatService = {
             local delay = message.delay
             local messageType = message.type
             local text = message.text
+            local color = message.color
 
             if messageType == "GLOBAL" then
                 if delay then
@@ -25,12 +26,12 @@ local ChatService = {
             if delay then
                 lua_thread.create(function()
                     wait(delay)
-                    sampAddChatMessage(text)
+                    sampAddChatMessage(text, color or -1)
                     return
                 end)
                 return
             end
-            sampAddChatMessage(text)
+            sampAddChatMessage(text, color or -1)
         end
 
         return self

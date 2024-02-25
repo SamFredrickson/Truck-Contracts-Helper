@@ -2,13 +2,21 @@ local imgui = require "mimgui"
 local encoding = require "encoding"
 local Config = require "tch.common.config"
 local Window = require "tch.gui.windows.window"
-local constants = require "tch.constants"
+local Sound = require "tch.entities.sounds.sound"
+local LocalMessage = require "tch.entities.chat.localmessage"
+local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesentry"
+local DriverCoordinatesEntryService = require "tch.services.drivercoordinatesentryservice"
+local ChatService = require "tch.services.chatservice"
 local PointsService = require "tch.services.pointsservice"
+local constants = require "tch.constants"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local config = Config.new()
+
 local pointsService = PointsService.new()
+local driverCoordinatesService = DriverCoordinatesEntryService.new()
+local chatService = ChatService.new()
 
 local Settings = {
     new = function()
@@ -43,7 +51,7 @@ local Settings = {
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
                 imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
                 for index, name in pairs(tabs) do
-                    if imgui.Button(u8(name), imgui.ImVec2(150, 40)) then
+                    if imgui.Button(u8(name), imgui.ImVec2(150, 45)) then
                         active = index
                     end
                 end
@@ -188,6 +196,70 @@ local Settings = {
                                 end
                             end
                         end
+                    end
+                    if active == 3 then
+                       if imgui.BeginTabBar("Players Tab") then
+                            if imgui.BeginTabItem(u8"Координаты") then
+                                if #DriverCoordinatesEntryService.ENTRIES <= 0 then
+                                    imgui.Text(u8"Список координат пуст.")
+                                end
+                                if #DriverCoordinatesEntryService.ENTRIES > 0 then
+                                    imgui.Columns(3)
+                                    imgui.CenterColumnText(u8'Отправитель') imgui.SetColumnWidth(-1, 130)
+                                    imgui.NextColumn()
+                                    imgui.CenterColumnText(u8'Сообщение') imgui.SetColumnWidth(-1, 215)
+                                    imgui.NextColumn()
+                                    imgui.CenterColumnText(u8'Опции')
+                                    imgui.Columns(1)
+                                    imgui.Separator()
+
+                                    for id, entry in pairs(DriverCoordinatesEntryService.ENTRIES) do
+                                        imgui.Columns(3)
+                                        imgui.CenterColumnText(entry.getNickname())
+                                        if imgui.IsItemHovered() then
+                                            imgui.SetTooltip(u8(entry.nickname))
+                                        end
+                                        imgui.NextColumn()
+                                        imgui.CenterColumnText(u8(entry.getMessage()))
+                                        if imgui.IsItemHovered() then
+                                            imgui.SetTooltip(u8(entry.message))
+                                        end
+                                        imgui.NextColumn()
+                                        if imgui.Button(u8"Мет.##" .. tostring(id)) then
+                                            Sound.new("mark.wav").play()
+                                            removeBlip(entry.blip)
+                                            entry.blip = addSpriteBlipForCoord(
+                                                entry.x, 
+                                                entry.y, 
+                                                entry.z, 
+                                                41
+                                            )
+                                            local localMessage = LocalMessage.new(
+                                                "Метка установлена на карте",
+                                                nil,
+                                                constants.COLORS.GOLD
+                                            )
+                                            chatService.send(localMessage)
+                                        end
+                                        if imgui.IsItemHovered() then
+                                            imgui.SetTooltip(u8"Поставить метку на карте.")
+                                        end
+                                        imgui.SameLine()
+                                        if imgui.Button(u8"Уд.##" .. tostring(id)) then
+                                            removeBlip(entry.blip)
+                                            driverCoordinatesService.delete(
+                                                DriverCoordinatesEntryService.ENTRIES, 
+                                                id
+                                            )
+                                        end
+                                        if imgui.IsItemHovered() then
+                                            imgui.SetTooltip(u8"Удалить запись из таблицы.")
+                                        end
+                                        imgui.Columns(1)
+                                    end
+                                end
+                            end
+                       end
                     end
                     imgui.EndChild()
                 end
