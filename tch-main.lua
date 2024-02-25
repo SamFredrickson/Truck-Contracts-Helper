@@ -91,7 +91,7 @@ function main()
 		end
 
 		sampRegisterChatCommand(
-            'tch.show',
+            "tch.list",
 			function() mainWindow.toggle() end
         )
 
