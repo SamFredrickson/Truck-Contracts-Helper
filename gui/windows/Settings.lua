@@ -207,7 +207,7 @@ local Settings = {
                                     imgui.Columns(3)
                                     imgui.CenterColumnText(u8'Отправитель') imgui.SetColumnWidth(-1, 130)
                                     imgui.NextColumn()
-                                    imgui.CenterColumnText(u8'Сообщение') imgui.SetColumnWidth(-1, 215)
+                                    imgui.CenterColumnText(u8'Сообщение') imgui.SetColumnWidth(-1, #DriverCoordinatesEntryService.ENTRIES <= 12 and 223 or 215)
                                     imgui.NextColumn()
                                     imgui.CenterColumnText(u8'Опции')
                                     imgui.Columns(1)
