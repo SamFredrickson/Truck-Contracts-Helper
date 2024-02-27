@@ -200,6 +200,53 @@ local COLOR_LIST = {
     u8"[33] Белый"
 }
 
+local SERVER_MESSAGES = {
+    {
+        message = "Вы успешно арендовали фуру. Для начала работы используйте {.-}%(%( /tmenu %)%)",
+        code = "successful-renting"
+    },
+    {
+        message = "Контракт был отменен",
+        code = "contract-canceled"
+    },
+    {
+        message = "У Вас уже есть активный контракт",
+        code = "contract-canceled"
+    },
+    {
+        message = "Вам необходимо доставить в {.-}\"(.+)\" {.-}груз {.-}\"(.+)\" {.-}в количестве {.-}(%d+) т.",
+        code = "delivery-start"
+    },
+    {
+        message = "Вы получили документы на груз, чтобы их показать используйте {.-}/showtabel",
+        code = "receive-documents"
+    },
+    {
+        message = "Вы успешно доставили груз {.-}\"(.+)\" {.-}в количестве {.-}(%d+) т.",
+        code = "delivery-success"
+    },
+    {
+        message = "Ваш заработок с учетом комиссии компании {.-}(%d+)%% {.-}составил {.-}(%d+)%$",
+        code = "income"
+    },
+    {
+        message = "Вы получили дополнительно {.-}%$(%d+) {.-}при сдаче груза за улучшение семьи",
+        code = "family-income"
+    },
+    {
+        message = "За выполненный контракт Вы получили {.-}(%d+) опыта",
+        code = "contract-experience"
+    },
+    {
+        message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+)",
+        code = "truck-driver-chat-new-message"
+    },
+    {
+        message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+) (.+)|(.+)|(.+)",
+        code = "truck-driver-chat-new-message-with-coords"
+    }
+}
+
 local TRUCK_RENTED_CHOICES = {
     u8"Не выбрано",
     u8"Игрок заспавнился",
@@ -218,5 +265,6 @@ return {
     TRUCK_RENTED_CHOICES = TRUCK_RENTED_CHOICES,
     POINTS = POINTS,
     TOP_CHOICES = TOP_CHOICES,
-    SORT_CHOICES = SORT_CHOICES
+    SORT_CHOICES = SORT_CHOICES,
+    SERVER_MESSAGES = SERVER_MESSAGES
 }
