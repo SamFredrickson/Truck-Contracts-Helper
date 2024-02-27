@@ -72,7 +72,7 @@ local Settings = {
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(180, 5))
                         imgui.BeginChild('##ContractsChild', imgui.ImVec2(385, 400), false)
-                            imgui.Text(u8"Открывать меню контрактов, если:")
+                            imgui.Text(u8"Открывать список контрактов, если:")
                             if imgui.Combo(
                                 "##Contracts", 
                                 selectedTruckRentedChoice, 
