@@ -66,4 +66,4 @@
 # Контакты
 
 - [GitHub](https://github.com/SamFredrickson/Truck-Contracts-Helper/issues/new)
-- [BH](https://www.blast.hk/members/519123/)
+- [BLASTHACK](https://www.blast.hk/members/519123/)
