@@ -226,7 +226,7 @@ local Settings = {
                                         end
                                         imgui.NextColumn()
                                         if imgui.Button(u8"Μες.##" .. tostring(id)) then
-                                            Sound.new("mark.wav").play()
+                                            Sound.new("mark.wav", 80).play()
                                             removeBlip(entry.blip)
                                             entry.blip = addSpriteBlipForCoord(
                                                 entry.x, 
