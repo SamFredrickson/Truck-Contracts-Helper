@@ -27,6 +27,7 @@ local Config = require "tch.common.config"
 local Linerunner = require "tch.entities.vehicles.linerunner"
 local Tanker = require "tch.entities.vehicles.tanker"
 local RoadTrain = require "tch.entities.vehicles.roadtrain"
+local Sound = require "tch.entities.sounds.sound"
 
 local trucks = { 
     Linerunner.new().id, 
@@ -396,6 +397,8 @@ function sampev.onServerMessage(color, text)
 				driverCoordinatesEntry
 			)
 		end
+
+		Sound.new("tick.wav", 100).play()
 	end
 end
 
