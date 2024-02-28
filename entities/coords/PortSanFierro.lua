@@ -1,4 +1,4 @@
-local Coords = require 'tch.entities.coords.coords'
+local Coords = require "tch.entities.coords.coords"
 
 local PortSanFierro = {
     new = function()

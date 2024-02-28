@@ -3,8 +3,8 @@ local encoding = require "encoding"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 
-local constants = require 'tch.constants'
-local Dialogue = require 'tch.samp.dialogues.dialogue'
+local constants = require "tch.constants"
+local Dialogue = require "tch.samp.dialogues.dialogue"
 
 local Menu = {
     new = function()

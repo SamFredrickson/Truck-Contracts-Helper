@@ -1,4 +1,4 @@
-local imgui = require 'mimgui'
+local imgui = require "mimgui"
 local new = imgui.new
 
 local Window = {

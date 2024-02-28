@@ -1,5 +1,5 @@
-local Theme = require 'tch.gui.themes.theme'
-local imgui = require 'mimgui'
+local Theme = require "tch.gui.themes.theme"
+local imgui = require "mimgui"
 local encoding = require "encoding"
 
 encoding.default = "CP1251"

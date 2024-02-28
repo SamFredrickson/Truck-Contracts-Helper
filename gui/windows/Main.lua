@@ -1,10 +1,10 @@
-local imgui = require 'mimgui'
+local imgui = require "mimgui"
 local encoding = require "encoding"
 
-local constants = require 'tch.constants'
-local Window = require 'tch.gui.windows.window'
+local constants = require "tch.constants"
+local Window = require "tch.gui.windows.window"
 local Message = require "tch.entities.chat.message"
-local MenuDialogue = require 'tch.samp.dialogues.menu'
+local MenuDialogue = require "tch.samp.dialogues.menu"
 local ContractService = require "tch.services.contractservice"
 local ChatService = require "tch.services.chatservice"
 

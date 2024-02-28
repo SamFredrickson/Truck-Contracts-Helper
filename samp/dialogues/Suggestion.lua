@@ -1,4 +1,4 @@
-local Dialogue = require 'tch.samp.dialogues.dialogue'
+local Dialogue = require "tch.samp.dialogues.dialogue"
 
 -- ѕредложение о повторном вз€тии контракта
 local Suggestion = {

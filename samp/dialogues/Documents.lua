@@ -3,7 +3,7 @@ local encoding = require "encoding"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 
-local Dialogue = require 'tch.samp.dialogues.dialogue'
+local Dialogue = require "tch.samp.dialogues.dialogue"
 
 local Documents = {
     new = function()
