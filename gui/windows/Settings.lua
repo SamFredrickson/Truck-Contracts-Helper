@@ -21,7 +21,12 @@ local chatService = ChatService.new()
 local Settings = {
     new = function()
         local self = Window.new()
-        self.title = u8("Главное меню")
+        self.title = u8(
+            string.format(
+                "Главное меню (v%s)", 
+                constants.SCRIPT_INFO.VERSION
+            )
+        )
 
         local resX, resY = getScreenResolution()
         local windowPosition = imgui.ImVec2(resX / 2, resY / 2)
