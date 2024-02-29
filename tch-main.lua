@@ -22,6 +22,7 @@ local DriverCoordinatesEntryService = require "tch.services.drivercoordinatesent
 local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesentry"
 local PlayerService = require "tch.services.playerservice"
 local CarService = require "tch.services.carservice"
+local HttpService = require "tch.services.httpservice"
 local Config = require "tch.common.config"
 
 local Linerunner = require "tch.entities.vehicles.linerunner"
@@ -62,6 +63,7 @@ local serverMessageService = ServerMessageService.new()
 local playerService = PlayerService.new()
 local carsService = CarService.new()
 local driverCoordinatesService = DriverCoordinatesEntryService.new()
+local httpService = HttpService.new()
 
 local isSettingsApplied = false
 
@@ -75,9 +77,11 @@ function main()
         while not isSampAvailable() do wait(100) end
 
 		sampAddChatMessage(
-			"{FFFFFF}Меню настроек - {00CED1}/tch.menu{FFFFFF}, страница скрипта: {00CED1}" .. 
+			"{FFFFFF}Меню настроек - {ed5a5a}/tch.menu{FFFFFF}, страница скрипта: {ed5a5a}" .. 
 			thisScript().url, 0xFFFFFF
 		)
+
+		httpService.getAvailableUpdates()
 
 		if config.data.settings.truckRentedChoice == 1 then
 			lua_thread.create(function()
@@ -102,10 +106,64 @@ function main()
         )
 
 		sampRegisterChatCommand(
+            "tch.update",
+			function()
+				if not httpService.version then
+					local localMessage = LocalMessage.new(
+						"{FFFFFF}Произошла {ed5a5a}ошибка {FFFFFF}при попытке обновления. " ..
+						"Свяжитесь с разработчиком скрипта."
+					)
+					chatService.send(localMessage)
+					return
+				end
+
+				if httpService.version.number == constants.SCRIPT_INFO.VERSION_NUMBER then
+					local localMessage = LocalMessage.new(
+						"{FFFFFF}У вас уже установлена {ed5a5a}" .. 
+						"актуальная {FFFFFF}версия скрипта."
+					)
+					chatService.send(localMessage)
+					return
+				end
+
+				lua_thread.create(function()
+					local messages = {
+						LocalMessage.new(
+							"{FFFFFF}Не забудьте распаковать {ed5a5a}архив {FFFFFF}в папке " .. 
+							"{ed5a5a}moonloader {FFFFFF}с заменой старых файлов." 
+						),
+						LocalMessage.new(
+							"{FFFFFF}Переход по ссылке для скачивания через {ed5a5a}3 секунды..." 
+						)
+					}
+					local commands = {
+						string.format(
+							"start %s", 
+							httpService.version.release_url
+						),
+						string.format(
+							"start %s", 
+							constants.SCRIPT_INFO.CHANGELOG_URL
+						)
+					}
+					
+					for _, message in pairs(messages) do
+						chatService.send(message)
+					end
+					wait(3000)
+					for _, command in pairs(commands) do
+						os.execute(command)
+					end
+					return
+				end)
+			end
+        )
+
+		sampRegisterChatCommand(
             "tch.coords.send",
 			function(args) 
 				if args == nil or args == "" then
-					local localMessage = LocalMessage.new("{00CED1}/tch.coords.send{FFFFFF} [текст сообщения]")
+					local localMessage = LocalMessage.new("{ed5a5a}/tch.coords.send{FFFFFF} [текст сообщения]")
 					chatService.send(localMessage)
 					return
 				end

@@ -8,6 +8,8 @@ local SCRIPT_INFO = {
     VERSION = "1.0.0",
     MOONLOADER = 026,
     VERSION_NUMBER = 1,
+    VERSION_URL = "https://raw.githubusercontent.com/SamFredrickson/Truck-Contracts-Helper/master/version.json",
+    CHANGELOG_URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper/blob/master/CHANGELOG.md",
     URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper",
 }
 
