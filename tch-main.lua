@@ -478,10 +478,6 @@ in_array = function(needle, array)
     return false
 end
 
-function floatify(number)
-    return string.format("%0.1f", number)
-end
-
 function imgui.CenterColumnText(text)
     imgui.SetCursorPosX((imgui.GetColumnOffset() + (imgui.GetColumnWidth() / 2)) - imgui.CalcTextSize(text).x / 2)
     imgui.Text(text)
