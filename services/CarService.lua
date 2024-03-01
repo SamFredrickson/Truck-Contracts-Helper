@@ -14,14 +14,14 @@ local CarService = {
             for _, handle in ipairs(getAllVehicles()) do
                 local _, id = sampGetVehicleIdByCarHandle(handle)
                 local model = getCarModel(handle)
-                local name = getNameOfVehicleModel(model):lower()
+                local name = getNameOfVehicleModel(model)
                 local health = getCarHealth(handle)
                 local speed = getCarSpeed(handle) 
                 local maxPassengers = getMaximumNumberOfPassengers(handle)
 
                 local car = Car.new(
                     id,
-                    name,
+                    name and name:lower() or "unknown",
                     model,
                     health,
                     speed,
