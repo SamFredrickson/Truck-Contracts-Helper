@@ -66,6 +66,7 @@ local driverCoordinatesService = DriverCoordinatesEntryService.new()
 local httpService = HttpService.new()
 
 local isSettingsApplied = false
+local hasActiveContract = false
 
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
@@ -191,8 +192,9 @@ function main()
 		(
 			function()
 				local contracts = ContractService.CONTRACTS
-				if mainWindow.window[0] 
-				and mainWindow.hideCursor 
+				if mainWindow.window[0]
+				and not hasActiveContract
+				and mainWindow.hideCursor
 				and contractsService.CanSearch(contracts) then
 					MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
 					local message = Message.new(constants.COMMANDS.MENU)
@@ -404,6 +406,7 @@ end
 
 function sampev.onServerMessage(color, text)
 	if text:find(serverMessageService.findByCode("contract-canceled").message) then
+		hasActiveContract = false
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 		local contract = contractsService.update(
 			contractId,
@@ -412,7 +415,22 @@ function sampev.onServerMessage(color, text)
 		)
 	end
 
+	if text:find(serverMessageService.findByCode("has-active-contract").message) then
+		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
+		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
+		ContractService.CONTRACTS = {}
+		hasActiveContract = true
+
+		local localMessage = LocalMessage.new(
+			"{FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт."
+		)
+		
+		chatService.send(localMessage)
+		return false
+	end
+
 	if text:find(serverMessageService.findByCode("delivery-success").message) then
+		hasActiveContract = false
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 		local contract = contractsService.update(
 			contractId,
