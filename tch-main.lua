@@ -422,7 +422,7 @@ function sampev.onServerMessage(color, text)
 		hasActiveContract = true
 
 		local localMessage = LocalMessage.new(
-			"{FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт."
+			"{FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"
 		)
 		
 		chatService.send(localMessage)
