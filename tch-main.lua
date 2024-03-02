@@ -421,11 +421,15 @@ function sampev.onServerMessage(color, text)
 		ContractService.CONTRACTS = {}
 		hasActiveContract = true
 
-		local localMessage = LocalMessage.new(
-			"{FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"
-		)
+		local messages = {
+			LocalMessage.new("{FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
+			LocalMessage.new("{FFFFFF}Используйте меню {ed5a5a}(( /tmenu )){FFFFFF} контрактов, чтобы отменить его")
+		}
+
+		for _, message in pairs(messages) do
+			chatService.send(message)
+		end
 		
-		chatService.send(localMessage)
 		return false
 	end
 
