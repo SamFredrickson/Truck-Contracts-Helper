@@ -431,6 +431,7 @@ function sampev.onServerMessage(color, text)
 		end
 
 		if config.data.settings.autohideContractsList then
+			mainWindow.hideCursor = true
 			mainWindow.deactivate()
 		end
 		
@@ -455,6 +456,7 @@ function sampev.onServerMessage(color, text)
 		if config.data.settings.autohideContractsList then
 			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
 			chatService.send(localMessage)
+			mainWindow.hideCursor = true
 			mainWindow.deactivate()
 		end
 	end
