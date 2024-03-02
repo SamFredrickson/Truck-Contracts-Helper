@@ -429,6 +429,10 @@ function sampev.onServerMessage(color, text)
 		for _, message in pairs(messages) do
 			chatService.send(message)
 		end
+
+		if config.data.settings.autohideContractsList then
+			mainWindow.deactivate()
+		end
 		
 		return false
 	end
@@ -441,6 +445,18 @@ function sampev.onServerMessage(color, text)
 			{ IsActive = false },
 			ContractService.CONTRACTS
 		)
+
+		if config.data.settings.autohideContractsList then
+			mainWindow.activate()
+		end
+	end
+
+	if text:find(serverMessageService.findByCode("receive-documents").message) then
+		if config.data.settings.autohideContractsList then
+			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
+			chatService.send(localMessage)
+			mainWindow.deactivate()
+		end
 	end
 
 	if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then

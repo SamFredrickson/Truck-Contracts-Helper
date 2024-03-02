@@ -128,6 +128,16 @@ local Settings = {
                                 imgui.SetTooltip(u8"ѕри зажатой клавише \"Shift\" двигает задней \nчастью машины быстрее, чем обычно.")
                             end
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 115))
+                        imgui.BeginChild('##AutohideContractsList', imgui.ImVec2(250, 100), false)
+                            if imgui.Checkbox(u8(" јвтозакрытие списка"), imgui.new.bool(config.data.settings.autohideContractsList)) then
+                                config.data.settings.autohideContractsList = not config.data.settings.autohideContractsList
+                                config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"ѕр€тать список контрактов, если есть активный контракт.")
+                            end
+                        imgui.EndChild()
                     end
                     if active == 2 then
                         if imgui.BeginTabBar("Contract Tabs") then

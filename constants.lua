@@ -36,7 +36,8 @@ local CONFIG = {
         autoload = false,
         drift = false,
         unloadDistance = 15,
-        autolock = false
+        autolock = false,
+        autohideContractsList = false
     }
 }
 
