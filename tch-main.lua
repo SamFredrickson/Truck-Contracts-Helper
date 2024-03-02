@@ -89,6 +89,7 @@ function main()
 				while true do
 					wait(10)
 					if sampIsLocalPlayerSpawned() then
+						mainWindow.hideCursor = true
 						mainWindow.activate()
 						return
 					end
@@ -263,6 +264,7 @@ function main()
 							wait(1000)
 						end
 						if config.data.settings.truckRentedChoice > 0 then
+							mainWindow.hideCursor = true
 							mainWindow.activate()
 						end
 						isSettingsApplied = true
@@ -448,6 +450,7 @@ function sampev.onServerMessage(color, text)
 		)
 
 		if config.data.settings.autohideContractsList then
+			mainWindow.hideCursor = true
 			mainWindow.activate()
 		end
 	end
