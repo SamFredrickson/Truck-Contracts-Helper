@@ -1,4 +1,4 @@
-# [Помощник для работы с контрактами дальнобойщика на проекте Evolve Role Play](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.0.1/tch-release-v1.0.1.zip)
+# [Помощник для работы с контрактами дальнобойщика на проекте Evolve Role Play](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.1.2/tch-release-v1.1.2.rar)
 Данный помощник позволяет комфортно работать с контрактами и взаимодействовать с другими игроками.
 
 * Кликабельный список контрактов в правом углу экрана
@@ -14,7 +14,7 @@
 -   [Moonloader v026.5](https://www.blast.hk/threads/13305/)
 ## Установка
 ### Для пользователей
-1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.0.1/tch-release-v1.0.1.zip) архив с файлами скрипта
+1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.1.2/tch-release-v1.1.2.rar) архив с файлами скрипта
 2. Распаковать скачанный архив в папку **moonloader** в корне игры
 ### Для разработчиков
 1. Зайти в папку **moonloader** в корне игры
@@ -42,7 +42,7 @@
 #### Основное
 В данной вкладке содержатся базовые настройки.
 <p align="center">
-    <img src="https://i.imgur.com/RAYU0kA.png" alt="Главное меню (основное)">
+    <img src="https://i.imgur.com/D1Lpm3T.png" alt="Главное меню (основное)">
 </p>
 
 #### Контракты
