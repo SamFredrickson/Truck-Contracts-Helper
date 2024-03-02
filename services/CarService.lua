@@ -18,6 +18,7 @@ local CarService = {
                 local health = getCarHealth(handle)
                 local speed = getCarSpeed(handle) 
                 local maxPassengers = getMaximumNumberOfPassengers(handle)
+                local isLocked = getCarDoorLockStatus(handle)
 
                 local car = Car.new(
                     id,
@@ -26,6 +27,7 @@ local CarService = {
                     health,
                     speed,
                     maxPassengers,
+                    isLocked,
                     handle
                 )
         

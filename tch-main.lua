@@ -257,7 +257,7 @@ function main()
 							chatService.send(message)
 							wait(1000)
 						end
-						if config.data.settings.autolock then
+						if config.data.settings.autolock and car.isLocked <= 0 then
 							local message = Message.new(constants.COMMANDS.LOCK)
 							chatService.send(message)
 							wait(1000)
