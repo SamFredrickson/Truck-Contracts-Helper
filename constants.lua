@@ -213,7 +213,7 @@ local SERVER_MESSAGES = {
     },
     {
         message = "У Вас уже есть активный контракт",
-        code = "contract-canceled"
+        code = "has-active-contract"
     },
     {
         message = "Вам необходимо доставить в {.-}\"(.+)\" {.-}груз {.-}\"(.+)\" {.-}в количестве {.-}(%d+) т.",
