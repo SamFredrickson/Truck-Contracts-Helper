@@ -409,7 +409,6 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 end
 
 function sampev.onServerMessage(color, text)
-	print(text)
 	if text:find(serverMessageService.findByCode("contract-canceled").message) then
 		hasActiveContract = false
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
