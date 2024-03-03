@@ -268,7 +268,7 @@ local Settings = {
                                             )
                                         end
                                         if imgui.IsItemHovered() then
-                                            imgui.SetTooltip(u8"Удалить запись из таблицы.")
+                                            imgui.SetTooltip(u8"Удалить запись и метку на карте.")
                                         end
                                         imgui.Columns(1)
                                     end
