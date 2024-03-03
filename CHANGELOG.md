@@ -1,5 +1,17 @@
 # Список изменений
 Все видимые изменения проекта будут документироваться в данном файле.
+## [1.2.0] - 2024-03-03
+
+### Добавлено
+- Вывод уведомления о полученных координатах из рации
+- Новый грузовик Volvo
+
+### Исправлено
+- Курсор мыши при появлении списка контрактов
+
+### Изменено
+- Текст подсказки у кнопки "Уд."
+
 ## [1.1.2] - 2024-03-02
 
 ### Добавлено
@@ -23,3 +35,4 @@
 [1.0.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.0.0/tch-release-v1.0.0.zip
 [1.0.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.0.1/tch-release-v1.0.1.zip
 [1.1.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.1.2/tch-release-v1.1.2.rar
+[1.2.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.2.0/tch-release-v1.2.0.rar
