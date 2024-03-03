@@ -30,7 +30,7 @@ local Settings = {
 
         local resX, resY = getScreenResolution()
         local windowPosition = imgui.ImVec2(resX / 2, resY / 2)
-        local size = imgui.ImVec2(600, 450)
+        local size = imgui.ImVec2(620, 450)
 
         local active = 1
         local tabs = {
@@ -55,15 +55,19 @@ local Settings = {
                 )
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
                 imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
-                for index, name in pairs(tabs) do
-                    if imgui.Button(u8(name), imgui.ImVec2(150, 45)) then
-                        active = index
+                imgui.BeginChild("##Buttons", imgui.ImVec2(150, 410), true)
+                    for index, name in pairs(tabs) do
+                        imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
+                        if imgui.Button(u8(name), imgui.ImVec2(140, 45)) then
+                            active = index
+                        end
+                        imgui.PopStyleVar()
                     end
-                end
+                imgui.EndChild()
                 imgui.SetCursorPos(imgui.ImVec2(160, 28))
-                if imgui.BeginChild('##Main' .. active, imgui.ImVec2(435, 410), true) then
+                if imgui.BeginChild('##Main' .. active, imgui.ImVec2(453, 410), true) then
                     if active == 1 then
-                        imgui.BeginChild('##ClistChild', imgui.ImVec2(260, 400), false)
+                        imgui.BeginChild('##ClistChild', imgui.ImVec2(275, 400), false)
                             imgui.Text(u8"Цвет ника во время работы:")
                             if imgui.Combo(
                                 "##Clist", 
@@ -75,7 +79,7 @@ local Settings = {
                                 config.save()
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(180, 5))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 5))
                         imgui.BeginChild('##ContractsChild', imgui.ImVec2(385, 400), false)
                             imgui.Text(u8"Открывать список контрактов, если:")
                             if imgui.Combo(
@@ -108,7 +112,7 @@ local Settings = {
                                imgui.SetTooltip(u8"Автоматически закрывать фуру, \nесли перснонаж сел в нее.")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(179, 55))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 55))
                         imgui.BeginChild('##DocumentsChild', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Скрывать окно документов на груз"), imgui.new.bool(config.data.settings.documentsDialogue)) then
                                 config.data.settings.documentsDialogue = not config.data.settings.documentsDialogue
@@ -118,7 +122,7 @@ local Settings = {
                                 imgui.SetTooltip(u8"Скрывать раздраюащее окно документов \nпосле покупки товара.")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(179, 85))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 85))
                         imgui.BeginChild('##Drift', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Улучшенная манёвренность (drift)"), imgui.new.bool(config.data.settings.drift)) then
                                 config.data.settings.drift = not config.data.settings.drift
@@ -135,7 +139,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Прятать список контрактов, если есть активный контракт.")
+                                imgui.SetTooltip(u8"Прятать список контрактов, \nесли есть активный контракт.")
                             end
                         imgui.EndChild()
                     end
@@ -143,7 +147,7 @@ local Settings = {
                         if imgui.BeginTabBar("Contract Tabs") then
                             if imgui.BeginTabItem(u8"Сортировка") then
                                 imgui.Columns(4)
-                                imgui.CenterColumnText(u8'Место') imgui.SetColumnWidth(-1, 240)
+                                imgui.CenterColumnText(u8'Место') imgui.SetColumnWidth(-1, 225)
                                 imgui.NextColumn()
                                 imgui.CenterColumnText(u8'Топ') imgui.SetColumnWidth(-1, 40)
                                 imgui.NextColumn()
@@ -161,7 +165,7 @@ local Settings = {
                                     imgui.NextColumn()
                                     imgui.CenterColumnText(tostring(data.point.sort))
                                     imgui.NextColumn()
-                                    if imgui.Button(u8"up##" .. data.id) then
+                                    if imgui.Button(u8"Выше##" .. data.id) then
                                         if data.point.sort > 1 then
                                                 local previous = pointsService.findBySort(data.point.sort - 1)
                                                 local current = data.point
@@ -181,7 +185,7 @@ local Settings = {
                                         imgui.SetTooltip(u8"Перемещает запись выше по списку.")
                                     end
                                     imgui.SameLine()
-                                    if imgui.Button(u8"dwn##" .. data.id) then
+                                    if imgui.Button(u8"Ниже##" .. data.id) then
                                         if data.point.sort < 16 then
                                             local next = pointsService.findBySort(data.point.sort + 1)
                                             local current = data.point
@@ -201,7 +205,7 @@ local Settings = {
                                         imgui.SetTooltip(u8"Перемещает запись ниже по списку.")
                                     end
                                     imgui.SameLine()
-                                    if imgui.Button(u8"top##" .. data.id) then
+                                    if imgui.Button(u8"Топ##" .. data.id) then
                                         pointsService.update(data.id, { top = not data.point.top })
                                     end
                                     if imgui.IsItemHovered() then
@@ -222,7 +226,7 @@ local Settings = {
                                     imgui.Columns(3)
                                     imgui.CenterColumnText(u8'Отправитель') imgui.SetColumnWidth(-1, 130)
                                     imgui.NextColumn()
-                                    imgui.CenterColumnText(u8'Сообщение') imgui.SetColumnWidth(-1, #DriverCoordinatesEntryService.ENTRIES <= 12 and 223 or 215)
+                                    imgui.CenterColumnText(u8'Сообщение') imgui.SetColumnWidth(-1, #DriverCoordinatesEntryService.ENTRIES <= 12 and 226 or 218)
                                     imgui.NextColumn()
                                     imgui.CenterColumnText(u8'Опции')
                                     imgui.Columns(1)
@@ -260,7 +264,7 @@ local Settings = {
                                             imgui.SetTooltip(u8"Поставить метку на карте.")
                                         end
                                         imgui.SameLine()
-                                        if imgui.Button(u8"Уд.##" .. tostring(id)) then
+                                        if imgui.Button(u8"Удал.##" .. tostring(id)) then
                                             removeBlip(entry.blip)
                                             driverCoordinatesService.delete(
                                                 DriverCoordinatesEntryService.ENTRIES, 
