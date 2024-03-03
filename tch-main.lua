@@ -409,6 +409,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 end
 
 function sampev.onServerMessage(color, text)
+	print(text)
 	if text:find(serverMessageService.findByCode("contract-canceled").message) then
 		hasActiveContract = false
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
@@ -470,38 +471,55 @@ function sampev.onServerMessage(color, text)
 		local nickname, message, x, y, z = text:match(
 			serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
 		)
-		local driverCoordinatesEntry = DriverCoordinatesEntry.new(
-			nickname,
-			message,
-			x, y, z
-		)
-		local data = driverCoordinatesService.findByNickname(
-			DriverCoordinatesEntryService.ENTRIES,
-			nickname
-		)
-		if data then
-			driverCoordinatesService.update(
-				DriverCoordinatesEntryService.ENTRIES, 
-				data.id,
-				{ 
-					nickname = driverCoordinatesEntry.nickname, 
-					message = driverCoordinatesEntry.message,
-					x = driverCoordinatesEntry.x,
-					y = driverCoordinatesEntry.y, 
-					z = driverCoordinatesEntry.z
-				}
-			)
-			removeBlip(data.item.blip)
-		end
 
-		if not data then
-			driverCoordinatesService.create(
-				DriverCoordinatesEntryService.ENTRIES, 
-				driverCoordinatesEntry
-			)
-		end
+		local player = playerService.getByHandle(
+			playerService.get(), 
+			PLAYER_PED
+		)
 
-		Sound.new("tick.wav", 100).play()
+		if player.name ~= nickname then
+			local driverCoordinatesEntry = DriverCoordinatesEntry.new(
+				nickname,
+				message,
+				x, y, z
+			)
+
+			local data = driverCoordinatesService.findByNickname(
+				DriverCoordinatesEntryService.ENTRIES,
+				nickname
+			)
+
+			if data then
+				driverCoordinatesService.update(
+					DriverCoordinatesEntryService.ENTRIES, 
+					data.id,
+					{ 
+						nickname = driverCoordinatesEntry.nickname, 
+						message = driverCoordinatesEntry.message,
+						x = driverCoordinatesEntry.x,
+						y = driverCoordinatesEntry.y, 
+						z = driverCoordinatesEntry.z
+					}
+				)
+				removeBlip(data.item.blip)
+			end
+
+			if not data then
+				driverCoordinatesService.create(
+					DriverCoordinatesEntryService.ENTRIES, 
+					driverCoordinatesEntry
+				)
+			end
+
+			local localMessage = LocalMessage.new(
+				" {FFFFFF}Координаты успешно внесены в список " ..
+				"{ed5a5a}(( /tch.menu » Взаимодействие с игроками ))",
+				500
+			)
+
+			chatService.send(localMessage)
+			Sound.new("tick.wav", 100).play()
+		end
 	end
 end
 
