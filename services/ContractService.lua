@@ -9,6 +9,7 @@ local encoding = require "encoding"
 local Linerunner = require "tch.entities.vehicles.linerunner"
 local Tanker = require "tch.entities.vehicles.tanker"
 local RoadTrain = require "tch.entities.vehicles.roadtrain"
+local Volvo = require "tch.entities.vehicles.volvo"
 
 local PortLosSantos = require "tch.entities.coords.portlossantos"
 local PortSanFierro = require "tch.entities.coords.portsanfierro"
@@ -23,7 +24,8 @@ local pointsService = PointsService.new()
 local trucks = { 
     Linerunner.new().id, 
     Tanker.new().id, 
-    RoadTrain.new().id 
+    RoadTrain.new().id,
+    Volvo.new().id
 }
 
 local portLosSantos = PortLosSantos.new()

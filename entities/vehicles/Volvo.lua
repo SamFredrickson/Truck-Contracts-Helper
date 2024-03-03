@@ -1,10 +1,10 @@
 local Vehicle = require "tch.entities.vehicles.vehicle"
 
-local Tanker = {
+local Volvo = {
     new = function()
-        local self = Vehicle.new(514)
+        local self = Vehicle.new(12528)
         return self
     end
 }
 
-return Tanker
+return Volvo
