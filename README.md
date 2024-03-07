@@ -1,4 +1,4 @@
-# [Помощник для работы с контрактами дальнобойщика на проекте Evolve Role Play](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.2.0/tch-release-v1.2.0.rar)
+# [Помощник для работы с контрактами дальнобойщика на проекте Evolve Role Play](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.3.0/tch-release-v1.3.0.rar)
 Данный помощник позволяет комфортно работать с контрактами и взаимодействовать с другими игроками.
 
 * Кликабельный список контрактов в правом углу экрана
@@ -14,7 +14,7 @@
 -   [Moonloader v026.5](https://www.blast.hk/threads/13305/)
 ## Установка
 ### Для пользователей
-1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.2.0/tch-release-v1.2.0.rar) архив с файлами скрипта
+1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.3.0/tch-release-v1.3.0.rar) архив с файлами скрипта
 2. Распаковать скачанный архив в папку **moonloader** в корне игры
 ### Для разработчиков
 1. Зайти в папку **moonloader** в корне игры
@@ -42,7 +42,7 @@
 #### Основное
 В данной вкладке содержатся базовые настройки.
 <p align="center">
-    <img src="https://i.imgur.com/D1Lpm3T.png" alt="Главное меню (основное)">
+    <img src="https://i.imgur.com/uzdh2f0.png" alt="Главное меню (основное)">
 </p>
 
 #### Контракты
@@ -56,14 +56,14 @@
 *Метка **TOP** ставится тем контрактам, которые должны визуально выделятся в списке контрактов, чтобы было очевидно, что контракт самый выгодный. Например **Нефтезавод №2 -> Порт СФ***.
 
 <p align="center">
-    <img src="https://i.imgur.com/puncrDP.png" alt="Главное меню (контракты)">
+    <img src="https://i.imgur.com/rp0IHSZ.png" alt="Главное меню (контракты)">
 </p>
 
 #### Взаимодействие с игроками
 В данной вкладке содержится таблица с ником, сообщением и координатами, полученными из рации (( **/j** )). При нажатии на кнопку **Мет.** ставится маркер на карте, благодаря которому вы сможете найти другого игрока для того, чтобы помочь ему.
 
 <p align="center">
-    <img src="https://i.imgur.com/bouRd6T.png" alt="Главное меню (взаимодействие с игроками)">
+    <img src="https://i.imgur.com/SWlyh2h.png" alt="Главное меню (взаимодействие с игроками)">
 </p>
 
 ## Контракты
