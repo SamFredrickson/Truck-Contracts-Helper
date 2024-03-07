@@ -179,6 +179,46 @@ local ContractService = {
             end
         end
 
+        self.getContractByAutoloadPoint = function(point, contracts)
+            if not point or #contracts <= 0 then
+                return false
+            end
+
+            for _, contract in pairs(contracts) do
+                if point.source:find(contract.source) then
+                    return contract
+                end
+            end
+
+            return false
+        end
+
+        self.CanAutotake = function(point)
+            if not point then
+                return false
+            end
+
+            local cars = carsService.get()
+            local players = playerService.get()
+
+            local player = playerService.getByHandle(
+                players, 
+                PLAYER_PED
+            )
+
+            for _, driver in pairs(players) do
+                local car = carsService.getByDriver(cars, driver)
+                if car 
+                and in_array(car.model, trucks) 
+                and driver.IsWithinDistance(point.coords, 50)
+                and driver.handle ~= player.handle then
+                    return false
+                end
+            end
+
+            return true
+        end
+
         return self
     end
 }

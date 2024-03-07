@@ -23,6 +23,7 @@ local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesent
 local PlayerService = require "tch.services.playerservice"
 local CarService = require "tch.services.carservice"
 local HttpService = require "tch.services.httpservice"
+local PointsService = require "tch.services.pointsservice"
 local Config = require "tch.common.config"
 
 local Linerunner = require "tch.entities.vehicles.linerunner"
@@ -66,6 +67,7 @@ local playerService = PlayerService.new()
 local carsService = CarService.new()
 local driverCoordinatesService = DriverCoordinatesEntryService.new()
 local httpService = HttpService.new()
+local pointService = PointsService.new()
 
 local isSettingsApplied = false
 local hasActiveContract = false
@@ -191,14 +193,18 @@ function main()
 			end
         )
 
+		-- Автообновление списка контрактов
 		scheduleService.create
 		(
 			function()
 				local contracts = ContractService.CONTRACTS
+				local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
 				if mainWindow.window[0]
 				and not hasActiveContract
+				and not isAutoloading
 				and mainWindow.hideCursor
-				and contractsService.CanSearch(contracts) then
+				and contractsService.CanSearch(contracts)
+				then
 					MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
 					local message = Message.new(constants.COMMANDS.MENU)
 					chatService.send(message)
@@ -207,6 +213,7 @@ function main()
 			3000
 		):run()
 
+		-- Авторазгрузка
 		scheduleService.create
 		(
 			function()
@@ -221,6 +228,7 @@ function main()
 			end
 		):run()
 
+		-- Прослушка комбинации клавиш для показывания курсора мыши
 		scheduleService.create
 		(
 			function()
@@ -232,6 +240,7 @@ function main()
 			40
 		):run()
 
+		-- Прослушка на возможность дать цвет ника, закрыть машину, показать окно
 		scheduleService.create
 		(
 			function()
@@ -276,6 +285,7 @@ function main()
 			10
 		):run()
 
+		-- Прослушка на дрифт
 		scheduleService.create
 		(
 			function()
@@ -314,6 +324,7 @@ function main()
 			end
 		):run()
 
+		-- Прослушка на удаление маркера при дистанции 20 метров
 		scheduleService.create
 		(
 			function()
@@ -326,6 +337,46 @@ function main()
 						local coords = { x = entry.x, y = entry.y, z = entry.z }
 						if player.IsWithinDistance(coords, 20) then
 							removeBlip(entry.blip)
+						end
+					end
+				end
+			end
+		):run()
+
+		-- Прослушка на нахождение рядом со складами
+		scheduleService.create
+		(
+			function()
+				local contracts = ContractService.CONTRACTS
+				if config.data.settings.autoload 
+				and contractsService.CanTake(contracts) 
+				and mainWindow.hideCursor then
+					local point = pointService.getPlayerAutoloadPoint()
+					local contract = contractsService.getContractByAutoloadPoint(point, contracts)
+					
+					if contract and not contractsService.CanAutotake(point) then
+						local messages = {
+							LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики"),
+							LocalMessage.new(" {FFFFFF}Повторим автозагрузку через {ed5a5a}5 секунд...")
+						}
+						for _, message in pairs(messages) do
+							chatService.send(message)
+						end
+						wait(5000)
+						return
+					end
+
+					if contract then
+						MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
+						MenuDialogue.FLAGS.CONTRACT.ID = contract.id
+						local messages = {
+							LocalMessage.new(" {FFFFFF}Автозагрузка начнется через {ed5a5a}одну секунду"),
+							Message.new(constants.COMMANDS.MENU),
+							Message.new(constants.COMMANDS.LOAD)
+						}
+						for _, message in pairs(messages) do
+							chatService.send(message)
+							wait(1000)
 						end
 					end
 				end
@@ -417,6 +468,8 @@ function sampev.onServerMessage(color, text)
 			{ IsActive = false },
 			ContractService.CONTRACTS
 		)
+		mainWindow.hideCursor = true
+		mainWindow.activate()
 	end
 
 	if text:find(serverMessageService.findByCode("has-active-contract").message) then
@@ -426,8 +479,8 @@ function sampev.onServerMessage(color, text)
 		hasActiveContract = true
 
 		local messages = {
-			LocalMessage.new("{FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
-			LocalMessage.new("{FFFFFF}Используйте меню {ed5a5a}(( /tmenu )){FFFFFF} контрактов, чтобы отменить его")
+			LocalMessage.new(" {FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
+			LocalMessage.new(" {FFFFFF}Используйте меню {ed5a5a}(( /tmenu )){FFFFFF} контрактов, чтобы отменить его")
 		}
 
 		for _, message in pairs(messages) do

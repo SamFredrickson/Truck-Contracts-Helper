@@ -142,6 +142,16 @@ local Settings = {
                                 imgui.SetTooltip(u8"Прятать список контрактов, \nесли есть активный контракт.")
                             end
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 115))
+                        imgui.BeginChild('##Autoload', imgui.ImVec2(250, 100), false)
+                            if imgui.Checkbox(u8(" Автозагрузка фуры"), imgui.new.bool(config.data.settings.autoload)) then
+                                config.data.settings.autoload = not config.data.settings.autoload
+                                config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Автоматически брать самый выгодный \nконракт и получать груз на точке загрузки.")
+                            end
+                        imgui.EndChild()
                     end
                     if active == 2 then
                         if imgui.BeginTabBar("Contract Tabs") then

@@ -33,11 +33,11 @@ local CONFIG = {
         clistChoice = 16,
         documentsDialogue = false,
         autounload = true,
-        autoload = false,
         drift = false,
         unloadDistance = 15,
         autolock = false,
-        autohideContractsList = false
+        autohideContractsList = false,
+        autoload = false
     }
 }
 
@@ -152,6 +152,41 @@ local POINTS = {
     }
 }
 
+local AUTOLOAD_POINTS = {
+    {
+        source = "Лесопилка №1",
+        coords = { x = -449.37, y = -66.01, z = 59.42 }
+    },
+    {
+        source = "Лесопилка №2",
+        coords = { x = -1978.81, y = -2434.78, z = 30.63 }
+    },
+    {
+        source = "Строительный завод №1",
+        coords = { x = -158.12, y = -289.38, z = 3.91 }
+    },
+    {
+        source = "Строительный завод №2",
+        coords = { x = 617.18, y = 1224.79, z = 11.72 }
+    },
+    {
+        source = "Нефтезавод №1",
+        coords = { x = 256.20, y = 1414.57, z = 10.71 }
+    },
+    {
+        source = "Нефтезавод №2",
+        coords = { x = -1046.84, y = -670.79, z = 32.35 }
+    },
+    {
+        source = "Склад угля №1",
+        coords = { x = 608.77, y = 847.84, z = -43.15 }
+    },
+    {
+        source = "Склад угля №2",
+        coords = { x = -1873.02, y = -1720.16, z = 21.75 }
+    }
+}
+
 SCRIPT_INFO.NAME = string.format(
     "Truck Contracts Helper %s (%d)", 
     SCRIPT_INFO.VERSION, 
@@ -217,6 +252,10 @@ local SERVER_MESSAGES = {
         code = "has-active-contract"
     },
     {
+        message = "У Вас нет активного контракта, получить его можно в транспортной компании",
+        code = "hasnt-active-contract"
+    },
+    {
         message = "Вам необходимо доставить в {.-}\"(.+)\" {.-}груз {.-}\"(.+)\" {.-}в количестве {.-}(%d+) т.",
         code = "delivery-start"
     },
@@ -269,5 +308,6 @@ return {
     POINTS = POINTS,
     TOP_CHOICES = TOP_CHOICES,
     SORT_CHOICES = SORT_CHOICES,
-    SERVER_MESSAGES = SERVER_MESSAGES
+    SERVER_MESSAGES = SERVER_MESSAGES,
+    AUTOLOAD_POINTS = AUTOLOAD_POINTS
 }

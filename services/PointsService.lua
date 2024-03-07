@@ -1,9 +1,12 @@
 local Points = require "tch.common.storage.points"
 local Service = require "tch.services.service"
+local PlayerService = require "tch.services.playerservice"
 local encoding = require "encoding"
+local constants = require "tch.constants"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
+local playerService = PlayerService.new()
 
 local PointsService = {
     new = function()
@@ -60,6 +63,20 @@ local PointsService = {
             end
             return false
         end
+
+        self.getPlayerAutoloadPoint = function()
+            local player = playerService.getByHandle(
+                playerService.get(), 
+                PLAYER_PED
+            )
+            for _, point in pairs(constants.AUTOLOAD_POINTS) do
+                if player.IsWithinDistance(point.coords, 15) then
+                    return point
+                end
+            end
+            return false
+        end
+
         return self
     end
 }
