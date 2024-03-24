@@ -743,9 +743,9 @@ function sampev.onGivePlayerMoney(money)
 	lua_thread.create
 	(
 		function()
+			wait(1000)
 			if not isSuccessfulRenting then return end
 			isSuccessfulRenting = false
-			wait(1000)
 			-- Обновляем конфигурацию
 			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
