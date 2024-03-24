@@ -8,6 +8,7 @@ local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesent
 local DriverCoordinatesEntryService = require "tch.services.drivercoordinatesentryservice"
 local ChatService = require "tch.services.chatservice"
 local PointsService = require "tch.services.pointsservice"
+local RedTheme = require "tch.gui.themes.red"
 local constants = require "tch.constants"
 
 encoding.default = "CP1251"
@@ -28,8 +29,8 @@ local Settings = {
             )
         )
 
-        local resX, resY = getScreenResolution()
-        local windowPosition = imgui.ImVec2(resX / 2, resY / 2)
+        local screenX, screenY = getScreenResolution()
+        local position = imgui.ImVec2(screenX / 2, screenY / 2)
         local size = imgui.ImVec2(620, 450)
 
         local active = 1
@@ -48,8 +49,9 @@ local Settings = {
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
+                RedTheme.new()
                 imgui.SetNextWindowPos(
-                    windowPosition, 
+                    position, 
                     imgui.Cond.FirstUseEver, 
                     imgui.ImVec2(0.5, 0.5)
                 )
@@ -150,6 +152,16 @@ local Settings = {
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Автоматически брать самый выгодный \nконракт и получать груз на точке загрузки.")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 145))
+                        imgui.BeginChild('##Statistics', imgui.ImVec2(250, 100), false)
+                            if imgui.Checkbox(u8(" Статистика заработка"), imgui.new.bool(config.data.settings.statistics)) then
+                                config.data.settings.statistics = not config.data.settings.statistics
+                                config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Автоматически открывать окно со статистикой \nи прочей информацией во время работы")
                             end
                         imgui.EndChild()
                     end
