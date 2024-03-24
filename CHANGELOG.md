@@ -1,5 +1,13 @@
 # Список изменений
 Все видимые изменения проекта будут документироваться в данном файле.
+## [1.4.0] - 2024-03-24
+
+### Добавлено
+- Статистика заработка и времени
+
+### Изменено
+- Сообщение при попытке автозагрузиться когда рядом другие дальнобойщики
+
 ## [1.3.0] - 2024-03-07
 
 ### Добавлено
@@ -45,3 +53,4 @@
 [1.1.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.1.2/tch-release-v1.1.2.rar
 [1.2.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.2.0/tch-release-v1.2.0.rar
 [1.3.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.3.0/tch-release-v1.3.0.rar
+[1.4.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.4.0/tch-release-v1.4.0.rar
