@@ -12,7 +12,7 @@
 -   [CLEO 4](https://cleo.li)
 -   [SAMPFUNCS v5.4.1 ](https://www.blast.hk/threads/17/) (для работы возможно потребуется установка [DirectX и Visual C++ Redistributable](https://www.dropbox.com/s/sgbnapzy66umupu/sampfuncs.zip?dl=1))
 -   [Moonloader v026.5](https://www.blast.hk/threads/13305/)
--   [Imgui](https://www.blast.hk/moonloader/files/misc/moon-imgui-1.1.5.zip) (зайти в папку moonloader, далее в папку lib и перетащить папку из архива внутрь)
+-   [Mimgui](https://github.com/THE-FYP/mimgui/releases/download/v1.7.0/mimgui-v1.7.0.zip) (скопировать папку '**mimgui**' (не содержимое папки) из архива в каталог '**moonloader/lib/**')
 ## Установка
 ### Для пользователей
 1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.4.0/tch-release-v1.4.0.rar) архив с файлами скрипта
