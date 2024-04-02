@@ -614,22 +614,18 @@ function sampev.onServerMessage(color, text)
 	end
 
 	if text:find(serverMessageService.findByCode("receive-documents").message) then
+		local contract = contractsService.findActive(ContractService.CONTRACTS)
+		
 		if config.data.settings.autohideContractsList then
 			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
-			local contract = contractsService.findActive(ContractService.CONTRACTS)
-
 			chatService.send(localMessage)
 			mainWindow.hideCursor = true
 			mainWindow.deactivate()
+		end
 
-			if contract then
-				race = Race.new(
-					contract, 
-					os.time()
-				)
-
-				infoWindow.information.race.value = trim(race.getContract())
-			end
+		if contract then
+			race = Race.new(contract, os.time())
+			infoWindow.information.race.value = trim(race.getContract())
 		end
 	end
 
