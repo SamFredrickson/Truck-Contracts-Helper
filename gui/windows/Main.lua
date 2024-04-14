@@ -8,9 +8,11 @@ local MenuDialogue = require "tch.samp.dialogues.menu"
 local ContractService = require "tch.services.contractservice"
 local ChatService = require "tch.services.chatservice"
 local RedTheme = require "tch.gui.themes.red"
+local Config = require "tch.common.config"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
+local config = Config.new()
 
 local chatService = ChatService.new()
 local contractsService = ContractService.new()
@@ -21,25 +23,41 @@ local Main = {
         self.hideCursor = true
 
         local screenX, screenY = getScreenResolution()
-        local position = imgui.ImVec2(screenX - 225, screenY - 220)
-        local size = imgui.ImVec2(410, 370)
+        local size = imgui.ImVec2(415, 370)
+
+        local position = imgui.ImVec2(
+            config.data.settings.contractsScreenX or screenX - 420, 
+            config.data.settings.contractsScreenY or screenY - 410
+        )
 
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
                 RedTheme.new()
+                
                 self.title = string.format(
                     u8"Список контрактов (%d)", 
                     #ContractService.CONTRACTS
                 )
-                imgui.SetNextWindowPos(
-                    position, 
-                    imgui.Cond.FirstUseEver, 
-                    imgui.ImVec2(0.5, 0.5)
-                )
+
+                imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver)
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
-                imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
+
+                imgui.Begin(
+                    self.title, 
+                    self.window, 
+                    imgui.WindowFlags.NoResize 
+                    + imgui.WindowFlags.NoCollapse
+                )
+
                 player.HideCursor = self.hideCursor
+
+                if not self.hideCursor and imgui.IsMouseDown(0) then
+                    position = imgui.GetWindowPos()
+                    config.data.settings.contractsScreenX = position.x
+                    config.data.settings.contractsScreenY = position.y
+                    config.save()
+                 end
 
                 for number, contract in ipairs(ContractService.CONTRACTS) do
                     if imgui.CollapsingHeader(u8(contract.toString())) then

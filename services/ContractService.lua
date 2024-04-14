@@ -100,7 +100,7 @@ local ContractService = {
                 player
             )
         
-            if car and in_array(car.model, trucks) then
+            if car and car.IsTruck() then
                 return #contracts > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
@@ -121,7 +121,7 @@ local ContractService = {
                 player
             )
         
-            if car and in_array(car.model, trucks) then
+            if car and car.IsTruck() then
                 return not sampIsDialogActive()
                 and not sampIsChatInputActive()
                 and not self.findActive(contracts)
@@ -144,7 +144,7 @@ local ContractService = {
                 player
             )
 
-            if car and in_array(car.model, trucks) then
+            if car and car.IsTruck() then
                 return #contracts > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
@@ -209,7 +209,7 @@ local ContractService = {
             for _, driver in pairs(players) do
                 local car = carsService.getByDriver(cars, driver)
                 if car 
-                and in_array(car.model, trucks) 
+                and car.IsTruck() 
                 and driver.IsWithinDistance(point.coords, 50)
                 and driver.handle ~= player.handle then
                     return false

@@ -1,6 +1,7 @@
 local imgui = require "mimgui"
 local encoding = require "encoding"
 local Config = require "tch.common.config"
+local Statistics = require "tch.common.storage.statistics"
 local Window = require "tch.gui.windows.window"
 local Sound = require "tch.entities.sounds.sound"
 local LocalMessage = require "tch.entities.chat.localmessage"
@@ -36,7 +37,8 @@ local Settings = {
         local active = 1
         local tabs = {
             "Основное", 
-            "Контракты", 
+            "Контракты",
+            "Статистика",
             "Взаимодействие с\n       игроками"
         }
 
@@ -239,6 +241,28 @@ local Settings = {
                         end
                     end
                     if active == 3 then
+                        if imgui.BeginTabBar("Statistics") then
+                            imgui.Columns(2)
+                            imgui.CenterColumnText(u8'Название') imgui.SetColumnWidth(-1, 285)
+                            imgui.NextColumn()
+                            imgui.CenterColumnText(u8'Видимость')
+                            imgui.Columns(1)
+                            imgui.Separator()
+                        end
+
+                        for index, item in pairs(Statistics.new().data) do
+                            imgui.Columns(2)
+                            imgui.CenterColumnText(u8(item.short_name)) 
+                            imgui.NextColumn()
+                            if imgui.Button(u8(item.hidden and "Показывать##" or "Скрывать##") .. index, imgui.ImVec2(155, 0)) then
+                                local statistics = Statistics.new()
+                                statistics.data[index].hidden = not item.hidden
+                                statistics.save()
+                            end
+                            imgui.Columns(1)
+                        end
+                    end
+                    if active == 4 then
                        if imgui.BeginTabBar("Players Tab") then
                             if imgui.BeginTabItem(u8"Координаты") then
                                 if #DriverCoordinatesEntryService.ENTRIES <= 0 then

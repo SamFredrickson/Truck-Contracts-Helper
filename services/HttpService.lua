@@ -40,16 +40,16 @@ local HttpService = {
                             chatService.send(
                                 LocalMessage.new(
                                     string.format(
-                                        "{FFFFFF}Доступна новая версия скрипта " .. 
-                                        "{ed5a5a}Truck Contracts Helper {FFFFFF}(%s).", 
+                                        " {FFFFFF}Доступна новая версия скрипта " .. 
+                                        " {ed5a5a}Truck Contracts Helper {FFFFFF}(%s).", 
                                         content.full_number
                                     )
                                 )
                             )
                             chatService.send(
                                 LocalMessage.new(
-                                    "{FFFFFF}Введите команду {ed5a5a}/tch.update {FFFFFF}" .. 
-                                    "чтобы начать скачивание по ссылке."
+                                    " {FFFFFF}Введите команду {ed5a5a}/tch.update {FFFFFF}" .. 
+                                    " чтобы начать скачивание по ссылке."
                                 )
                             )
                         end

@@ -14,6 +14,7 @@ local ContractsDialogue = require "tch.samp.dialogues.contracts"
 local SuggestionDialogue = require "tch.samp.dialogues.suggestion"
 local DocumentsDialogue = require "tch.samp.dialogues.documents"
 local IllegalCargoDialogue = require "tch.samp.dialogues.illegalcargo"
+local SkillDialogue = require "tch.samp.dialogues.skill"
 
 local Sound = require "tch.entities.sounds.sound"
 local Contract = require "tch.entities.contracts.contract"
@@ -35,18 +36,6 @@ local HttpService = require "tch.services.httpservice"
 local PointsService = require "tch.services.pointsservice"
 local Config = require "tch.common.config"
 
-local Linerunner = require "tch.entities.vehicles.linerunner"
-local Tanker = require "tch.entities.vehicles.tanker"
-local RoadTrain = require "tch.entities.vehicles.roadtrain"
-local Volvo = require "tch.entities.vehicles.volvo"
-
-local trucks = { 
-    Linerunner.new().id, 
-    Tanker.new().id, 
-    RoadTrain.new().id,
-	Volvo.new().id
-}
-
 script_author(constants.SCRIPT_INFO.AUTHOR)
 script_version(constants.SCRIPT_INFO.VERSION)
 script_moonloader(constants.SCRIPT_INFO.MOONLOADER)
@@ -63,6 +52,7 @@ local contractsDialogue = ContractsDialogue.new()
 local suggestionDialogue = SuggestionDialogue.new()
 local documentsDialogue = DocumentsDialogue.new()
 local illegalCargoDialogue = IllegalCargoDialogue.new()
+local skillDialogue = SkillDialogue.new()
 
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
@@ -85,6 +75,12 @@ local hasActiveContract = false
 local isSuccessfulRenting = false
 local race = nil
 
+local unloading = {
+	active = false, 
+	time = nil,
+	notified = false
+}
+
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
 end)
@@ -101,34 +97,39 @@ function main()
 		httpService.getAvailableUpdates()
 
 		if config.data.settings.truckRentedChoice == 1 then
-			lua_thread.create(function()
-				while true do
-					wait(10)
+			scheduleService.create
+			(
+				function()
 					if sampIsLocalPlayerSpawned() then
 						mainWindow.hideCursor = true
 						mainWindow.activate()
 						return
 					end
-				end
-			end)
+				end,
+				10
+			):run()
 		end
 
-		sampRegisterChatCommand(
+		sampRegisterChatCommand
+		(
 			"tch.info",
 			function() infoWindow.toggle() end
 		)
 
-		sampRegisterChatCommand(
+		sampRegisterChatCommand
+		(
             "tch.list",
 			function() mainWindow.toggle() end
         )
 
-		sampRegisterChatCommand(
+		sampRegisterChatCommand
+		(
             "tch.menu",
 			function() settingsWindow.toggle() end
         )
 
-		sampRegisterChatCommand(
+		sampRegisterChatCommand
+		(
             "tch.update",
 			function()
 				if not httpService.version then
@@ -149,40 +150,43 @@ function main()
 					return
 				end
 
-				lua_thread.create(function()
-					local messages = {
-						LocalMessage.new(
-							"{FFFFFF}Не забудьте распаковать {ed5a5a}архив {FFFFFF}в папке " .. 
-							"{ed5a5a}moonloader {FFFFFF}с заменой старых файлов." 
-						),
-						LocalMessage.new(
-							"{FFFFFF}Переход по ссылке для скачивания через {ed5a5a}3 секунды..." 
-						)
-					}
-					local commands = {
-						string.format(
-							"start %s", 
-							httpService.version.release_url
-						),
-						string.format(
-							"start %s", 
-							constants.SCRIPT_INFO.CHANGELOG_URL
-						)
-					}
-					
-					for _, message in pairs(messages) do
-						chatService.send(message)
+				lua_thread.create
+				(
+					function()
+						local messages = {
+							LocalMessage.new(
+								" {FFFFFF}Не забудьте распаковать {ed5a5a}архив {FFFFFF}в папке " .. 
+								" {ed5a5a}moonloader {FFFFFF}с заменой старых файлов." 
+							),
+							LocalMessage.new(
+								" {FFFFFF}Переход по ссылке для скачивания через {ed5a5a}3 секунды..." 
+							)
+						}
+						local commands = {
+							string.format(
+								"start %s", 
+								httpService.version.release_url
+							),
+							string.format(
+								"start %s", 
+								constants.SCRIPT_INFO.CHANGELOG_URL
+							)
+						}
+						for _, message in pairs(messages) do
+							chatService.send(message)
+						end
+						wait(3000)
+						for _, command in pairs(commands) do
+							os.execute(command)
+						end
+						return
 					end
-					wait(3000)
-					for _, command in pairs(commands) do
-						os.execute(command)
-					end
-					return
-				end)
+				)
 			end
         )
 
-		sampRegisterChatCommand(
+		sampRegisterChatCommand
+		(
             "tch.coords.send",
 			function(args) 
 				if args == nil or args == "" then
@@ -196,8 +200,10 @@ function main()
 					PLAYER_PED
 				)
 
-				local message = Message.new(
-					string.format(
+				local message = Message.new
+				(
+					string.format
+					(
 						"/j %s %f|%f|%f", 
 						args, 
 						player.coords.x, 
@@ -217,6 +223,7 @@ function main()
 				local contracts = ContractService.CONTRACTS
 				local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
 				if mainWindow.window[0]
+				and not SkillDialogue.IS_PARSING
 				and not hasActiveContract
 				and not isAutoloading
 				and mainWindow.hideCursor
@@ -234,13 +241,43 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.autounload then
-					local contracts = ContractService.CONTRACTS
-					if contractsService.CanUnload(contracts) then
+				local contracts = ContractService.CONTRACTS
+				local canUnload = contractsService.CanUnload(contracts)
+				
+				if config.data.settings.autounload 
+				and canUnload 
+				and not unloading.active then
+					local message = Message.new(constants.COMMANDS.UNLOAD)
+					chatService.send(message)
+					unloading.active = true
+					wait(1000)
+				end
+
+				if config.data.settings.autoload 
+				and canUnload
+				and unloading.active
+				and unloading.time then
+					local difftime = os.difftime(unloading.time, os.time())
+					if difftime < 0 then
 						local message = Message.new(constants.COMMANDS.UNLOAD)
 						chatService.send(message)
 						wait(1000)
 					end
+				end
+
+				if config.data.settings.autounload
+				and canUnload
+				and unloading.active
+				and not unloading.notified
+				and not unloading.time then
+					unloading.notified = true
+					local message = LocalMessage.new( 
+						" Контракт больше неактуален или Вы взяли не свой груз", 
+						0, 
+						constants.COLORS.DARK_GRAY
+					)
+					chatService.send(message)
+					wait(1000)
 				end
 			end
 		):run()
@@ -275,7 +312,7 @@ function main()
 						player
 					)
 
-					if car and in_array(car.model, trucks) then
+					if car and car.IsTruck() then
 						-- Меняем цвет ника
 						if config.data.settings.clistChoice > 0 then
 							local message = Message.new(
@@ -293,6 +330,11 @@ function main()
 							chatService.send(message)
 							wait(1000)
 						end
+						-- Обновляем опыт
+						SkillDialogue.IS_PARSING = true
+						local message = Message.new(constants.COMMANDS.SKILL)
+						chatService.send(message)
+						wait(1000)
 						-- Активируем окно с контрактами
 						if config.data.settings.truckRentedChoice > 0 then
 							mainWindow.hideCursor = true
@@ -381,7 +423,7 @@ function main()
 					if contract and not contractsService.CanAutotake(point) then
 						local messages = {
 							LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики"),
-							LocalMessage.new(" {FFFFFF}Подождите {ed5a5a}5 секунд{FFFFFF} или возьмите груз вручную {ed5a5a}(( /tch.list ))")
+							LocalMessage.new(" {FFFFFF}Подождите {ed5a5a}5 секунд{FFFFFF} или возьмите груз вручную {ed5a5a}(( /tch.list » Взять контракт и загрузить ))")
 						}
 						for _, message in pairs(messages) do
 							chatService.send(message)
@@ -416,12 +458,12 @@ function main()
 					local illegalCargoAvailableAt = config.data.settings.lastIllegalCargoUnloadedAt + TWO_HOURS
 					local illegalCargoDiffTime = os.difftime(illegalCargoAvailableAt, os.time())
 					local illegalCargoAvailableAtFormatted = Time.new(illegalCargoDiffTime).toString()
-					infoWindow.information.cargo.value = illegalCargoAvailableAtFormatted
+					infoWindow.information.cargo.setValue(illegalCargoAvailableAtFormatted)
 					
 					-- Обновление таймингов рейса
 					if race then
 						local raceDiffTime = os.difftime(race.finishedAt or os.time(), race.startedAt)
-						infoWindow.information.raceTime.value = Time.new(raceDiffTime).toString()
+						infoWindow.information.raceTime.setValue(Time.new(raceDiffTime).toString())
 					end
 				end
 			end
@@ -490,6 +532,24 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		return false
 	end
 
+	if title:find(skillDialogue.title) and SkillDialogue.IS_PARSING then
+		SkillDialogue.IS_PARSING = false
+		local level = tonumber(text:match("Уровень:	{.-}(%d+) ур."))
+		local current, goal = text:match("Опыт:	{.-}(%d+) из (%d+)")
+		local value = goal - current
+		local valueFormatted = Number.new(value < 0 and 0 or value).format(0, "", "{F2545B}")
+		local title = string.format(
+			"Опыта до %s уровня:",
+			level == constants.MAX_TRUCK_DRIVER_LEVEL and constants.MAX_TRUCK_DRIVER_LEVEL or level + 1
+		)
+
+		infoWindow.information.experienceToLevel.setValue(valueFormatted)
+		infoWindow.information.experienceToLevel.setTitle(title)
+
+		sampSendDialogResponse(id, 0, _, _)
+		return false
+	end
+
 	if config.data.settings.documentsDialogue then
 		if documentsDialogue.title == title then
 			sampSendDialogResponse(id, 0, _, _)
@@ -518,35 +578,52 @@ function sampev.onSendDialogResponse(dialogId, button, list, input)
 		-- Обновляем тайминги
 		config.data.settings.lastIllegalCargoUnloadedAt = os.time()
 		local illegalCargoAvailableAt = config.data.settings.lastIllegalCargoUnloadedAt + TWO_HOURS
-		local illegalCargoAvailableAtFormatted = Time.new(os.difftime(illegalCargoAvailableAt, os.time())).toString()
-		infoWindow.information.cargo.value = illegalCargoAvailableAtFormatted
+		local illegalCargoDiffTime = os.difftime(illegalCargoAvailableAt, os.time())
+		local illegalCargoAvailableAtFormatted = Time.new(illegalCargoDiffTime).toString()
+		infoWindow.information.cargo.setValue(illegalCargoAvailableAtFormatted)
 
 		-- Обновляем информацию о текущем рейсе
 		race = Race.new(nil, os.time())
-		infoWindow.information.race.value = "{32CD32}Нелегальный груз{FFFFFF}"
 
+		infoWindow.information.race.setValue("{32CD32}Нелегальный груз{FFFFFF}")
 		config.save()
+
+		if config.data.settings.autohideContractsList then
+			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
+			chatService.send(localMessage)
+			mainWindow.hideCursor = true
+			mainWindow.deactivate()
+		end
 	end
 end
 
 function sampev.onServerMessage(color, text)
+	-- Логика при появлении собщения в чате, что контракт отменен
 	if text:find(serverMessageService.findByCode("contract-canceled").message) then
 		hasActiveContract = false
+		unloading.active = false
+		unloading.time = nil
+		unloading.notified = false
+		
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 		local contract = contractsService.update(
 			contractId,
 			{ IsActive = false },
 			ContractService.CONTRACTS
 		)
-		mainWindow.hideCursor = true
-		mainWindow.activate()
+
+		if config.data.settings.autohideContractsList then
+			mainWindow.hideCursor = true
+			mainWindow.activate()
+		end
 
 		-- Обнуляем текущий рейс
 		race = nil
-		infoWindow.information.race.value = "—"
-		infoWindow.information.raceTime.value = Time.new(0).toString()
+		infoWindow.information.race.setValue("—")
+		infoWindow.information.raceTime.setValue(Time.new(0).toString())
 	end
 
+	-- Логика при появлении собщения в чате, что игрок имеет активный контракт
 	if text:find(serverMessageService.findByCode("has-active-contract").message) then
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
@@ -570,8 +647,13 @@ function sampev.onServerMessage(color, text)
 		return false
 	end
 
+	-- Логика при успешной доставки обычного груза
 	if text:find(serverMessageService.findByCode("delivery-success").message) then
 		hasActiveContract = false
+		unloading.active = false
+		unloading.time = nil
+		unloading.notified = false
+
 		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 		local contract = contractsService.update(
 			contractId,
@@ -586,7 +668,7 @@ function sampev.onServerMessage(color, text)
 
 		-- Обновляем количество рейсов за сессию
 		config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
-		infoWindow.information.raceQuantity.value = config.data.settings.sessionRaceQuantity
+		infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
 
 		-- Устанавливаем время окончания рейса
 		if race then race.finishedAt = os.time() end
@@ -594,25 +676,41 @@ function sampev.onServerMessage(color, text)
 		config.save()
 	end
 
+	-- Логика при успешной доставке нелегального груза
 	if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
+		hasActiveContract = false
+		unloading.active = false
+		unloading.time = nil
+		unloading.notified = false
+
 		-- Обновляем количество рейсов за сессию
 		config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
-		infoWindow.information.raceQuantity.value = config.data.settings.sessionRaceQuantity
+		infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
+		config.save()
 
 		-- Устанавливаем время окончания рейса
 		if race then race.finishedAt = os.time() end
 
-		config.save()
+		if config.data.settings.autohideContractsList then
+			mainWindow.hideCursor = true
+			mainWindow.activate()
+		end
 	end
 
+	-- Логика при получении опыта за груз
 	if text:find(serverMessageService.findByCode("contract-experience").message) then
 		-- Обновляем количество полученного опыта за сессию
 		local experience = text:match(serverMessageService.findByCode("contract-experience").message)
 		config.data.settings.sessionExperience = config.data.settings.sessionExperience + experience
-		infoWindow.information.sessionExperience.value = Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}")
+		infoWindow.information.sessionExperience.setValue(Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}"))
 		config.save()
+
+		SkillDialogue.IS_PARSING = true
+		local message = Message.new(constants.COMMANDS.SKILL, 1000)
+		chatService.send(message)
 	end
 
+	-- Логика при получении документов на груз
 	if text:find(serverMessageService.findByCode("receive-documents").message) then
 		local contract = contractsService.findActive(ContractService.CONTRACTS)
 		
@@ -625,8 +723,41 @@ function sampev.onServerMessage(color, text)
 
 		if contract then
 			race = Race.new(contract, os.time())
-			infoWindow.information.race.value = trim(race.getContract())
+			infoWindow.information.race.setValue(trim(race.getContract()))
 		end
+	end
+
+	-- Учитываем полученный штраф в статистику заработка
+	if text:find(serverMessageService.findByCode("fine").message) then
+		local fine = text:match(serverMessageService.findByCode("fine").message)
+
+		-- Обновляем конфигурацию
+		config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - fine
+		config.data.settings.totalEarnings = config.data.settings.totalEarnings - fine
+		
+		-- Обновляем значения в окне
+		infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+		infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+		config.save()
+	end
+
+	-- Логика при получении сообщения об освобождении места для груза
+	if config.data.settings.autounload
+	and contractsService.CanUnload(ContractService.CONTRACTS) 
+	and text:find(serverMessageService.findByCode("waiting-for-free-place").message) then
+		local minutes, seconds = text:match(serverMessageService.findByCode("waiting-for-free-place").message)
+		local time = ((tonumber(minutes) * 60) + tonumber(seconds))
+		unloading.time = os.time() + time
+		local message = LocalMessage.new(
+			string.format(" {FFFFFF}Авторазгрузка начнется через {ed5a5a}%s секунд", time)
+		)
+		chatService.send(message)
+		return false
+	end
+
+	if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
+		return false
 	end
 
 	-- Проверка на аренду фуры, чтобы учесть статистику
@@ -705,9 +836,9 @@ function sampev.onInitGame()
 	config.data.settings.sessionRaceQuantity = 0
 	config.data.settings.sessionExperience = 0
 
-	infoWindow.information.sessionEarnings.value = Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}")
-	infoWindow.information.sessionExperience.value = Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}")
-	infoWindow.information.raceQuantity.value = config.data.settings.sessionRaceQuantity
+	infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+	infoWindow.information.sessionExperience.setValue(Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}"))
+	infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
 
 	config.save()
 end
@@ -723,14 +854,14 @@ function sampev.onGivePlayerMoney(money)
 		player
 	)
 
-	if car and in_array(car.model, trucks) then
+	if car and car.IsTruck() then
 		-- Обновляем конфигурацию
 		config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
 		config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
 		
 		-- Обновляем значения в окне
-		infoWindow.information.sessionEarnings.value = Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}")
-		infoWindow.information.totalEarnings.value = Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}")
+		infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+		infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
 
 		config.save()
 	end
@@ -747,8 +878,8 @@ function sampev.onGivePlayerMoney(money)
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
 			
 			-- Обновляем значения в окне
-			infoWindow.information.sessionEarnings.value = Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}")
-			infoWindow.information.totalEarnings.value = Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}")
+			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
 
 			config.save()
 			return

@@ -5,9 +5,9 @@ local u8 = encoding.UTF8
 
 local SCRIPT_INFO = {
     AUTHOR = "SAM",
-    VERSION = "1.4.0",
+    VERSION = "1.5.0",
     MOONLOADER = 026,
-    VERSION_NUMBER = 6,
+    VERSION_NUMBER = 7,
     VERSION_URL = "https://raw.githubusercontent.com/SamFredrickson/Truck-Contracts-Helper/master/version.json",
     CHANGELOG_URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper/blob/master/CHANGELOG.md",
     URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper",
@@ -18,13 +18,16 @@ local COLORS = {
 	GREEN = 0x00FF00,
 	GOLD = 0xFFD700,
 	SEASHELL = 0xFFF5EE,
-	PINK = 0xFFC0CB
+	PINK = 0xFFC0CB,
+    DARK_GRAY = 0xBABABA
 }
 
 local REGEXP = {
     MULTIPLE_CONTRACTS = "({AE433D}%d+%. {FFFFFF}%W+ №%d %-%> %W+{A9A9A9}%W+{33AA33}%d+ из %d+ т%.	{A9A9A9}[A-Za-z0-9%s%-]+)",
     SINGLE_CONTRACT = "{AE433D}(%d+)%. {FFFFFF}(%W+ №%d+) %-%> (%W+){A9A9A9}(%W+){33AA33}(%d+) из (%d+) т%.	{A9A9A9}([A-Za-z0-9%s%-]+)"
 }
+
+local MAX_TRUCK_DRIVER_LEVEL = 26
 
 local CONFIG = {
     PATH = "tch/settings.ini",
@@ -43,7 +46,9 @@ local CONFIG = {
         sessionRaceQuantity = 0,
         sessionExperience = 0,
         lastIllegalCargoUnloadedAt = 0,
-        statistics = true
+        statistics = true,
+        contractsScreenX = nil,
+        contractsScreenY = nil
     }
 }
 
@@ -204,7 +209,8 @@ local COMMANDS = {
     LOAD    = "/tload",
     UNLOAD  = "/tunload",
     CLIST   = "/clist %d",
-    LOCK    = "/lock"
+    LOCK    = "/lock",
+    SKILL   = "/tskill"
 }
 
 local COLOR_LIST = {
@@ -290,12 +296,75 @@ local SERVER_MESSAGES = {
         code = "contract-experience"
     },
     {
+        message  = "Штраф в размере {.-}(%d+)$ {.-}будет списан с банковского счёта",
+        code = "fine"
+    },
+    {
+        message = "Освобождаем место под Ваш груз. Пожалуйста подождите (%d+):(%d+)",
+        code = "waiting-for-free-place"
+    },
+    {
+        message = "У Вас отсутствует груз",
+        code = "no-cargo-attached"
+    },
+    {
         message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+)",
         code = "truck-driver-chat-new-message"
     },
     {
         message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+) (.+)|(.+)|(.+)",
         code = "truck-driver-chat-new-message-with-coords"
+    }
+}
+
+local STATISTICS_ENTRIES =  {
+    {
+        name = "Рейс:",
+        code = "race",
+        short_name = "Рейс:",
+        hidden = false
+    },
+    {
+        name = "Время в рейсе:",
+        code = "race-time",
+        short_name = "Время в рейсе:",
+        hidden = false
+    },
+    {
+        name = "Нелегальный груз доступен через:",
+        code = "illegal-cargo-time",
+        short_name = "Нелегальный груз доступен через:",
+        hidden = false
+    },
+    {
+        name = "Опыта за сессию:",
+        code = "session-experience",
+        short_name = "Опыта за сессию:",
+        hidden = false
+    },
+    {
+        name = "Опыта до N уровня:",
+        code = "experience-to-level",
+        short_name = "Опыта до N уровня:",
+        hidden = false
+    },
+    {
+        name = "Рейсов за сессию:",
+        code = "session-races",
+        short_name = "Рейсов за сессию:",
+        hidden = false
+    },
+    {
+        name = "Заработано за сессию:",
+        code = "session-earnings",
+        short_name = "Заработано за сессию:",
+        hidden = false
+    },
+    {
+        name = "Заработано за всё время:",
+        code = "total-earnings",
+        short_name = "Заработано за всё время:",
+        hidden = false
     }
 }
 
@@ -319,5 +388,7 @@ return {
     TOP_CHOICES = TOP_CHOICES,
     SORT_CHOICES = SORT_CHOICES,
     SERVER_MESSAGES = SERVER_MESSAGES,
-    AUTOLOAD_POINTS = AUTOLOAD_POINTS
+    AUTOLOAD_POINTS = AUTOLOAD_POINTS,
+    STATISTICS_ENTRIES = STATISTICS_ENTRIES,
+    MAX_TRUCK_DRIVER_LEVEL = MAX_TRUCK_DRIVER_LEVEL
 }

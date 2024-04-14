@@ -1,8 +1,20 @@
 local Player = require "tch.entities.player"
+local Linerunner = require "tch.entities.vehicles.linerunner"
+local Tanker = require "tch.entities.vehicles.tanker"
+local RoadTrain = require "tch.entities.vehicles.roadtrain"
+local Volvo = require "tch.entities.vehicles.volvo"
+
+local trucks = { 
+    Linerunner.new().id, 
+    Tanker.new().id, 
+    RoadTrain.new().id,
+	Volvo.new().id
+}
 
 local Car = {
     new = function(id, name, model, health, speed, maxPassengers, isLocked, handle)
         local self = {}
+
         self.id = id
         self.name = name
         self.model = model
@@ -45,6 +57,15 @@ local Car = {
                 end
             end
             return result
+        end
+
+        self.IsTruck = function()
+            for _, truck in pairs(trucks) do
+                if self.model == truck then
+                    return true
+                end
+            end
+            return false
         end
 
         return self

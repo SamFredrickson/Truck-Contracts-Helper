@@ -8,6 +8,7 @@ local Window = require "tch.gui.windows.window"
 local InfoTheme = require "tch.gui.themes.info"
 local constants = require "tch.constants"
 local Config = require "tch.common.config"
+local Statistics = require "tch.common.storage.statistics"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -20,16 +21,51 @@ local illegalCargoAvailableAtFormatted = Time.new(os.difftime(illegalCargoAvaila
 local sessionEarnings = Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}")
 local totalEarnings = Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}")
 local sessionExperience = Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}")
+local experienceToLevel = Number.new(0).format(0, "", "{F2545B}")
 local raceQuantity = config.data.settings.sessionRaceQuantity
 
-local information = Information.new(
-    InfoEntry.new("Рейс:", "—"),
-    InfoEntry.new("Время в рейсе:", raceTime),
-    InfoEntry.new("Нелегальный груз доступен через:", illegalCargoAvailableAtFormatted),
-    InfoEntry.new("Опыта за сессию:", sessionExperience),
-    InfoEntry.new("Рейсов за сессию:", raceQuantity),
-    InfoEntry.new("Заработано за сессию:", sessionEarnings),
-    InfoEntry.new("Заработано за всё время:", totalEarnings)
+local information = Information.new
+(
+    InfoEntry.new(
+        "Рейс:", 
+        "race", 
+        "—"
+    ),
+    InfoEntry.new(
+        "Время в рейсе:", 
+        "race-time", 
+        raceTime
+    ),
+    InfoEntry.new(
+        "Нелегальный груз доступен через:", 
+        "illegal-cargo-time", 
+        illegalCargoAvailableAtFormatted
+    ),
+    InfoEntry.new(
+        "Опыта за сессию:", 
+        "session-experience",
+        sessionExperience
+    ),
+    InfoEntry.new(
+        "Опыта до N уровня:", 
+        "experience-to-level",
+        experienceToLevel
+    ),
+    InfoEntry.new(
+        "Рейсов за сессию:",
+        "session-races",
+        raceQuantity
+    ),
+    InfoEntry.new(
+        "Заработано за сессию:",
+        "session-earnings",
+        sessionEarnings
+    ),
+    InfoEntry.new(
+        "Заработано за всё время:",
+        "total-earnings",
+        totalEarnings
+    )
 )
 
 local Info = {
@@ -37,6 +73,7 @@ local Info = {
         local self = Window.new()
         self.title = u8("Информация")
         self.information = information
+        self.entries = {}
 
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(-2, screenY - 25)
@@ -48,6 +85,8 @@ local Info = {
                 InfoTheme.new()
                 imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver)
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
+                player.HideCursor = true
+
                 imgui.Begin(
                     self.title, 
                     self.window, 
@@ -56,63 +95,20 @@ local Info = {
                     + imgui.WindowFlags.NoCollapse 
                     + imgui.WindowFlags.NoMove
                 )
-                player.HideCursor = true
 
-                imgui.TextColoredRGB(
-                    string.format(
-                        "{FFFFFF}%s %s{FFFFFF} |", 
-                        information.race.title, 
-                        information.race.value
-                    )
-                )
-                imgui.SameLine()
-                imgui.TextColoredRGB(
-                    string.format(
-                        information.raceTime.value == "00:00:00" and "{FFFFFF}%s {F2545B}%s{FFFFFF} |" or "{FFFFFF}%s {32CD32}%s{FFFFFF} |", 
-                        information.raceTime.title, 
-                        information.raceTime.value
-                    )
-                )
-                imgui.SameLine()
-                imgui.TextColoredRGB(
-                    string.format(
-                        information.cargo.value ~= "00:00:00" and "{FFFFFF}%s {F2545B}%s{FFFFFF} |" or "{FFFFFF}%s {32CD32}%s{FFFFFF} |",
-                        information.cargo.title, 
-                        information.cargo.value
-                    )
-                )
-                imgui.SameLine()
-                imgui.TextColoredRGB(
-                    string.format(
-                        information.sessionExperience.value == "0" and "{FFFFFF}%s {F2545B}%s{FFFFFF} |" or "{FFFFFF}%s {32CD32}%s{FFFFFF} |",  
-                        information.sessionExperience.title, 
-                        information.sessionExperience.value
-                    )
-                )
-                imgui.SameLine()
-                imgui.TextColoredRGB(
-                    string.format(
-                        information.raceQuantity.value > 0 and "{FFFFFF}%s {32CD32}%s{FFFFFF} |" or "{FFFFFF}%s {F2545B}%s{FFFFFF} |", 
-                        information.raceQuantity.title, 
-                        information.raceQuantity.value
-                    )
-                )
-                imgui.SameLine()
-                imgui.TextColoredRGB(
-                    string.format(
-                        "{FFFFFF}%s {32CD32}%s${FFFFFF} |", 
-                        information.sessionEarnings.title, 
-                        information.sessionEarnings.value
-                    )
-                )
-                imgui.SameLine()
-                imgui.TextColoredRGB(
-                    string.format(
-                        "{FFFFFF}%s {32CD32}%s$", 
-                        information.totalEarnings.title, 
-                        information.totalEarnings.value
-                    )
-                )
+                for _, entry in pairs(information) do 
+                   self.entries[entry.id] = entry
+                end
+                
+                for _, entry in pairs(self.entries) do
+                    for _, statistics in pairs(Statistics.new().data) do
+                        if statistics.code == entry.code and not statistics.hidden then
+                            imgui.TextColoredRGB(entry.getValue())
+                            imgui.SameLine()
+                        end
+                    end
+                end
+
                 imgui.End()
             end
         )
