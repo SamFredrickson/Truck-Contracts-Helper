@@ -1,5 +1,20 @@
 # Список изменений
 Все видимые изменения проекта будут документироваться в данном файле.
+## [1.5.0] - 2024-04-16
+
+### Добавлено
+- Вкладка "Статистика" в главном меню
+- Информация о количестве опыта до следующего уровня
+- Сообщение о том, что игрок взял не свой груз или контракт неактуален (только для опции "Авторазгрузка")
+
+### Изменено
+- Сообщение при наличии других дальнобойщиков на месте разгрузки (только для опции "Авторазгрузка")
+
+### Исправлено
+- Флуд в чат при авторазгрузке
+- Неучитывание штрафов в статистику заработка
+- Сбив предыдущей позиции списка контрактов на экране
+
 ## [1.4.0] - 2024-03-24
 
 ### Добавлено
@@ -54,3 +69,4 @@
 [1.2.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.2.0/tch-release-v1.2.0.rar
 [1.3.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.3.0/tch-release-v1.3.0.rar
 [1.4.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.4.0/tch-release-v1.4.0.rar
+[1.5.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.5.0/tch-release-1.5.0.rar
