@@ -73,12 +73,11 @@ local Main = {
                             MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
                             MenuDialogue.FLAGS.CONTRACT.ID = contract.id
                             chatService.send(Message.new(
-                                constants.COMMANDS.MENU,
-                                1000
+                                constants.COMMANDS.MENU
                             ))
                             chatService.send(Message.new(
                                 constants.COMMANDS.LOAD,
-                                1000
+                                2000
                             ))
                         end
                         imgui.SameLine()
