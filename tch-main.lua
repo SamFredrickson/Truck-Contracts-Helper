@@ -322,19 +322,19 @@ function main()
 								)
 							)
 							chatService.send(message)
-							wait(1000)
+							wait(2000)
 						end
 						-- Закрываем машину
 						if config.data.settings.autolock and car.isLocked <= 0 then
 							local message = Message.new(constants.COMMANDS.LOCK)
 							chatService.send(message)
-							wait(1000)
+							wait(2000)
 						end
 						-- Обновляем опыт
 						SkillDialogue.IS_PARSING = true
 						local message = Message.new(constants.COMMANDS.SKILL)
 						chatService.send(message)
-						wait(1000)
+						wait(2000)
 						-- Активируем окно с контрактами
 						if config.data.settings.truckRentedChoice > 0 then
 							mainWindow.hideCursor = true
