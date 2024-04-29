@@ -213,12 +213,10 @@ local Settings = {
                                         if data.point.sort < 16 then
                                             local next = pointsService.findBySort(data.point.sort + 1)
                                             local current = data.point
-
                                             pointsService.update(
                                                 data.id, 
                                                 { sort = next.point.sort }
                                             )
-
                                             pointsService.update(
                                                 next.id, 
                                                 { sort = current.sort }

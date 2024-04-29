@@ -13,6 +13,7 @@ local Config = require "tch.common.config"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local config = Config.new()
+local SCROLLBAR_SIZE = 11
 
 local chatService = ChatService.new()
 local contractsService = ContractService.new()
@@ -34,7 +35,6 @@ local Main = {
             function() return self.window[0] end,
             function(player)
                 RedTheme.new()
-                
                 self.title = string.format(
                     u8"Список контрактов (%d)", 
                     #ContractService.CONTRACTS
@@ -64,7 +64,6 @@ local Main = {
                         if imgui.Button(string.format(u8"Взять контракт ##%d", contract.id)) and self.window[0] and contractsService.CanTake(ContractService.CONTRACTS) then
                             MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
                             MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-                            
                             chatService.send(Message.new(
                                 constants.COMMANDS.MENU
                             ))
@@ -73,11 +72,9 @@ local Main = {
                         if imgui.Button(string.format(u8"Взять контракт и загрузить ##%d", contract.id)) and self.window[0] and contractsService.CanTake(ContractService.CONTRACTS) then
                             MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
                             MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-                            
                             chatService.send(Message.new(
                                 constants.COMMANDS.MENU
                             ))
-
                             chatService.send(Message.new(
                                 constants.COMMANDS.LOAD,
                                 1000
@@ -90,9 +87,9 @@ local Main = {
                             ))
                         end
                         imgui.SameLine()
-                        if imgui.Button(string.format(u8"Отм ##%d", contract.id)) then
+                        local cancelButtonSize = #ContractService.CONTRACTS <= SCROLLBAR_SIZE and imgui.ImVec2(41, 0) or nil
+                        if imgui.Button(string.format(u8"Отм ##%d", contract.id), cancelButtonSize) then
                             MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = true
-
                             chatService.send(Message.new(
                                 constants.COMMANDS.MENU
                             ))
