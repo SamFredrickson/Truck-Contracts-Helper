@@ -253,7 +253,7 @@ function main()
 					wait(1000)
 				end
 
-				if config.data.settings.autoload 
+				if config.data.settings.autounload 
 				and canUnload
 				and unloading.active
 				and unloading.time then
@@ -435,14 +435,15 @@ function main()
 					if contract then
 						MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
 						MenuDialogue.FLAGS.CONTRACT.ID = contract.id
+						local startTimeMessage = LocalMessage.new(" {FFFFFF}Автозагрузка начнется через {ed5a5a}две секунды")
+						chatService.send(startTimeMessage)
 						local messages = {
-							LocalMessage.new(" {FFFFFF}Автозагрузка начнется через {ed5a5a}одну секунду"),
 							Message.new(constants.COMMANDS.MENU),
 							Message.new(constants.COMMANDS.LOAD)
 						}
 						for _, message in pairs(messages) do
 							chatService.send(message)
-							wait(1000)
+							wait(2000)
 						end
 					end
 				end
