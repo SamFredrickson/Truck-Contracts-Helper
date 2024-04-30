@@ -1,5 +1,12 @@
 # Список изменений
 Все видимые изменения проекта будут документироваться в данном файле.
+## [1.5.1] - 2024-04-30
+
+### Исправлено
+- Маленький размер кнопки "Отм." в меню контрактов, если мало контрактов
+- Не работает авторазгрузка при выключенной опции "Автозагрузка"
+- Высокая вероятность появления защиты от флуда в чате ("Не флуди!")
+
 ## [1.5.0] - 2024-04-16
 
 ### Добавлено
@@ -70,3 +77,4 @@
 [1.3.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.3.0/tch-release-v1.3.0.rar
 [1.4.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.4.0/tch-release-v1.4.0.rar
 [1.5.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.5.0/tch-release-1.5.0.rar
+[1.5.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.5.1/tch-release-1.5.1.rar
