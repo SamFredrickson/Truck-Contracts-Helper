@@ -64,35 +64,24 @@ local Main = {
                         if imgui.Button(string.format(u8"Взять контракт ##%d", contract.id)) and self.window[0] and contractsService.CanTake(ContractService.CONTRACTS) then
                             MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
                             MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-                            chatService.send(Message.new(
-                                constants.COMMANDS.MENU
-                            ))
+                            chatService.send(Message.new(constants.COMMANDS.MENU))
                         end
                         imgui.SameLine()
                         if imgui.Button(string.format(u8"Взять контракт и загрузить ##%d", contract.id)) and self.window[0] and contractsService.CanTake(ContractService.CONTRACTS) then
                             MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
+                            MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
                             MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-                            chatService.send(Message.new(
-                                constants.COMMANDS.MENU
-                            ))
-                            chatService.send(Message.new(
-                                constants.COMMANDS.LOAD,
-                                2000
-                            ))
+                            chatService.send(Message.new(constants.COMMANDS.MENU))
                         end
                         imgui.SameLine()
                         if imgui.Button(string.format(u8"Загрузить ##%d", contract.id)) then
-                            chatService.send(Message.new(
-                                constants.COMMANDS.LOAD
-                            ))
+                            chatService.send(Message.new(constants.COMMANDS.LOAD))
                         end
                         imgui.SameLine()
                         local cancelButtonSize = #ContractService.CONTRACTS <= SCROLLBAR_SIZE and imgui.ImVec2(41, 0) or nil
                         if imgui.Button(string.format(u8"Отм ##%d", contract.id), cancelButtonSize) then
                             MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = true
-                            chatService.send(Message.new(
-                                constants.COMMANDS.MENU
-                            ))
+                            chatService.send(Message.new(constants.COMMANDS.MENU))
                         end
                     end
                 end

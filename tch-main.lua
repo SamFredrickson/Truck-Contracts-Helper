@@ -433,18 +433,14 @@ function main()
 					end
 
 					if contract then
+						MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
 						MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
 						MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-						local startTimeMessage = LocalMessage.new(" {FFFFFF}Автозагрузка начнется через {ed5a5a}две секунды")
+						local startTimeMessage = LocalMessage.new(" {FFFFFF}Автозагрузка начата! Пожалуйста, {ed5a5a}подождите...")
+						local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
 						chatService.send(startTimeMessage)
-						local messages = {
-							Message.new(constants.COMMANDS.MENU),
-							Message.new(constants.COMMANDS.LOAD)
-						}
-						for _, message in pairs(messages) do
-							chatService.send(message)
-							wait(2000)
-						end
+						chatService.send(menuCommandMessage)
+						wait(1000)
 					end
 				end
 			end
@@ -601,6 +597,7 @@ end
 function sampev.onServerMessage(color, text)
 	-- Логика при появлении собщения в чате, что контракт отменен
 	if text:find(serverMessageService.findByCode("contract-canceled").message) then
+		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 		hasActiveContract = false
 		unloading.active = false
 		unloading.time = nil
@@ -626,6 +623,7 @@ function sampev.onServerMessage(color, text)
 
 	-- Логика при появлении собщения в чате, что игрок имеет активный контракт
 	if text:find(serverMessageService.findByCode("has-active-contract").message) then
+		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
 		ContractService.CONTRACTS = {}
@@ -650,6 +648,7 @@ function sampev.onServerMessage(color, text)
 
 	-- Логика при успешной доставки обычного груза
 	if text:find(serverMessageService.findByCode("delivery-success").message) then
+		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 		hasActiveContract = false
 		unloading.active = false
 		unloading.time = nil
@@ -677,8 +676,19 @@ function sampev.onServerMessage(color, text)
 		config.save()
 	end
 
+	-- Логика при выборе контракта из списка
+	if text:find(serverMessageService.findByCode("delivery-start").message) then
+		if config.data.settings.autoload
+		and MenuDialogue.FLAGS.CONTRACT.IS_LOADING
+		and pointService.getPlayerAutoloadPoint() then
+			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
+			chatService.send(loadCommandMessage)
+		end
+	end
+
 	-- Логика при успешной доставке нелегального груза
 	if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
+		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 		hasActiveContract = false
 		unloading.active = false
 		unloading.time = nil
@@ -713,15 +723,14 @@ function sampev.onServerMessage(color, text)
 
 	-- Логика при получении документов на груз
 	if text:find(serverMessageService.findByCode("receive-documents").message) then
+		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 		local contract = contractsService.findActive(ContractService.CONTRACTS)
-		
 		if config.data.settings.autohideContractsList then
 			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
 			chatService.send(localMessage)
 			mainWindow.hideCursor = true
 			mainWindow.deactivate()
 		end
-
 		if contract then
 			race = Race.new(contract, os.time())
 			infoWindow.information.race.setValue(trim(race.getContract()))

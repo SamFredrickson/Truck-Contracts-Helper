@@ -14,7 +14,12 @@ local Menu = {
     end,
     FLAGS = {
 		IS_PARSING_CONTRACTS_LAST_STEP = false,
-        CONTRACT = { IS_TAKING = false, IS_CANCELING = false, ID = 0 },
+        CONTRACT = {
+            ID = 0,
+            IS_LOADING = false,
+            IS_TAKING = false, 
+            IS_CANCELING = false, 
+        },
         IS_PARSING_CONTRACTS = false,
         IS_UNLOADING = false
 	}
