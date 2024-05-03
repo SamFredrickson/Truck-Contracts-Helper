@@ -314,6 +314,10 @@ local SERVER_MESSAGES = {
     {
         message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+) (.+)|(.+)|(.+)",
         code = "truck-driver-chat-new-message-with-coords"
+    },
+    {
+        message = "Не флуди!",
+        code = "flood"
     }
 }
 

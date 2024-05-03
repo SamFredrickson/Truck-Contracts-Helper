@@ -691,6 +691,11 @@ function sampev.onServerMessage(color, text)
 		end
 	end
 
+	if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
+		local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
+		chatService.send(loadCommandMessage)
+	end
+
 	-- Ћогика при успешной доставке нелегального груза
 	if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
 		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
