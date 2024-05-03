@@ -7,6 +7,7 @@ local Message = require "tch.entities.chat.message"
 local MenuDialogue = require "tch.samp.dialogues.menu"
 local ContractService = require "tch.services.contractservice"
 local ChatService = require "tch.services.chatservice"
+local RedThemeTransparent = require "tch.gui.themes.redtransparent"
 local RedTheme = require "tch.gui.themes.red"
 local Config = require "tch.common.config"
 
@@ -34,7 +35,7 @@ local Main = {
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
-                RedTheme.new()
+                ((config.data.settings.transparentContracts and self.hideCursor) and RedThemeTransparent or RedTheme).new()
                 self.title = string.format(
                     u8"Список контрактов (%d)", 
                     #ContractService.CONTRACTS

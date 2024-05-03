@@ -166,6 +166,16 @@ local Settings = {
                                 imgui.SetTooltip(u8"Автоматически открывать окно со статистикой \nи прочей информацией во время работы")
                             end
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 145))
+                        imgui.BeginChild('##TransparentContracts', imgui.ImVec2(250, 100), false)
+                            if imgui.Checkbox(u8(" Прозрачные контракты"), imgui.new.bool(config.data.settings.transparentContracts)) then
+                                config.data.settings.transparentContracts = not config.data.settings.transparentContracts
+                                config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши")
+                            end
+                        imgui.EndChild()
                     end
                     if active == 2 then
                         if imgui.BeginTabBar("Contract Tabs") then
@@ -235,6 +245,11 @@ local Settings = {
                                     end
                                     imgui.Columns(1)
                                 end
+                                imgui.EndTabItem()
+                            end
+                            if imgui.BeginTabItem(u8("Фильтрация")) then
+                                imgui.Text(u8("Тута пока ничего нема"))
+                                imgui.EndTabItem()
                             end
                         end
                     end

@@ -48,7 +48,8 @@ local CONFIG = {
         lastIllegalCargoUnloadedAt = 0,
         statistics = true,
         contractsScreenX = nil,
-        contractsScreenY = nil
+        contractsScreenY = nil,
+        transparentContracts = true
     }
 }
 
