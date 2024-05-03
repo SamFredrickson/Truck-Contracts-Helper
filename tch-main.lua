@@ -769,7 +769,7 @@ function sampev.onServerMessage(color, text)
 		local time = ((tonumber(minutes) * 60) + tonumber(seconds))
 		unloading.time = os.time() + time
 		local message = LocalMessage.new(
-			string.format(" {FFFFFF}Авторазгрузка начнется через {ed5a5a}%s секунд", time)
+			string.format(" {FFFFFF}Авторазгрузка начата! Пожалуйста, подождите {ed5a5a}%s секунд...", time)
 		)
 		chatService.send(message)
 		return false
