@@ -223,7 +223,6 @@ function main()
 				local contracts = ContractService.CONTRACTS
 				local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
 				if mainWindow.window[0]
-				and not SkillDialogue.IS_PARSING
 				and not hasActiveContract
 				and not isAutoloading
 				and mainWindow.hideCursor
