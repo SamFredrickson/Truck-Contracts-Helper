@@ -678,11 +678,16 @@ function sampev.onServerMessage(color, text)
 
 	-- Ћогика при выборе контракта из списка
 	if text:find(serverMessageService.findByCode("delivery-start").message) then
-		if config.data.settings.autoload
-		and MenuDialogue.FLAGS.CONTRACT.IS_LOADING
-		and pointService.getPlayerAutoloadPoint() then
+		local isLoading = MenuDialogue.FLAGS.CONTRACT.IS_LOADING
+		local isNextToAutoloadPoint = pointService.getPlayerAutoloadPoint()
+		
+		if isLoading and isNextToAutoloadPoint then
 			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
 			chatService.send(loadCommandMessage)
+		end
+		if isLoading and not isNextToAutoloadPoint then
+			local message = LocalMessage.new(" ¬ы слишком далеко от места загрузки товара", 0, constants.COLORS.DARK_GRAY)
+			chatService.send(message)
 		end
 	end
 
