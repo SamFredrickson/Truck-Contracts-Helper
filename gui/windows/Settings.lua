@@ -44,9 +44,10 @@ local Settings = {
 
         local clists = imgui.new['const char*'][#constants.COLOR_LIST](constants.COLOR_LIST)
         local selectedClist = imgui.new.int(config.data.settings.clistChoice)
-
         local truckRentedChoices = imgui.new['const char*'][#constants.TRUCK_RENTED_CHOICES](constants.TRUCK_RENTED_CHOICES)
         local selectedTruckRentedChoice = imgui.new.int(config.data.settings.truckRentedChoice)
+        local autorepairPrice = imgui.new.int(config.data.settings.repairPrice)
+        local autorefillPrice = imgui.new.int(config.data.settings.refillPrice)
 
         imgui.OnFrame(
             function() return self.window[0] end,
@@ -73,7 +74,8 @@ local Settings = {
                     if active == 1 then
                         imgui.BeginChild('##ClistChild', imgui.ImVec2(275, 400), false)
                             imgui.Text(u8"Цвет ника во время работы:")
-                            if imgui.Combo(
+                            if imgui.Combo
+                            (
                                 "##Clist", 
                                 selectedClist, 
                                 clists, 
@@ -86,7 +88,8 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(195, 5))
                         imgui.BeginChild('##ContractsChild', imgui.ImVec2(385, 400), false)
                             imgui.Text(u8"Открывать список контрактов, если:")
-                            if imgui.Combo(
+                            if imgui.Combo
+                            (
                                 "##Contracts", 
                                 selectedTruckRentedChoice, 
                                 truckRentedChoices, 
@@ -176,6 +179,69 @@ local Settings = {
                                 imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши")
                             end
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 180))
+                        imgui.BeginChild("##AutomechanicSuggestionsText")
+                            imgui.Text(u8(" Принимать предложения"))
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Автоматически принимать предложения от механиков")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 175))
+                        imgui.BeginChild("##AutomechanicSuggestions")
+                            if imgui.Checkbox(u8(" Ремонта"), imgui.new.bool(config.data.settings.autorepair)) then
+                                config.data.settings.autorepair = not config.data.settings.autorepair
+                                config.save()
+                            end
+                            imgui.SameLine()
+                            if imgui.Checkbox(u8(" Заправки"), imgui.new.bool(config.data.settings.autorefill)) then
+                                config.data.settings.autorefill = not config.data.settings.autorefill
+                                config.save()
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 210))
+                        imgui.BeginChild("##AutomechanicSuggestionsRepairConditionText")
+                            imgui.TextColoredRGB(" Если цена ремонта")
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Если цена ремонта меньше либо равна выбранной")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 210))
+                        imgui.BeginChild("##AutomechanicSuggestionsRepairPrice")
+                            imgui.PushItemWidth(250)
+                            if imgui.SliderInt
+                            (
+                                "##repairPrice", 
+                                autorepairPrice, 
+                                constants.MECHANIC.MIN_REPIAR_PRICE, 
+                                constants.MECHANIC.MAX_REPAIR_PRICE
+                            ) then
+                                config.data.settings.repairPrice = autorepairPrice[0]
+                                config.save()
+                            end
+                            imgui.PopItemWidth()
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 240))
+                        imgui.BeginChild("##AutomechanicSuggestionsRefillConditionText")
+                            imgui.TextColoredRGB(" Если цена заправки")
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Если цена заправки меньше либо равна выбранной")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 240))
+                        imgui.BeginChild("##AutomechanicSuggestionsRefillPrice")
+                            imgui.PushItemWidth(250)
+                            if imgui.SliderInt
+                            (
+                                "##refillPrice", 
+                                autorefillPrice, 
+                                constants.MECHANIC.MIN_REFILL_PRICE, 
+                                constants.MECHANIC.MAX_REFILL_PRICE
+                            ) then
+                                config.data.settings.refillPrice = autorefillPrice[0]
+                                config.save()
+                            end
+                            imgui.PopItemWidth()
+                        imgui.EndChild()
                     end
                     if active == 2 then
                         if imgui.BeginTabBar("Contract Tabs") then
@@ -254,15 +320,12 @@ local Settings = {
                         end
                     end
                     if active == 3 then
-                        if imgui.BeginTabBar("Statistics") then
-                            imgui.Columns(2)
-                            imgui.CenterColumnText(u8'Название') imgui.SetColumnWidth(-1, 285)
-                            imgui.NextColumn()
-                            imgui.CenterColumnText(u8'Видимость')
-                            imgui.Columns(1)
-                            imgui.Separator()
-                        end
-
+                        imgui.Columns(2)
+                        imgui.CenterColumnText(u8'Название') imgui.SetColumnWidth(-1, 285)
+                        imgui.NextColumn()
+                        imgui.CenterColumnText(u8'Видимость')
+                        imgui.Columns(1)
+                        imgui.Separator()
                         for index, item in pairs(Statistics.new().data) do
                             imgui.Columns(2)
                             imgui.CenterColumnText(u8(item.short_name)) 

@@ -49,8 +49,19 @@ local CONFIG = {
         statistics = true,
         contractsScreenX = nil,
         contractsScreenY = nil,
-        transparentContracts = true
+        transparentContracts = true,
+        autorepair = false,
+        autorefill = false,
+        repairPrice = 100,
+        refillPrice = 20000
     }
+}
+
+local MECHANIC = {
+    MIN_REPIAR_PRICE = 100,
+    MAX_REPAIR_PRICE = 10000,
+    MIN_REFILL_PRICE = 0,
+    MAX_REFILL_PRICE = 500000
 }
 
 local CONTRACTS = {
@@ -317,6 +328,30 @@ local SERVER_MESSAGES = {
         code = "truck-driver-chat-new-message-with-coords"
     },
     {
+        message = "([A-Za-z_]+)%[%d+%] предложил Вам отремонтировать транспорт. Цена: (%d+) $.",
+        code = "repair-suggestion"
+    },
+    {
+        message = "([A-Za-z_]+)%[%d+%] предложил Вам заправить транспортное средство на (%d+) литров. Цена: (%d+) $.",
+        code = "refill-suggestion"
+    },
+    {
+        message = "Вы согласились на ремонт транспортного средства",
+        code = "repair-accepted"
+    },
+    {
+        message = "Вы уже ремонтировались.",
+        code = "repair-already"
+    },
+    {
+        message = "Вы купили (%d+) литров топлива",
+        code = "refill-accepted"
+    },
+    {
+        message = "Вашей машине не требуется ремонт",
+        code = "repair-not-required"
+    },
+    {
         message = "Не флуди!",
         code = "flood"
     }
@@ -395,5 +430,6 @@ return {
     SERVER_MESSAGES = SERVER_MESSAGES,
     AUTOLOAD_POINTS = AUTOLOAD_POINTS,
     STATISTICS_ENTRIES = STATISTICS_ENTRIES,
-    MAX_TRUCK_DRIVER_LEVEL = MAX_TRUCK_DRIVER_LEVEL
+    MAX_TRUCK_DRIVER_LEVEL = MAX_TRUCK_DRIVER_LEVEL,
+    MECHANIC = MECHANIC
 }

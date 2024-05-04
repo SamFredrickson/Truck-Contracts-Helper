@@ -15,6 +15,8 @@ local SuggestionDialogue = require "tch.samp.dialogues.suggestion"
 local DocumentsDialogue = require "tch.samp.dialogues.documents"
 local IllegalCargoDialogue = require "tch.samp.dialogues.illegalcargo"
 local SkillDialogue = require "tch.samp.dialogues.skill"
+local RepairSuggestion = require "tch.samp.dialogues.repairsuggestion"
+local RefillSuggestion = require "tch.samp.dialogues.refillsuggestion"
 
 local Sound = require "tch.entities.sounds.sound"
 local Contract = require "tch.entities.contracts.contract"
@@ -53,6 +55,8 @@ local suggestionDialogue = SuggestionDialogue.new()
 local documentsDialogue = DocumentsDialogue.new()
 local illegalCargoDialogue = IllegalCargoDialogue.new()
 local skillDialogue = SkillDialogue.new()
+local repairSuggestion = RepairSuggestion.new()
+local refillSuggestion = RefillSuggestion.new()
 
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
@@ -84,6 +88,13 @@ local unloading = {
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
 end)
+
+-- Swack_Hokage[441] предложил Вам отремонтировать транспорт. Цена: 100 $.
+-- Swack_Hokage[441] предложил Вам заправить транспортное средство на 8 литров. Цена: 800 $.
+-- Используйте: {26931C}"Y"{4682B4} - принять предложение. {ae433d}"N"{4682B4} - отклонить предложение
+
+--{FFFFFF}Ремонт | {ae433d}Предложение   {FFFFFF}Alexei_bazaka предлагает Вам отремонтировать транспортное средство за $100
+--{FFFFFF}Заправка | {ae433d}Предложение   {FFFFFF}Alexei_bazaka предлагает Вам заправить транспортное средство на 19 литров за $2831
 
 function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
@@ -465,6 +476,16 @@ function main()
 			end
 		):run()
 
+		-- Проверка на активное предложение от механика
+		scheduleService.create
+		(
+			function()
+				if repairSuggestion.active then setGameKeyState(11, 255) end
+				if refillSuggestion.active then setGameKeyState(11, 255) end
+			end,
+			10
+		):run()
+
 		while true do
 			wait(-1)
 		end
@@ -543,6 +564,20 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		infoWindow.information.experienceToLevel.setTitle(title)
 
 		sampSendDialogResponse(id, 0, _, _)
+		return false
+	end
+
+	if config.data.settings.autorepair 
+	and title:find(repairSuggestion.title) 
+	and repairSuggestion.active then
+		sampSendDialogResponse(id, 1, _, _)
+		return false
+	end
+
+	if config.data.settings.autorefill 
+	and title:find(refillSuggestion.title) 
+	and refillSuggestion.active then
+		sampSendDialogResponse(id, 1, _, _)
 		return false
 	end
 
@@ -773,6 +808,36 @@ function sampev.onServerMessage(color, text)
 		)
 		chatService.send(message)
 		return false
+	end
+
+	if config.data.settings.autorepair and text:find(serverMessageService.findByCode("repair-suggestion").message) then
+		local name, price = text:match(serverMessageService.findByCode("repair-suggestion").message)
+		if tonumber(price) <= config.data.settings.repairPrice then
+			repairSuggestion.active = true
+		end
+	end
+
+	if config.data.settings.autorefill and text:find(serverMessageService.findByCode("refill-suggestion").message) then
+		local name, liters, price = text:match(serverMessageService.findByCode("refill-suggestion").message)
+		if tonumber(price) <= config.data.settings.refillPrice then
+			refillSuggestion.active = true
+		end
+	end
+
+	if text:find(serverMessageService.findByCode("repair-accepted").message) then
+		repairSuggestion.active = false
+	end
+
+	if text:find(serverMessageService.findByCode("repair-already").message) then
+		repairSuggestion.active = false
+	end
+
+	if text:find(serverMessageService.findByCode("repair-not-required").message) then
+		repairSuggestion.active = false
+	end
+
+	if text:find(serverMessageService.findByCode("refill-accepted").message) then
+		refillSuggestion.active = false
 	end
 
 	if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
