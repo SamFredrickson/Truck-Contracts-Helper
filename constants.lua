@@ -23,8 +23,8 @@ local COLORS = {
 }
 
 local REGEXP = {
-    MULTIPLE_CONTRACTS = "({AE433D}%d+%. {FFFFFF}%W+ №%d %-%> %W+{A9A9A9}%W+{33AA33}%d+ из %d+ т%.	{A9A9A9}[A-Za-z0-9%s%-]+)",
-    SINGLE_CONTRACT = "{AE433D}(%d+)%. {FFFFFF}(%W+ №%d+) %-%> (%W+){A9A9A9}(%W+){33AA33}(%d+) из (%d+) т%.	{A9A9A9}([A-Za-z0-9%s%-]+)"
+    MULTIPLE_CONTRACTS = "({.-}%d+%. {.-}%W+ №%d %-%> %W+{.-}%W+{.-}%d+ из %d+ т%.	{.-}[%w\128-\255-]+)",
+    SINGLE_CONTRACT = "{.-}(%d+)%. {.-}(%W+ №%d+) %-%> (%W+){.-}(%W+){.-}(%d+) из (%d+) т%.	{.-}([%w\128-\255-]+)"
 }
 
 local MAX_TRUCK_DRIVER_LEVEL = 26
