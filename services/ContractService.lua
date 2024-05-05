@@ -3,6 +3,7 @@ local Service = require "tch.services.service"
 local PlayerService = require "tch.services.playerservice"
 local CarService = require "tch.services.carservice"
 local PointsService = require "tch.services.pointsservice"
+local Filters = require "tch.common.storage.filters"
 local constants = require "tch.constants"
 local encoding = require "encoding"
 
@@ -35,9 +36,11 @@ local ContractService = {
     new = function()
         local self = Service.new()
 
-        self.make = function(text)
+        self.parse = function(text)
             local list = {}
+            local filters = Filters.new()
             for contract in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
+                local isAllowed = false
                 local id, source, destination, cargo, amountFirst, amountSecond, company 
                     = contract:match(constants.REGEXP.SINGLE_CONTRACT)
         
@@ -60,7 +63,55 @@ local ContractService = {
                     company
                 )
 
-                table.insert(list, entity)
+                -- Проверяем является ли контракт скрытым
+                local isSource = 
+                (
+                    function()
+                        for _, filterSource in pairs(filters.data.sources) do
+                            if source:find(filterSource.name) then
+                               for _, filterDestination in pairs(filterSource.destinations) do
+                                    if not filterDestination.hidden 
+                                    and destination:find(filterDestination.short_name) then
+                                        return true
+                                    end
+                               end
+                            end
+                        end
+                        return false
+                    end
+                )()
+
+                -- Проверяем на название компании
+                local isCompany = 
+                (
+                    function()
+                        if filters.data.company == nil or #string.gsub(filters.data.company, "^%s*(.-)%s*$", "%1") == 0 then return true end
+                        if filters.data.company:find(entity.company:lower()) then return true end
+                        return false
+                    end
+                )()
+                
+                -- Проверяем на количество тонн
+                local isProperTonQuantity =
+                (
+                    function()
+                        if tonumber(entity.amount.first) > filters.data.minTonsQuantity then return true end
+                        return false
+                    end
+                )()
+
+                -- Проверяем на метку топ (всегда показывать лучшие контракты)
+                local isTop = 
+                (
+                    function()
+                        if filters.data.top and entity.top then return true end
+                        return false
+                    end
+                )()
+
+                if (isSource and isCompany and isProperTonQuantity) or isTop then 
+                    table.insert(list, entity) 
+                end
             end
 
             table.sort(list, function(a, b)

@@ -512,7 +512,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 	if contractsDialogue.title == title and MenuDialogue.FLAGS.IS_PARSING_CONTRACTS then
 		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = true -- устанавливаем данный флаг в "true", чтобы не вызвать циклическое открытие
 		sampSendDialogResponse(id, 0, _, _)
-		ContractService.CONTRACTS = contractsService.make(text)
+		ContractService.CONTRACTS = contractsService.parse(text)
 		return false
 	end
 

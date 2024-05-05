@@ -28,6 +28,10 @@ local REGEXP = {
 }
 
 local MAX_TRUCK_DRIVER_LEVEL = 26
+local MIN_CONTRACTS_SIZE = 1
+local MAX_CONTRACTS_SIZE = 16
+local MIN_TONS_QUANTITY = 1
+local MAX_TONS_QUANTITY = 1600
 
 local CONFIG = {
     PATH = "tch/settings.ini",
@@ -207,6 +211,90 @@ local AUTOLOAD_POINTS = {
     {
         source = "Склад угля №2",
         coords = { x = -1873.02, y = -1720.16, z = 21.75 }
+    }
+}
+
+local CONTRACT_FILTERS = {
+    company = "",
+    top = true,
+    minTonsQuantity = 1,
+    sources = {
+        { 
+            name = "Лесопилка №1",
+            x = 10,
+            y = 155,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Лесопилка №2",
+            x = 10,
+            y = 187,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Строительный завод №1",
+            x = 10,
+            y = 217,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Строительный завод №2", 
+            x = 10,
+            y = 247,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Нефтезавод №1",
+            x = 10,
+            y = 277,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Нефтезавод №2",
+            x = 10,
+            y = 307,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Склад угля №1",
+            x = 10,
+            y = 337,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Склад угля №2",
+            x = 10,
+            y = 367,
+            destinations = {
+                { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
+                { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        }
+    },
+    destinations = {
+        { name = "Порт ЛС", hidden = false },
+        { name = "Порт СФ", hidden = false }
     }
 }
 
@@ -431,5 +519,10 @@ return {
     AUTOLOAD_POINTS = AUTOLOAD_POINTS,
     STATISTICS_ENTRIES = STATISTICS_ENTRIES,
     MAX_TRUCK_DRIVER_LEVEL = MAX_TRUCK_DRIVER_LEVEL,
-    MECHANIC = MECHANIC
+    MIN_CONTRACTS_SIZE = MIN_CONTRACTS_SIZE,
+    MAX_CONTRACTS_SIZE = MAX_CONTRACTS_SIZE,
+    MIN_TONS_QUANTITY = MIN_TONS_QUANTITY,
+    MAX_TONS_QUANTITY = MAX_TONS_QUANTITY,
+    MECHANIC = MECHANIC,
+    CONTRACT_FILTERS = CONTRACT_FILTERS
 }

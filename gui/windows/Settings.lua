@@ -1,7 +1,9 @@
 local imgui = require "mimgui"
+local ffi = require 'ffi'
 local encoding = require "encoding"
 local Config = require "tch.common.config"
 local Statistics = require "tch.common.storage.statistics"
+local Filters = require "tch.common.storage.filters"
 local Window = require "tch.gui.windows.window"
 local Sound = require "tch.entities.sounds.sound"
 local LocalMessage = require "tch.entities.chat.localmessage"
@@ -19,6 +21,7 @@ local config = Config.new()
 local pointsService = PointsService.new()
 local driverCoordinatesService = DriverCoordinatesEntryService.new()
 local chatService = ChatService.new()
+local filters = Filters.new()
 
 local Settings = {
     new = function()
@@ -48,6 +51,8 @@ local Settings = {
         local selectedTruckRentedChoice = imgui.new.int(config.data.settings.truckRentedChoice)
         local autorepairPrice = imgui.new.int(config.data.settings.repairPrice)
         local autorefillPrice = imgui.new.int(config.data.settings.refillPrice)
+        local company = imgui.new.char[256](u8(filters.data.company))
+        local minTonsQuantity = imgui.new.int(filters.data.minTonsQuantity)
 
         imgui.OnFrame(
             function() return self.window[0] end,
@@ -256,7 +261,6 @@ local Settings = {
                                 imgui.CenterColumnText(u8'Опции')
                                 imgui.Columns(1)
                                 imgui.Separator()
-
                                 for index, data in pairs(pointsService.get()) do
                                     imgui.Columns(4)
                                     imgui.CenterColumnText(string.format("%s -> %s", u8(data.point.source), u8(data.point.destination)))
@@ -266,19 +270,11 @@ local Settings = {
                                     imgui.CenterColumnText(tostring(data.point.sort))
                                     imgui.NextColumn()
                                     if imgui.Button(u8"Выше##" .. data.id) then
-                                        if data.point.sort > 1 then
+                                        if data.point.sort > constants.MIN_CONTRACTS_SIZE then
                                                 local previous = pointsService.findBySort(data.point.sort - 1)
                                                 local current = data.point
-
-                                                pointsService.update(
-                                                    data.id, 
-                                                    { sort = previous.point.sort }
-                                                )
-
-                                                pointsService.update(
-                                                    previous.id, 
-                                                    { sort = current.sort }
-                                                )
+                                                pointsService.update(data.id, { sort = previous.point.sort })
+                                                pointsService.update(previous.id, { sort = current.sort })
                                             end
                                         end
                                     if imgui.IsItemHovered() then
@@ -286,17 +282,11 @@ local Settings = {
                                     end
                                     imgui.SameLine()
                                     if imgui.Button(u8"Ниже##" .. data.id) then
-                                        if data.point.sort < 16 then
+                                        if data.point.sort < constants.MAX_CONTRACTS_SIZE then
                                             local next = pointsService.findBySort(data.point.sort + 1)
                                             local current = data.point
-                                            pointsService.update(
-                                                data.id, 
-                                                { sort = next.point.sort }
-                                            )
-                                            pointsService.update(
-                                                next.id, 
-                                                { sort = current.sort }
-                                            )
+                                            pointsService.update(data.id, { sort = next.point.sort })
+                                            pointsService.update(next.id, { sort = current.sort })
                                         end
                                     end
                                     if imgui.IsItemHovered() then
@@ -314,7 +304,114 @@ local Settings = {
                                 imgui.EndTabItem()
                             end
                             if imgui.BeginTabItem(u8("Фильтрация")) then
-                                imgui.Text(u8("Тута пока ничего нема"))
+                                imgui.SetCursorPos(imgui.ImVec2(5, 40))
+                                imgui.BeginChild("##CompanyName")
+                                    imgui.Text(u8(" Транспортная компания:"))
+                                    if imgui.IsItemHovered() then
+                                        imgui.SetTooltip(u8"Показывать контракты, которые принадлежат указанной компании")
+                                    end
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(175, 35))
+                                imgui.BeginChild("##CompanyNameField")
+                                    imgui.PushItemWidth(270)
+                                    if imgui.InputText(u8("##company"), company, ffi.sizeof(company)) then
+                                        filters.data.company = u8:decode(ffi.string(company):lower())
+                                        filters.save()
+                                    end
+                                    imgui.PopItemWidth()
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(5, 70))
+                                imgui.BeginChild("##MinTonsQuantityText")
+                                    imgui.Text(u8(" Минимальное кол-во тонн:"))
+                                    if imgui.IsItemHovered() then
+                                        imgui.SetTooltip(u8"Скрывать контракты у которых остаток \nменьше либо равен выбранному значению")
+                                    end
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(175, 65))
+                                imgui.BeginChild("##MinTonsQuantitySlider")
+                                    imgui.PushItemWidth(270)
+                                    if imgui.SliderInt
+                                    (
+                                        "##tonsQuantity", 
+                                        minTonsQuantity, 
+                                        constants.MIN_TONS_QUANTITY, 
+                                        constants.MAX_TONS_QUANTITY
+                                    ) then
+                                        filters.data.minTonsQuantity = minTonsQuantity[0]
+                                        filters.save()
+                                    end
+                                    imgui.PopItemWidth()
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(5, 115))
+                                imgui.BeginChild("##OtherFiltersText")
+                                    imgui.Text(u8(" Фильтры для всех портов:"))
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(175, 96))
+                                imgui.BeginChild('##AllowedDestinations')
+                                if imgui.Checkbox(u8(" Порт Лос-Сантос "), imgui.new.bool(not filters.data.destinations[1].hidden)) then
+                                    filters.data.destinations[1].hidden = not filters.data.destinations[1].hidden
+                                    for index, source in pairs(filters.data.sources) do
+                                        filters.data.sources[index].destinations[1].hidden 
+                                            = filters.data.destinations[1].hidden
+                                    end
+                                    filters.save()
+                                end
+                                if imgui.IsItemHovered() then
+                                    imgui.SetTooltip(u8"Показывать контракты в порт Лос-Сантос")
+                                end
+                                imgui.SameLine()
+                                if imgui.Checkbox(u8(" Порт Сан-Фиерро"), imgui.new.bool(not filters.data.destinations[2].hidden)) then
+                                    filters.data.destinations[2].hidden = not filters.data.destinations[2].hidden
+                                    for index, source in pairs(filters.data.sources) do
+                                        filters.data.sources[index].destinations[2].hidden 
+                                            = filters.data.destinations[2].hidden
+                                    end
+                                    filters.save()
+                                end
+                                if imgui.IsItemHovered() then
+                                    imgui.SetTooltip(u8"Показывать контракты в порт Сан-Фиерро")
+                                end
+                                if imgui.Checkbox(u8(" Всегда показывать топовые (рек.)"), imgui.new.bool(filters.data.top)) then
+                                    filters.data.top = not filters.data.top
+                                    filters.save()
+                                end
+                                if imgui.IsItemHovered() then
+                                    imgui.SetTooltip(u8"Игнорировать все фильтры в данном окне, \nесли контракт является топовым (TOP)")
+                                end
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(175, 155))
+                                imgui.BeginChild("##SourceCheckboxes")
+                                    for index, source in pairs(filters.data.sources) do
+                                        local portLosSantos = string.format(" %s##%d", source.destinations[1].name, index)
+                                        local portSanFierro = string.format(" %s##%d", source.destinations[2].name, index)
+                                        if imgui.Checkbox
+                                        (
+                                            u8(portLosSantos), 
+                                            imgui.new.bool(not source.destinations[1].hidden)
+                                        ) then
+                                            filters.data.sources[index].destinations[1].hidden 
+                                                = not source.destinations[1].hidden
+                                            filters.save()
+                                        end
+                                        imgui.SameLine()
+                                        imgui.SetCursorPosX(137)
+                                        if imgui.Checkbox
+                                        (
+                                            u8(portSanFierro), 
+                                            imgui.new.bool(not source.destinations[2].hidden)
+                                        ) then
+                                            filters.data.sources[index].destinations[2].hidden 
+                                                = not source.destinations[2].hidden
+                                            filters.save()
+                                        end
+                                    end
+                                imgui.EndChild()
+                                for index, source in pairs(filters.data.sources) do
+                                    imgui.SetCursorPos(imgui.ImVec2(source.x, source.y))
+                                    imgui.BeginChild("##SourceNames" .. index, imgui.ImVec2(145, 0), false)
+                                        imgui.Text(u8(source.name))
+                                    imgui.EndChild()
+                                end
                                 imgui.EndTabItem()
                             end
                         end
@@ -369,17 +466,8 @@ local Settings = {
                                         if imgui.Button(u8"Мет.##" .. tostring(id)) then
                                             Sound.new("mark.wav", 80).play()
                                             removeBlip(entry.blip)
-                                            entry.blip = addSpriteBlipForCoord(
-                                                entry.x, 
-                                                entry.y, 
-                                                entry.z, 
-                                                41
-                                            )
-                                            local localMessage = LocalMessage.new(
-                                                "Метка установлена на карте",
-                                                nil,
-                                                constants.COLORS.GOLD
-                                            )
+                                            entry.blip = addSpriteBlipForCoord(entry.x, entry.y, entry.z, 41)
+                                            local localMessage = LocalMessage.new("Метка установлена на карте", nil, constants.COLORS.GOLD)
                                             chatService.send(localMessage)
                                         end
                                         if imgui.IsItemHovered() then
@@ -388,10 +476,7 @@ local Settings = {
                                         imgui.SameLine()
                                         if imgui.Button(u8"Удал.##" .. tostring(id)) then
                                             removeBlip(entry.blip)
-                                            driverCoordinatesService.delete(
-                                                DriverCoordinatesEntryService.ENTRIES, 
-                                                id
-                                            )
+                                            driverCoordinatesService.delete(DriverCoordinatesEntryService.ENTRIES, id)
                                         end
                                         if imgui.IsItemHovered() then
                                             imgui.SetTooltip(u8"Удалить запись и метку на карте.")
