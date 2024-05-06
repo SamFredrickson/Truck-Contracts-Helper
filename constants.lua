@@ -267,7 +267,7 @@ local CONTRACT_FILTERS = {
         { 
             name = "Нефтезавод №2",
             x = 10,
-            y = 307,
+            y = 305,
             destinations = {
                 { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
                 { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
@@ -276,7 +276,7 @@ local CONTRACT_FILTERS = {
         { 
             name = "Склад угля №1",
             x = 10,
-            y = 337,
+            y = 333,
             destinations = {
                 { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
                 { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
@@ -285,7 +285,7 @@ local CONTRACT_FILTERS = {
         { 
             name = "Склад угля №2",
             x = 10,
-            y = 367,
+            y = 360,
             destinations = {
                 { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
                 { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
