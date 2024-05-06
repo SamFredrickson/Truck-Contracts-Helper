@@ -89,13 +89,6 @@ imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
 end)
 
--- Swack_Hokage[441] предложил Вам отремонтировать транспорт. Цена: 100 $.
--- Swack_Hokage[441] предложил Вам заправить транспортное средство на 8 литров. Цена: 800 $.
--- Используйте: {26931C}"Y"{4682B4} - принять предложение. {ae433d}"N"{4682B4} - отклонить предложение
-
---{FFFFFF}Ремонт | {ae433d}Предложение   {FFFFFF}Alexei_bazaka предлагает Вам отремонтировать транспортное средство за $100
---{FFFFFF}Заправка | {ae433d}Предложение   {FFFFFF}Alexei_bazaka предлагает Вам заправить транспортное средство на 19 литров за $2831
-
 function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
         while not isSampAvailable() do wait(100) end
