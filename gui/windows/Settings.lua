@@ -54,6 +54,26 @@ local Settings = {
         local company = imgui.new.char[256](u8(filters.data.company))
         local minTonsQuantity = imgui.new.int(filters.data.minTonsQuantity)
 
+        local isAnyItemActive = false
+        local isAnyItemActiveMoreOneSecond = false
+        local currentTime = nil
+
+        -- Создаем поток для проверки на зажатие кнопок плюса или минуса в течении двух секунд
+        -- чтобы избежать итерацию при единичном нажатии клавиши мыши.
+        lua_thread.create
+        (
+            function()
+                while true do
+                    wait(0)
+                    if isAnyItemActive then
+                        currentTime = currentTime or os.time()
+                        local difftime = os.difftime(os.time(), currentTime)
+                        if difftime >= 2 then isAnyItemActiveMoreOneSecond = true end
+                    end
+                end
+            end
+        )
+
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
@@ -212,7 +232,7 @@ local Settings = {
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 210))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairPrice")
-                            imgui.PushItemWidth(250)
+                            imgui.PushItemWidth(200)
                             if imgui.SliderInt
                             (
                                 "##repairPrice", 
@@ -225,6 +245,52 @@ local Settings = {
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(400, 210))
+                        imgui.BeginChild("##AutomechanicSuggestionsRepairButtons")
+                            if imgui.Button("+ ##AutomechanicSuggestionsRepairPlusButton", imgui.ImVec2(20, 0)) then
+                                autorepairPrice[0] = autorepairPrice[0] + 1
+                                config.data.settings.repairPrice = autorepairPrice[0]
+                                config.save()
+                            end
+                            if imgui.IsItemActive() then
+                                isAnyItemActive = true
+                                if isAnyItemActiveMoreOneSecond then
+                                    autorepairPrice[0] = autorepairPrice[0] + 1
+                                    config.data.settings.repairPrice = autorepairPrice[0]
+                                    config.save()
+                                end
+                            end
+                            if imgui.IsItemActivated() then
+                                isAnyItemActiveMoreOneSecond = false
+                                isAnyItemActive = false
+                                currentTime = nil
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
+                            end
+                            imgui.SameLine()
+                            if imgui.Button("- ##AutomechanicSuggestionsRepairMinusButton", imgui.ImVec2(20, 0)) then
+                                autorepairPrice[0] = autorepairPrice[0] - 1
+                                config.data.settings.repairPrice = autorepairPrice[0]
+                                config.save()
+                            end
+                            if imgui.IsItemActive() then
+                                isAnyItemActive = true
+                                if isAnyItemActiveMoreOneSecond then
+                                    autorepairPrice[0] = autorepairPrice[0] - 1
+                                    config.data.settings.repairPrice = autorepairPrice[0]
+                                    config.save()
+                                end
+                            end
+                            if imgui.IsItemActivated() then
+                                isAnyItemActiveMoreOneSecond = false
+                                isAnyItemActive = false
+                                currentTime = nil
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
+                            end
+                        imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 240))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillConditionText")
                             imgui.TextColoredRGB(" Если цена заправки")
@@ -234,7 +300,7 @@ local Settings = {
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 240))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillPrice")
-                            imgui.PushItemWidth(250)
+                            imgui.PushItemWidth(200)
                             if imgui.SliderInt
                             (
                                 "##refillPrice", 
@@ -246,6 +312,52 @@ local Settings = {
                                 config.save()
                             end
                             imgui.PopItemWidth()
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(400, 240))
+                        imgui.BeginChild("##AutomechanicSuggestionsRefillButtons")
+                            if imgui.Button("+ ##AutomechanicSuggestionsRefillPlusButton", imgui.ImVec2(20, 0)) then
+                                autorefillPrice[0] = autorefillPrice[0] + 1
+                                config.data.settings.refillPrice = autorefillPrice[0]
+                                config.save()
+                            end
+                            if imgui.IsItemActive() then
+                                isAnyItemActive = true
+                                if isAnyItemActiveMoreOneSecond then
+                                    autorefillPrice[0] = autorefillPrice[0] + 1
+                                    config.data.settings.refillPrice = autorefillPrice[0]
+                                    config.save()
+                                end
+                            end
+                            if imgui.IsItemActivated() then
+                                isAnyItemActiveMoreOneSecond = false
+                                isAnyItemActive = false
+                                currentTime = nil
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
+                            end
+                            imgui.SameLine()
+                            if imgui.Button("- ##AutomechanicSuggestionsRefillMinusButton", imgui.ImVec2(20, 0)) then
+                                autorefillPrice[0] = autorefillPrice[0] - 1
+                                config.data.settings.refillPrice = autorefillPrice[0]
+                                config.save()
+                            end
+                            if imgui.IsItemActive() then
+                                isAnyItemActive = true
+                                if isAnyItemActiveMoreOneSecond then
+                                    autorefillPrice[0] = autorefillPrice[0] - 1
+                                    config.data.settings.refillPrice = autorefillPrice[0]
+                                    config.save()
+                                end
+                            end
+                            if imgui.IsItemActivated() then
+                                isAnyItemActiveMoreOneSecond = false
+                                isAnyItemActive = false
+                                currentTime = nil
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
+                            end
                         imgui.EndChild()
                     end
                     if active == 2 then
