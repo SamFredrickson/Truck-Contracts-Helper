@@ -35,6 +35,7 @@ local Main = {
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
+                if config.data.settings.selectedScriptStatus == 0 then return end
                 ((config.data.settings.transparentContracts and self.hideCursor) and RedThemeTransparent or RedTheme).new()
                 self.title = string.format(
                     u8"Список контрактов (%d)", 

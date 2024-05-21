@@ -47,8 +47,8 @@ local Settings = {
 
         local clists = imgui.new['const char*'][#constants.COLOR_LIST](constants.COLOR_LIST)
         local selectedClist = imgui.new.int(config.data.settings.clistChoice)
-        local truckRentedChoices = imgui.new['const char*'][#constants.TRUCK_RENTED_CHOICES](constants.TRUCK_RENTED_CHOICES)
-        local selectedTruckRentedChoice = imgui.new.int(config.data.settings.truckRentedChoice)
+        local scriptStatuses = imgui.new['const char*'][#constants.SCRIPT_STATUSES](constants.SCRIPT_STATUSES)
+        local selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
         local autorepairPrice = imgui.new.int(config.data.settings.repairPrice)
         local autorefillPrice = imgui.new.int(config.data.settings.refillPrice)
         local company = imgui.new.char[256](u8(filters.data.company))
@@ -111,17 +111,20 @@ local Settings = {
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 5))
-                        imgui.BeginChild('##ContractsChild', imgui.ImVec2(385, 400), false)
-                            imgui.Text(u8"Открывать список контрактов, если:")
+                        imgui.BeginChild('##ScriptStatus', imgui.ImVec2(385, 400), false)
+                            imgui.Text(u8"Статус работы скрипта:")
                             if imgui.Combo
                             (
-                                "##Contracts", 
-                                selectedTruckRentedChoice, 
-                                truckRentedChoices, 
-                                #constants.TRUCK_RENTED_CHOICES
+                                "##ScriptStatus", 
+                                selectedScriptStatus, 
+                                scriptStatuses, 
+                                #constants.SCRIPT_STATUSES
                             ) then
-                                config.data.settings.truckRentedChoice = selectedTruckRentedChoice[0]
+                                config.data.settings.selectedScriptStatus = selectedScriptStatus[0]
                                 config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"С помощью статуса работы можно включить / выключить функции скрипта.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 55))

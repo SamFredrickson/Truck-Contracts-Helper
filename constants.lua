@@ -37,6 +37,7 @@ local CONFIG = {
     PATH = "tch/settings.ini",
     DEFAULT_SETTINGS = {
         truckRentedChoice = 0,
+        selectedScriptStatus = 1,
         clistChoice = 16,
         documentsDialogue = false,
         autounload = true,
@@ -502,6 +503,11 @@ local TRUCK_RENTED_CHOICES = {
     u8"Игрок сел в фуру"
 }
 
+local SCRIPT_STATUSES = {
+    u8"Выключен",
+    u8"Включен"
+}
+
 return {
     SCRIPT_INFO = SCRIPT_INFO,
     COLORS = COLORS,
@@ -524,5 +530,6 @@ return {
     MIN_TONS_QUANTITY = MIN_TONS_QUANTITY,
     MAX_TONS_QUANTITY = MAX_TONS_QUANTITY,
     MECHANIC = MECHANIC,
-    CONTRACT_FILTERS = CONTRACT_FILTERS
+    CONTRACT_FILTERS = CONTRACT_FILTERS,
+    SCRIPT_STATUSES = SCRIPT_STATUSES
 }

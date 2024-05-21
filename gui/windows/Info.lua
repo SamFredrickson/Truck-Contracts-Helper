@@ -82,6 +82,7 @@ local Info = {
         imgui.OnFrame(
             function() return self.window[0] end,
             function(player)
+                if config.data.settings.selectedScriptStatus == 0 then return end
                 if not config.data.settings.statistics then return end
                 InfoTheme.new()
                 imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver)

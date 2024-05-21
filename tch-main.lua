@@ -100,20 +100,6 @@ function main()
 
 		httpService.getAvailableUpdates()
 
-		if config.data.settings.truckRentedChoice == 1 then
-			scheduleService.create
-			(
-				function()
-					if sampIsLocalPlayerSpawned() then
-						mainWindow.hideCursor = true
-						mainWindow.activate()
-						return
-					end
-				end,
-				10
-			):run()
-		end
-
 		sampRegisterChatCommand
 		(
 			"tch.info",
@@ -193,30 +179,32 @@ function main()
 		(
             "tch.coords.send",
 			function(args) 
-				if args == nil or args == "" then
-					local localMessage = LocalMessage.new("{ed5a5a}/tch.coords.send{FFFFFF} [текст сообщения]")
-					chatService.send(localMessage)
-					return
-				end
-
-				local player = playerService.getByHandle(
-					playerService.get(), 
-					PLAYER_PED
-				)
-
-				local message = Message.new
-				(
-					string.format
-					(
-						"/j %s %f|%f|%f", 
-						args, 
-						player.coords.x, 
-						player.coords.y, 
-						player.coords.z
+				if config.data.settings.selectedScriptStatus > 0 then
+					if args == nil or args == "" then
+						local localMessage = LocalMessage.new("{ed5a5a}/tch.coords.send{FFFFFF} [текст сообщения]")
+						chatService.send(localMessage)
+						return
+					end
+	
+					local player = playerService.getByHandle(
+						playerService.get(), 
+						PLAYER_PED
 					)
-				)
-
-				chatService.send(message)
+	
+					local message = Message.new
+					(
+						string.format
+						(
+							"/j %s %f|%f|%f", 
+							args, 
+							player.coords.x, 
+							player.coords.y, 
+							player.coords.z
+						)
+					)
+	
+					chatService.send(message)
+				end
 			end
         )
 
@@ -224,17 +212,18 @@ function main()
 		scheduleService.create
 		(
 			function()
-				local contracts = ContractService.CONTRACTS
-				local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
-				if mainWindow.window[0]
-				and not hasActiveContract
-				and not isAutoloading
-				and mainWindow.hideCursor
-				and contractsService.CanSearch(contracts)
-				then
-					MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
-					local message = Message.new(constants.COMMANDS.MENU)
-					chatService.send(message)
+				if config.data.settings.selectedScriptStatus > 0 then
+					local contracts = ContractService.CONTRACTS
+					local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
+					if mainWindow.window[0]
+					and not hasActiveContract
+					and not isAutoloading
+					and mainWindow.hideCursor
+					and contractsService.CanSearch(contracts) then
+						MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
+						local message = Message.new(constants.COMMANDS.MENU)
+						chatService.send(message)
+					end
 				end
 			end, 
 			3000
@@ -244,43 +233,45 @@ function main()
 		scheduleService.create
 		(
 			function()
-				local contracts = ContractService.CONTRACTS
-				local canUnload = contractsService.CanUnload(contracts)
-				
-				if config.data.settings.autounload 
-				and canUnload 
-				and not unloading.active then
-					local message = Message.new(constants.COMMANDS.UNLOAD)
-					chatService.send(message)
-					unloading.active = true
-					wait(1000)
-				end
-
-				if config.data.settings.autounload 
-				and canUnload
-				and unloading.active
-				and unloading.time then
-					local difftime = os.difftime(unloading.time, os.time())
-					if difftime < 0 then
+				if config.data.settings.selectedScriptStatus > 0 then
+					local contracts = ContractService.CONTRACTS
+					local canUnload = contractsService.CanUnload(contracts)
+					
+					if config.data.settings.autounload 
+					and canUnload 
+					and not unloading.active then
 						local message = Message.new(constants.COMMANDS.UNLOAD)
+						chatService.send(message)
+						unloading.active = true
+						wait(1000)
+					end
+
+					if config.data.settings.autounload 
+					and canUnload
+					and unloading.active
+					and unloading.time then
+						local difftime = os.difftime(unloading.time, os.time())
+						if difftime < 0 then
+							local message = Message.new(constants.COMMANDS.UNLOAD)
+							chatService.send(message)
+							wait(1000)
+						end
+					end
+
+					if config.data.settings.autounload
+					and canUnload
+					and unloading.active
+					and not unloading.notified
+					and not unloading.time then
+						unloading.notified = true
+						local message = LocalMessage.new( 
+							" Контракт больше неактуален или Вы взяли не свой груз", 
+							0, 
+							constants.COLORS.DARK_GRAY
+						)
 						chatService.send(message)
 						wait(1000)
 					end
-				end
-
-				if config.data.settings.autounload
-				and canUnload
-				and unloading.active
-				and not unloading.notified
-				and not unloading.time then
-					unloading.notified = true
-					local message = LocalMessage.new( 
-						" Контракт больше неактуален или Вы взяли не свой груз", 
-						0, 
-						constants.COLORS.DARK_GRAY
-					)
-					chatService.send(message)
-					wait(1000)
 				end
 			end
 		):run()
@@ -289,10 +280,12 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) then
-                    while isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) do wait(80) end
-					mainWindow.hideCursor = not mainWindow.hideCursor
-                end
+				if config.data.settings.selectedScriptStatus > 0 then
+					if isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) then
+						while isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) do wait(80) end
+						mainWindow.hideCursor = not mainWindow.hideCursor
+					end
+				end
 			end,
 			40
 		):run()
@@ -301,7 +294,7 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if not isSettingsApplied then
+				if config.data.settings.selectedScriptStatus > 0 and not isSettingsApplied then
 					local cars = carsService.get()
 					local players = playerService.get()
 
@@ -358,33 +351,23 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.drift then
-					local cars = carsService.get()
-					local players = playerService.get()
-
-					local player = playerService.getByHandle(
-						players, 
-						PLAYER_PED
-					)
-				
-					local car = carsService.getByDriver(
-						cars,
-						player
-					)
-
-					if car then
-						setCarCollision(car.handle, true)
+				if config.data.settings.selectedScriptStatus > 0 and config.data.settings.drift then
+					if isCharInAnyCar(PLAYER_PED) then
+						local car = storeCarCharIsInNoSave(PLAYER_PED)
+						local speed = getCarSpeed(car)
+						setCarCollision(car, true)
 						if isKeyDown(vkeys.VK_SHIFT) 
-						and isVehicleOnAllWheels(car.handle)
-						and doesVehicleExist(car.handle) then
-							setCarCollision(car.handle, false)
-							if isCarInAirProper(car.handle) then
-								setCarCollision(car.handle, true)
+						and isVehicleOnAllWheels(car)
+						and doesVehicleExist(car)
+						and speed > 0.5 then
+							setCarCollision(car, false)
+							if isCarInAirProper(car) then
+								setCarCollision(car, true)
 								if isKeyDown(vkeys.VK_A) then
-									addToCarRotationVelocity(car.handle, 0, 0, 0.1)
+									addToCarRotationVelocity(car, 0, 0, 0.1)
 								end
 								if isKeyDown(vkeys.VK_D) then
-									addToCarRotationVelocity(car.handle, 0, 0, -0.1)
+									addToCarRotationVelocity(car, 0, 0, -0.1)
 								end
 							end
 						end
@@ -397,15 +380,17 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if #DriverCoordinatesEntryService.ENTRIES > 0 then
-					local player = playerService.getByHandle(
-						playerService.get(), 
-						PLAYER_PED
-					)
-					for _, entry in pairs(DriverCoordinatesEntryService.ENTRIES) do
-						local coords = { x = entry.x, y = entry.y, z = entry.z }
-						if player.IsWithinDistance(coords, 20) then
-							removeBlip(entry.blip)
+				if config.data.settings.selectedScriptStatus > 0 then
+					if #DriverCoordinatesEntryService.ENTRIES > 0 then
+						local player = playerService.getByHandle(
+							playerService.get(), 
+							PLAYER_PED
+						)
+						for _, entry in pairs(DriverCoordinatesEntryService.ENTRIES) do
+							local coords = { x = entry.x, y = entry.y, z = entry.z }
+							if player.IsWithinDistance(coords, 20) then
+								removeBlip(entry.blip)
+							end
 						end
 					end
 				end
@@ -416,34 +401,36 @@ function main()
 		scheduleService.create
 		(
 			function()
-				local contracts = ContractService.CONTRACTS
-				if config.data.settings.autoload 
-				and contractsService.CanTake(contracts) 
-				and mainWindow.hideCursor then
-					local point = pointService.getPlayerAutoloadPoint()
-					local contract = contractsService.getContractByAutoloadPoint(point, contracts)
-					
-					if contract and not contractsService.CanAutotake(point) then
-						local messages = {
-							LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики"),
-							LocalMessage.new(" {FFFFFF}Подождите {ed5a5a}5 секунд{FFFFFF} или возьмите груз вручную {ed5a5a}(( /tch.list » Взять контракт и загрузить ))")
-						}
-						for _, message in pairs(messages) do
-							chatService.send(message)
+				if config.data.settings.selectedScriptStatus > 0 then
+					local contracts = ContractService.CONTRACTS
+					if config.data.settings.autoload 
+					and contractsService.CanTake(contracts) 
+					and mainWindow.hideCursor then
+						local point = pointService.getPlayerAutoloadPoint()
+						local contract = contractsService.getContractByAutoloadPoint(point, contracts)
+						
+						if contract and not contractsService.CanAutotake(point) then
+							local messages = {
+								LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики"),
+								LocalMessage.new(" {FFFFFF}Подождите {ed5a5a}5 секунд{FFFFFF} или возьмите груз вручную {ed5a5a}(( /tch.list » Взять контракт и загрузить ))")
+							}
+							for _, message in pairs(messages) do
+								chatService.send(message)
+							end
+							wait(5000)
+							return
 						end
-						wait(5000)
-						return
-					end
 
-					if contract then
-						MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
-						MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
-						MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-						local startTimeMessage = LocalMessage.new(" {FFFFFF}Автозагрузка начата! Пожалуйста, {ed5a5a}подождите...")
-						local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
-						chatService.send(startTimeMessage)
-						chatService.send(menuCommandMessage)
-						wait(1000)
+						if contract then
+							MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
+							MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
+							MenuDialogue.FLAGS.CONTRACT.ID = contract.id
+							local startTimeMessage = LocalMessage.new(" {FFFFFF}Автозагрузка начата! Пожалуйста, {ed5a5a}подождите...")
+							local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
+							chatService.send(startTimeMessage)
+							chatService.send(menuCommandMessage)
+							wait(1000)
+						end
 					end
 				end
 			end
@@ -453,17 +440,19 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if infoWindow.window[0] then
-					-- Обновление таймингов нелегального груза
-					local illegalCargoAvailableAt = config.data.settings.lastIllegalCargoUnloadedAt + TWO_HOURS
-					local illegalCargoDiffTime = os.difftime(illegalCargoAvailableAt, os.time())
-					local illegalCargoAvailableAtFormatted = Time.new(illegalCargoDiffTime).toString()
-					infoWindow.information.cargo.setValue(illegalCargoAvailableAtFormatted)
-					
-					-- Обновление таймингов рейса
-					if race then
-						local raceDiffTime = os.difftime(race.finishedAt or os.time(), race.startedAt)
-						infoWindow.information.raceTime.setValue(Time.new(raceDiffTime).toString())
+				if config.data.settings.selectedScriptStatus > 0 then
+					if infoWindow.window[0] then
+						-- Обновление таймингов нелегального груза
+						local illegalCargoAvailableAt = config.data.settings.lastIllegalCargoUnloadedAt + TWO_HOURS
+						local illegalCargoDiffTime = os.difftime(illegalCargoAvailableAt, os.time())
+						local illegalCargoAvailableAtFormatted = Time.new(illegalCargoDiffTime).toString()
+						infoWindow.information.cargo.setValue(illegalCargoAvailableAtFormatted)
+						
+						-- Обновление таймингов рейса
+						if race then
+							local raceDiffTime = os.difftime(race.finishedAt or os.time(), race.startedAt)
+							infoWindow.information.raceTime.setValue(Time.new(raceDiffTime).toString())
+						end
 					end
 				end
 			end
@@ -473,8 +462,10 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if repairSuggestion.active then setGameKeyState(11, 255) end
-				if refillSuggestion.active then setGameKeyState(11, 255) end
+				if config.data.settings.selectedScriptStatus > 0 then
+					if repairSuggestion.active then setGameKeyState(11, 255) end
+					if refillSuggestion.active then setGameKeyState(11, 255) end
+				end
 			end,
 			10
 		):run()
@@ -485,113 +476,115 @@ function main()
 end
 
 function sampev.onShowDialog(id, style, title, button1, button2, text)
-	-- проверяем, что текущий диалог является главным меню и был открыт по специальной команде
-	if menuDialogue.title == title and MenuDialogue.FLAGS.IS_PARSING_CONTRACTS then
-		-- проверяем надо ли закрывать главное меню в случае возвращения назад из списка контрактов
-		if MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP then
-			-- обнуляем флаги, чтобы повторный вызов функции не зациклил открытие меню
-			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
-			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
+	if config.data.settings.selectedScriptStatus > 0 then
+		-- проверяем, что текущий диалог является главным меню и был открыт по специальной команде
+		if menuDialogue.title == title and MenuDialogue.FLAGS.IS_PARSING_CONTRACTS then
+			-- проверяем надо ли закрывать главное меню в случае возвращения назад из списка контрактов
+			if MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP then
+				-- обнуляем флаги, чтобы повторный вызов функции не зациклил открытие меню
+				MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
+				MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
+				sampSendDialogResponse(id, 0, _, _)
+				return false
+			end
+			-- проверяем надо ли открывать список контрактов в случае первоначального открытия главного меню
+			if not MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP then
+				sampSendDialogResponse(id, 1, 0, _)
+				return false
+			end
+		end
+		-- проверяем, что текущий диалог является списком контрактов и был открыт по специальной команде
+		if contractsDialogue.title == title and MenuDialogue.FLAGS.IS_PARSING_CONTRACTS then
+			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = true -- устанавливаем данный флаг в "true", чтобы не вызвать циклическое открытие
 			sampSendDialogResponse(id, 0, _, _)
+			ContractService.CONTRACTS = contractsService.parse(text)
 			return false
 		end
-		-- проверяем надо ли открывать список контрактов в случае первоначального открытия главного меню
-		if not MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP then
+
+		if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
 			sampSendDialogResponse(id, 1, 0, _)
 			return false
 		end
-	end
-	-- проверяем, что текущий диалог является списком контрактов и был открыт по специальной команде
-	if contractsDialogue.title == title and MenuDialogue.FLAGS.IS_PARSING_CONTRACTS then
-		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = true -- устанавливаем данный флаг в "true", чтобы не вызвать циклическое открытие
-		sampSendDialogResponse(id, 0, _, _)
-		ContractService.CONTRACTS = contractsService.parse(text)
-		return false
-	end
 
-	if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
-		sampSendDialogResponse(id, 1, 0, _)
-		return false
-	end
+		if contractsDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
+			MenuDialogue.FLAGS.CONTRACT.IS_TAKING = false
+			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 
-	if contractsDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then
-		MenuDialogue.FLAGS.CONTRACT.IS_TAKING = false
-		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+			local contract = contractsService.update(
+				contractId,
+				{ IsActive = true },
+				ContractService.CONTRACTS
+			)
 
-		local contract = contractsService.update(
-			contractId,
-			{ IsActive = true },
-			ContractService.CONTRACTS
-		)
+			sampSendDialogResponse(id, 1, contractId - 1, _)
+			return false
+		end
 
-		sampSendDialogResponse(id, 1, contractId - 1, _)
-		return false
-	end
+		if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_CANCELING then
+			MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = false
+			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 
-	if menuDialogue.title == title and MenuDialogue.FLAGS.CONTRACT.IS_CANCELING then
-		MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = false
-		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+			local contract = contractsService.update(
+				contractId,
+				{ IsActive = false },
+				ContractService.CONTRACTS
+			)
+			
+			sampSendDialogResponse(id, 1, 1, _)
+			return false
+		end
 
-		local contract = contractsService.update(
-			contractId,
-			{ IsActive = false },
-			ContractService.CONTRACTS
-		)
-		
-		sampSendDialogResponse(id, 1, 1, _)
-		return false
-	end
+		if title:find(skillDialogue.title) and SkillDialogue.IS_PARSING then
+			SkillDialogue.IS_PARSING = false
+			local level = tonumber(text:match("Уровень:	{.-}(%d+) ур."))
+			local current, goal = text:match("Опыт:	{.-}(%d+) из (%d+)")
+			local value = goal - current
+			local valueFormatted = Number.new(value < 0 and 0 or value).format(0, "", "{F2545B}")
+			local title = string.format(
+				"Опыта до %s уровня:",
+				level == constants.MAX_TRUCK_DRIVER_LEVEL and constants.MAX_TRUCK_DRIVER_LEVEL or level + 1
+			)
 
-	if title:find(skillDialogue.title) and SkillDialogue.IS_PARSING then
-		SkillDialogue.IS_PARSING = false
-		local level = tonumber(text:match("Уровень:	{.-}(%d+) ур."))
-		local current, goal = text:match("Опыт:	{.-}(%d+) из (%d+)")
-		local value = goal - current
-		local valueFormatted = Number.new(value < 0 and 0 or value).format(0, "", "{F2545B}")
-		local title = string.format(
-			"Опыта до %s уровня:",
-			level == constants.MAX_TRUCK_DRIVER_LEVEL and constants.MAX_TRUCK_DRIVER_LEVEL or level + 1
-		)
+			infoWindow.information.experienceToLevel.setValue(valueFormatted)
+			infoWindow.information.experienceToLevel.setTitle(title)
 
-		infoWindow.information.experienceToLevel.setValue(valueFormatted)
-		infoWindow.information.experienceToLevel.setTitle(title)
-
-		sampSendDialogResponse(id, 0, _, _)
-		return false
-	end
-
-	if config.data.settings.autorepair 
-	and title:find(repairSuggestion.title) 
-	and repairSuggestion.active then
-		sampSendDialogResponse(id, 1, _, _)
-		return false
-	end
-
-	if config.data.settings.autorefill 
-	and title:find(refillSuggestion.title) 
-	and refillSuggestion.active then
-		sampSendDialogResponse(id, 1, _, _)
-		return false
-	end
-
-	if config.data.settings.documentsDialogue then
-		if documentsDialogue.title == title then
 			sampSendDialogResponse(id, 0, _, _)
 			return false
 		end
-	end
 
-	if suggestionDialogue.title == title then
-		sampSendDialogResponse(id, 0, _, _)
-		return false
-	end
+		if config.data.settings.autorepair 
+		and title:find(repairSuggestion.title) 
+		and repairSuggestion.active then
+			sampSendDialogResponse(id, 1, _, _)
+			return false
+		end
 
-	if title:find(illegalCargoDialogue.title) then
-		illegalCargoDialogue.isActive = true
-	end
+		if config.data.settings.autorefill 
+		and title:find(refillSuggestion.title) 
+		and refillSuggestion.active then
+			sampSendDialogResponse(id, 1, _, _)
+			return false
+		end
 
-	if not title:find(illegalCargoDialogue.title) then
-		illegalCargoDialogue.isActive = false
+		if config.data.settings.documentsDialogue then
+			if documentsDialogue.title == title then
+				sampSendDialogResponse(id, 0, _, _)
+				return false
+			end
+		end
+
+		if suggestionDialogue.title == title then
+			sampSendDialogResponse(id, 0, _, _)
+			return false
+		end
+
+		if title:find(illegalCargoDialogue.title) then
+			illegalCargoDialogue.isActive = true
+		end
+
+		if not title:find(illegalCargoDialogue.title) then
+			illegalCargoDialogue.isActive = false
+		end
 	end
 end
 
@@ -622,290 +615,297 @@ function sampev.onSendDialogResponse(dialogId, button, list, input)
 end
 
 function sampev.onServerMessage(color, text)
-	-- Логика при появлении собщения в чате, что контракт отменен
-	if text:find(serverMessageService.findByCode("contract-canceled").message) then
-		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-		hasActiveContract = false
-		unloading.active = false
-		unloading.time = nil
-		unloading.notified = false
-		
-		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
-		local contract = contractsService.update(
-			contractId,
-			{ IsActive = false },
-			ContractService.CONTRACTS
-		)
+	if config.data.settings.selectedScriptStatus > 0 then
+		-- Логика при появлении собщения в чате, что контракт отменен
+		if text:find(serverMessageService.findByCode("contract-canceled").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
+			hasActiveContract = false
+			unloading.active = false
+			unloading.time = nil
+			unloading.notified = false
+			
+			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+			local contract = contractsService.update(
+				contractId,
+				{ IsActive = false },
+				ContractService.CONTRACTS
+			)
 
-		if config.data.settings.autohideContractsList then
-			mainWindow.hideCursor = true
-			mainWindow.activate()
+			if config.data.settings.autohideContractsList then
+				mainWindow.hideCursor = true
+				mainWindow.activate()
+			end
+
+			-- Обнуляем текущий рейс
+			race = nil
+			infoWindow.information.race.setValue("—")
+			infoWindow.information.raceTime.setValue(Time.new(0).toString())
 		end
 
-		-- Обнуляем текущий рейс
-		race = nil
-		infoWindow.information.race.setValue("—")
-		infoWindow.information.raceTime.setValue(Time.new(0).toString())
-	end
+		-- Логика при появлении собщения в чате, что игрок имеет активный контракт
+		if text:find(serverMessageService.findByCode("has-active-contract").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
+			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
+			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
+			ContractService.CONTRACTS = {}
+			hasActiveContract = true
 
-	-- Логика при появлении собщения в чате, что игрок имеет активный контракт
-	if text:find(serverMessageService.findByCode("has-active-contract").message) then
-		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
-		MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
-		ContractService.CONTRACTS = {}
-		hasActiveContract = true
+			local messages = {
+				LocalMessage.new(" {FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
+				LocalMessage.new(" {FFFFFF}Используйте меню {ed5a5a}(( /tmenu )){FFFFFF} контрактов, чтобы отменить его")
+			}
 
-		local messages = {
-			LocalMessage.new(" {FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
-			LocalMessage.new(" {FFFFFF}Используйте меню {ed5a5a}(( /tmenu )){FFFFFF} контрактов, чтобы отменить его")
-		}
+			for _, message in pairs(messages) do
+				chatService.send(message)
+			end
 
-		for _, message in pairs(messages) do
-			chatService.send(message)
+			if config.data.settings.autohideContractsList then
+				mainWindow.hideCursor = true
+				mainWindow.deactivate()
+			end
+			
+			return false
 		end
 
-		if config.data.settings.autohideContractsList then
-			mainWindow.hideCursor = true
-			mainWindow.deactivate()
+		-- Логика при успешной доставки обычного груза
+		if text:find(serverMessageService.findByCode("delivery-success").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
+			hasActiveContract = false
+			unloading.active = false
+			unloading.time = nil
+			unloading.notified = false
+
+			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
+			local contract = contractsService.update(
+				contractId,
+				{ IsActive = false },
+				ContractService.CONTRACTS
+			)
+
+			if config.data.settings.autohideContractsList then
+				mainWindow.hideCursor = true
+				mainWindow.activate()
+			end
+
+			-- Обновляем количество рейсов за сессию
+			config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
+			infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
+
+			-- Устанавливаем время окончания рейса
+			if race then race.finishedAt = os.time() end
+
+			config.save()
 		end
-		
-		return false
-	end
 
-	-- Логика при успешной доставки обычного груза
-	if text:find(serverMessageService.findByCode("delivery-success").message) then
-		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-		hasActiveContract = false
-		unloading.active = false
-		unloading.time = nil
-		unloading.notified = false
-
-		local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
-		local contract = contractsService.update(
-			contractId,
-			{ IsActive = false },
-			ContractService.CONTRACTS
-		)
-
-		if config.data.settings.autohideContractsList then
-			mainWindow.hideCursor = true
-			mainWindow.activate()
+		-- Логика при выборе контракта из списка
+		if text:find(serverMessageService.findByCode("delivery-start").message) then
+			local isLoading = MenuDialogue.FLAGS.CONTRACT.IS_LOADING
+			local isNextToAutoloadPoint = pointService.getPlayerAutoloadPoint()
+			
+			if isLoading and isNextToAutoloadPoint then
+				local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
+				chatService.send(loadCommandMessage)
+			end
+			if isLoading and not isNextToAutoloadPoint then
+				local message = LocalMessage.new(" Вы слишком далеко от места загрузки товара", 0, constants.COLORS.DARK_GRAY)
+				chatService.send(message)
+			end
 		end
 
-		-- Обновляем количество рейсов за сессию
-		config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
-		infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
-
-		-- Устанавливаем время окончания рейса
-		if race then race.finishedAt = os.time() end
-
-		config.save()
-	end
-
-	-- Логика при выборе контракта из списка
-	if text:find(serverMessageService.findByCode("delivery-start").message) then
-		local isLoading = MenuDialogue.FLAGS.CONTRACT.IS_LOADING
-		local isNextToAutoloadPoint = pointService.getPlayerAutoloadPoint()
-		
-		if isLoading and isNextToAutoloadPoint then
+		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
 			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
 			chatService.send(loadCommandMessage)
 		end
-		if isLoading and not isNextToAutoloadPoint then
-			local message = LocalMessage.new(" Вы слишком далеко от места загрузки товара", 0, constants.COLORS.DARK_GRAY)
+
+		-- Логика при успешной доставке нелегального груза
+		if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
+			hasActiveContract = false
+			unloading.active = false
+			unloading.time = nil
+			unloading.notified = false
+
+			-- Обновляем количество рейсов за сессию
+			config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
+			infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
+			config.save()
+
+			-- Устанавливаем время окончания рейса
+			if race then race.finishedAt = os.time() end
+
+			if config.data.settings.autohideContractsList then
+				mainWindow.hideCursor = true
+				mainWindow.activate()
+			end
+		end
+
+		-- Логика при получении опыта за груз
+		if text:find(serverMessageService.findByCode("contract-experience").message) then
+			-- Обновляем количество полученного опыта за сессию
+			local experience = text:match(serverMessageService.findByCode("contract-experience").message)
+			config.data.settings.sessionExperience = config.data.settings.sessionExperience + experience
+			infoWindow.information.sessionExperience.setValue(Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}"))
+			config.save()
+
+			SkillDialogue.IS_PARSING = true
+			local message = Message.new(constants.COMMANDS.SKILL, 1000)
 			chatService.send(message)
 		end
-	end
 
-	if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
-		local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
-		chatService.send(loadCommandMessage)
-	end
-
-	-- Логика при успешной доставке нелегального груза
-	if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
-		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-		hasActiveContract = false
-		unloading.active = false
-		unloading.time = nil
-		unloading.notified = false
-
-		-- Обновляем количество рейсов за сессию
-		config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
-		infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
-		config.save()
-
-		-- Устанавливаем время окончания рейса
-		if race then race.finishedAt = os.time() end
-
-		if config.data.settings.autohideContractsList then
-			mainWindow.hideCursor = true
-			mainWindow.activate()
-		end
-	end
-
-	-- Логика при получении опыта за груз
-	if text:find(serverMessageService.findByCode("contract-experience").message) then
-		-- Обновляем количество полученного опыта за сессию
-		local experience = text:match(serverMessageService.findByCode("contract-experience").message)
-		config.data.settings.sessionExperience = config.data.settings.sessionExperience + experience
-		infoWindow.information.sessionExperience.setValue(Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}"))
-		config.save()
-
-		SkillDialogue.IS_PARSING = true
-		local message = Message.new(constants.COMMANDS.SKILL, 1000)
-		chatService.send(message)
-	end
-
-	-- Логика при получении документов на груз
-	if text:find(serverMessageService.findByCode("receive-documents").message) then
-		MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-		local contract = contractsService.findActive(ContractService.CONTRACTS)
-		if config.data.settings.autohideContractsList then
-			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
-			chatService.send(localMessage)
-			mainWindow.hideCursor = true
-			mainWindow.deactivate()
-		end
-		if contract then
-			race = Race.new(contract, os.time())
-			infoWindow.information.race.setValue(trim(race.getContract()))
-		end
-	end
-
-	-- Учитываем полученный штраф в статистику заработка
-	if text:find(serverMessageService.findByCode("fine").message) then
-		local fine = text:match(serverMessageService.findByCode("fine").message)
-
-		-- Обновляем конфигурацию
-		config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - fine
-		config.data.settings.totalEarnings = config.data.settings.totalEarnings - fine
-		
-		-- Обновляем значения в окне
-		infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-		infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
-		config.save()
-	end
-
-	-- Логика при получении сообщения об освобождении места для груза
-	if config.data.settings.autounload
-	and contractsService.CanUnload(ContractService.CONTRACTS) 
-	and text:find(serverMessageService.findByCode("waiting-for-free-place").message) then
-		local minutes, seconds = text:match(serverMessageService.findByCode("waiting-for-free-place").message)
-		local time = ((tonumber(minutes) * 60) + tonumber(seconds))
-		unloading.time = os.time() + time
-		local message = LocalMessage.new(
-			string.format(" {FFFFFF}Авторазгрузка начата! Пожалуйста, подождите {ed5a5a}%s секунд...", time)
-		)
-		chatService.send(message)
-		return false
-	end
-
-	if config.data.settings.autorepair and text:find(serverMessageService.findByCode("repair-suggestion").message) then
-		local name, price = text:match(serverMessageService.findByCode("repair-suggestion").message)
-		if tonumber(price) <= config.data.settings.repairPrice then
-			repairSuggestion.active = true
-		end
-	end
-
-	if config.data.settings.autorefill and text:find(serverMessageService.findByCode("refill-suggestion").message) then
-		local name, liters, price = text:match(serverMessageService.findByCode("refill-suggestion").message)
-		if tonumber(price) <= config.data.settings.refillPrice then
-			refillSuggestion.active = true
-		end
-	end
-
-	if text:find(serverMessageService.findByCode("repair-accepted").message) then
-		repairSuggestion.active = false
-	end
-
-	if text:find(serverMessageService.findByCode("repair-already").message) then
-		repairSuggestion.active = false
-	end
-
-	if text:find(serverMessageService.findByCode("repair-not-required").message) then
-		repairSuggestion.active = false
-	end
-
-	if text:find(serverMessageService.findByCode("refill-accepted").message) then
-		refillSuggestion.active = false
-	end
-
-	if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
-		return false
-	end
-
-	-- Проверка на аренду фуры, чтобы учесть статистику
-	if text:find(serverMessageService.findByCode("successful-renting").message) then isSuccessfulRenting = true end
-		
-	-- Проверка на отправленные в рацию координаты
-	if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
-		local nickname, message, x, y, z = text:match(
-			serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
-		)
-
-		local player = playerService.getByHandle(
-			playerService.get(), 
-			PLAYER_PED
-		)
-
-		if player.name ~= nickname then
-			local driverCoordinatesEntry = DriverCoordinatesEntry.new(
-				nickname,
-				message,
-				x, y, z
-			)
-
-			local data = driverCoordinatesService.findByNickname(
-				DriverCoordinatesEntryService.ENTRIES,
-				nickname
-			)
-
-			if data then
-				driverCoordinatesService.update(
-					DriverCoordinatesEntryService.ENTRIES, 
-					data.id,
-					{ 
-						nickname = driverCoordinatesEntry.nickname, 
-						message = driverCoordinatesEntry.message,
-						x = driverCoordinatesEntry.x,
-						y = driverCoordinatesEntry.y, 
-						z = driverCoordinatesEntry.z
-					}
-				)
-				removeBlip(data.item.blip)
+		-- Логика при получении документов на груз
+		if text:find(serverMessageService.findByCode("receive-documents").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
+			local contract = contractsService.findActive(ContractService.CONTRACTS)
+			if config.data.settings.autohideContractsList then
+				local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
+				chatService.send(localMessage)
+				mainWindow.hideCursor = true
+				mainWindow.deactivate()
 			end
-
-			if not data then
-				driverCoordinatesService.create(
-					DriverCoordinatesEntryService.ENTRIES, 
-					driverCoordinatesEntry
-				)
+			if contract then
+				race = Race.new(contract, os.time())
+				infoWindow.information.race.setValue(trim(race.getContract()))
 			end
+		end
 
-			local localMessage = LocalMessage.new(
-				" {FFFFFF}Координаты успешно внесены в список " ..
-				"{ed5a5a}(( /tch.menu » Взаимодействие с игроками ))",
-				500
+		-- Учитываем полученный штраф в статистику заработка
+		if text:find(serverMessageService.findByCode("fine").message) then
+			local fine = text:match(serverMessageService.findByCode("fine").message)
+
+			-- Обновляем конфигурацию
+			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - fine
+			config.data.settings.totalEarnings = config.data.settings.totalEarnings - fine
+			
+			-- Обновляем значения в окне
+			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+			config.save()
+		end
+
+		-- Логика при получении сообщения об освобождении места для груза
+		if config.data.settings.autounload
+		and contractsService.CanUnload(ContractService.CONTRACTS) 
+		and text:find(serverMessageService.findByCode("waiting-for-free-place").message) then
+			local minutes, seconds = text:match(serverMessageService.findByCode("waiting-for-free-place").message)
+			local time = ((tonumber(minutes) * 60) + tonumber(seconds))
+			unloading.time = os.time() + time
+			local message = LocalMessage.new(
+				string.format(" {FFFFFF}Авторазгрузка начата! Пожалуйста, подождите {ed5a5a}%s секунд...", time)
+			)
+			chatService.send(message)
+			return false
+		end
+
+		if config.data.settings.autorepair and text:find(serverMessageService.findByCode("repair-suggestion").message) then
+			local name, price = text:match(serverMessageService.findByCode("repair-suggestion").message)
+			if tonumber(price) <= config.data.settings.repairPrice then
+				repairSuggestion.active = true
+			end
+		end
+
+		if config.data.settings.autorefill and text:find(serverMessageService.findByCode("refill-suggestion").message) then
+			local name, liters, price = text:match(serverMessageService.findByCode("refill-suggestion").message)
+			if tonumber(price) <= config.data.settings.refillPrice then
+				refillSuggestion.active = true
+			end
+		end
+
+		if text:find(serverMessageService.findByCode("repair-accepted").message) then
+			repairSuggestion.active = false
+		end
+
+		if text:find(serverMessageService.findByCode("repair-already").message) then
+			repairSuggestion.active = false
+		end
+
+		if text:find(serverMessageService.findByCode("repair-not-required").message) then
+			repairSuggestion.active = false
+		end
+
+		if text:find(serverMessageService.findByCode("refill-accepted").message) then
+			refillSuggestion.active = false
+		end
+
+		if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
+			return false
+		end
+
+		-- Проверка на аренду фуры, чтобы учесть статистику
+		if text:find(serverMessageService.findByCode("successful-renting").message) then isSuccessfulRenting = true end
+			
+		-- Проверка на отправленные в рацию координаты
+		if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
+			local nickname, message, x, y, z = text:match(
+				serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
 			)
 
-			chatService.send(localMessage)
-			Sound.new("tick.wav", 100).play()
+			local player = playerService.getByHandle(
+				playerService.get(), 
+				PLAYER_PED
+			)
+
+			if player.name ~= nickname then
+				local driverCoordinatesEntry = DriverCoordinatesEntry.new(
+					nickname,
+					message,
+					x, y, z
+				)
+
+				local data = driverCoordinatesService.findByNickname(
+					DriverCoordinatesEntryService.ENTRIES,
+					nickname
+				)
+
+				if data then
+					driverCoordinatesService.update(
+						DriverCoordinatesEntryService.ENTRIES, 
+						data.id,
+						{ 
+							nickname = driverCoordinatesEntry.nickname, 
+							message = driverCoordinatesEntry.message,
+							x = driverCoordinatesEntry.x,
+							y = driverCoordinatesEntry.y, 
+							z = driverCoordinatesEntry.z
+						}
+					)
+					removeBlip(data.item.blip)
+				end
+
+				if not data then
+					driverCoordinatesService.create(
+						DriverCoordinatesEntryService.ENTRIES, 
+						driverCoordinatesEntry
+					)
+				end
+
+				local localMessage = LocalMessage.new(
+					" {FFFFFF}Координаты успешно внесены в список " ..
+					"{ed5a5a}(( /tch.menu » Взаимодействие с игроками ))",
+					500
+				)
+
+				chatService.send(localMessage)
+				Sound.new("tick.wav", 100).play()
+			end
 		end
 	end
 end
 
 -- Деактивируем окно с контрактами и статистикой, если пед вышел с машины
 function sampev.onSendExitVehicle(vehicleId, isPassenger)
-	lua_thread.create(function()
-		while isCharInAnyCar(PLAYER_PED) do wait(0) end
-		mainWindow.deactivate()
-		infoWindow.deactivate()
-		isSettingsApplied = false
-		return
-	end)
+	if config.data.settings.selectedScriptStatus > 0 then
+		lua_thread.create
+		(
+			function()
+				while isCharInAnyCar(PLAYER_PED) do wait(0) end
+				mainWindow.deactivate()
+				infoWindow.deactivate()
+				isSettingsApplied = false
+				return
+			end
+		)
+	end
 end
 
 function sampev.onInitGame()
@@ -921,35 +921,18 @@ function sampev.onInitGame()
 end
 
 function sampev.onGivePlayerMoney(money)
-	local player = playerService.getByHandle(
-		playerService.get(), 
-		PLAYER_PED
-	)
+	if config.data.settings.selectedScriptStatus > 0 then
+		local player = playerService.getByHandle(
+			playerService.get(), 
+			PLAYER_PED
+		)
 
-	local car = carsService.getByDriver(
-		carsService.get(),
-		player
-	)
+		local car = carsService.getByDriver(
+			carsService.get(),
+			player
+		)
 
-	if car and car.IsTruck() then
-		-- Обновляем конфигурацию
-		config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
-		config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
-		
-		-- Обновляем значения в окне
-		infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-		infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
-		config.save()
-	end
-
-	-- Проверка на аренду фуры
-	lua_thread.create
-	(
-		function()
-			wait(1000)
-			if not isSuccessfulRenting then return end
-			isSuccessfulRenting = false
+		if car and car.IsTruck() then
 			-- Обновляем конфигурацию
 			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
@@ -959,10 +942,28 @@ function sampev.onGivePlayerMoney(money)
 			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
 
 			config.save()
-			return
 		end
-	)
 
+		-- Проверка на аренду фуры
+		lua_thread.create
+		(
+			function()
+				wait(1000)
+				if not isSuccessfulRenting then return end
+				isSuccessfulRenting = false
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+				config.save()
+				return
+			end
+		)
+	end
 end
 
 -- Утилитные функции
