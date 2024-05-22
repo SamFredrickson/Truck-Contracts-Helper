@@ -264,11 +264,8 @@ function main()
 					and not unloading.notified
 					and not unloading.time then
 						unloading.notified = true
-						local message = LocalMessage.new( 
-							" Контракт больше неактуален или Вы взяли не свой груз", 
-							0, 
-							constants.COLORS.DARK_GRAY
-						)
+						local text = " Контракт больше неактуален или Вы взяли не свой груз"
+						local message = LocalMessage.new(" Контракт больше неактуален или Вы взяли не свой груз", 0, constants.COLORS.DARK_GRAY)
 						chatService.send(message)
 						wait(1000)
 					end
@@ -298,15 +295,8 @@ function main()
 					local cars = carsService.get()
 					local players = playerService.get()
 
-					local player = playerService.getByHandle(
-						players, 
-						PLAYER_PED
-					)
-				
-					local car = carsService.getByDriver(
-						cars,
-						player
-					)
+					local player = playerService.getByHandle(players, PLAYER_PED)
+					local car = carsService.getByDriver(cars, player)
 
 					if car and car.IsTruck() then
 						-- Меняем цвет ника
