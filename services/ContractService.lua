@@ -14,6 +14,9 @@ local Volvo = require "tch.entities.vehicles.volvo"
 
 local PortLosSantos = require "tch.entities.coords.portlossantos"
 local PortSanFierro = require "tch.entities.coords.portsanfierro"
+local AirportSanFierro = require "tch.entities.coords.airportsanfierro"
+local AirportLasVenturas = require "tch.entities.coords.airportlasventuras"
+local AirportLosSantos = require "tch.entities.coords.airportlossantos"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -31,6 +34,22 @@ local trucks = {
 
 local portLosSantos = PortLosSantos.new()
 local portSanFierro = PortSanFierro.new()
+local airportSanFierro = AirportSanFierro.new()
+local airportLasVenturas = AirportLasVenturas.new()
+local airportLosSantos = AirportLosSantos.new()
+
+local points = 
+{
+   legal = {
+        portLosSantos = portLosSantos,
+        portSanFierro = portSanFierro
+   },
+   illegal = {
+        airportSanFierro = airportSanFierro,
+        airportLasVenturas = airportLasVenturas,
+        airportLosSantos = airportLosSantos
+   }
+}
 
 local ContractService = {
     new = function()
@@ -71,9 +90,7 @@ local ContractService = {
                             if source:find(filterSource.name) then
                                for _, filterDestination in pairs(filterSource.destinations) do
                                     if not filterDestination.hidden 
-                                    and destination:find(filterDestination.short_name) then
-                                        return true
-                                    end
+                                    and destination:find(filterDestination.short_name) then return true end
                                end
                             end
                         end
@@ -141,15 +158,11 @@ local ContractService = {
         end
 
         self.CanTake = function(contracts)
-            local player = playerService.getByHandle(
-                playerService.get(), 
-                PLAYER_PED
-            )
-        
-            local car = carsService.getByDriver(
-                carsService.get(),
-                player
-            )
+            local cars = carsService.get()
+            local players = playerService.get()
+
+            local player = playerService.getByHandle(players, PLAYER_PED)
+            local car = carsService.getByDriver(cars, player)
         
             if car and car.IsTruck() then
                 return #contracts > 0
@@ -162,15 +175,11 @@ local ContractService = {
         end
 
         self.CanSearch = function(contracts)
-            local player = playerService.getByHandle(
-                playerService.get(), 
-                PLAYER_PED
-            )
-        
-            local car = carsService.getByDriver(
-                carsService.get(),
-                player
-            )
+            local cars = carsService.get()
+            local players = playerService.get()
+
+            local player = playerService.getByHandle(players, PLAYER_PED)
+            local car = carsService.getByDriver(cars, player)
         
             if car and car.IsTruck() then
                 return not sampIsDialogActive()
@@ -185,24 +194,47 @@ local ContractService = {
             local cars = carsService.get()
             local players = playerService.get()
 
-            local player = playerService.getByHandle(
-                players, 
-                PLAYER_PED
-            )
+            local player = playerService.getByHandle(players, PLAYER_PED)
+            local car = carsService.getByDriver(cars, player)
         
-            local car = carsService.getByDriver(
-                cars,
-                player
-            )
+            -- ѕроверка разгрузки обычного груза
+            local isWithinDistance = 
+            (
+                function()
+                    local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
+                    for _, point in pairs(points.legal) do
+                        if player.IsWithinDistance(point, distance) then return true end
+                    end
+                   return false
+                end
+            )()
 
             if car and car.IsTruck() then
-                return #contracts > 0
+                if #contracts > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
                 and self.findActive(contracts)
                 and carsService.IsCarAttachedToTrailer(cars, car)
-                and (player.IsWithinDistance(portLosSantos, constants.CONFIG.DEFAULT_SETTINGS.unloadDistance) 
-                or player.IsWithinDistance(portSanFierro, constants.CONFIG.DEFAULT_SETTINGS.unloadDistance))
+                and isWithinDistance then return true end
+            end
+
+            -- ѕроверка разгрузки нелегального груза
+            local isWithinDistance = 
+            (
+                function()
+                    local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
+                    for _, point in pairs(points.illegal) do
+                        if player.IsWithinDistance(point, distance) then return true end
+                    end
+                   return false
+                end
+            )()
+
+            if car and car.IsTruck() then
+                if not sampIsDialogActive()
+                and not sampIsChatInputActive()
+                and carsService.IsCarAttachedToTrailer(cars, car)
+                and isWithinDistance then return true end
             end
         
             return false
@@ -231,40 +263,27 @@ local ContractService = {
         end
 
         self.getContractByAutoloadPoint = function(point, contracts)
-            if not point or #contracts <= 0 then
-                return false
-            end
+            if not point or #contracts <= 0 then return false end
 
             for _, contract in pairs(contracts) do
-                if point.source:find(contract.source) then
-                    return contract
-                end
+                if point.source:find(contract.source) then return contract end
             end
 
             return false
         end
 
         self.CanAutotake = function(point)
-            if not point then
-                return false
-            end
-
+            if not point then return false end
             local cars = carsService.get()
             local players = playerService.get()
-
-            local player = playerService.getByHandle(
-                players, 
-                PLAYER_PED
-            )
+            local player = playerService.getByHandle(players, PLAYER_PED)
 
             for _, driver in pairs(players) do
                 local car = carsService.getByDriver(cars, driver)
                 if car 
                 and car.IsTruck() 
                 and driver.IsWithinDistance(point.coords, 50)
-                and driver.handle ~= player.handle then
-                    return false
-                end
+                and driver.handle ~= player.handle then return false end
             end
 
             return true

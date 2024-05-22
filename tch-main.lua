@@ -922,15 +922,11 @@ end
 
 function sampev.onGivePlayerMoney(money)
 	if config.data.settings.selectedScriptStatus > 0 then
-		local player = playerService.getByHandle(
-			playerService.get(), 
-			PLAYER_PED
-		)
+		local cars = carsService.get()
+		local players = playerService.get()
 
-		local car = carsService.getByDriver(
-			carsService.get(),
-			player
-		)
+		local player = playerService.getByHandle(players, PLAYER_PED)
+		local car = carsService.getByDriver(cars, player)
 
 		if car and car.IsTruck() then
 			-- Обновляем конфигурацию
