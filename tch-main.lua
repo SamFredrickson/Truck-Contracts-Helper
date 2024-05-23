@@ -265,7 +265,7 @@ function main()
 					and not unloading.time then
 						unloading.notified = true
 						local text = " Контракт больше неактуален или Вы взяли не свой груз"
-						local message = LocalMessage.new(" Контракт больше неактуален или Вы взяли не свой груз", 0, constants.COLORS.DARK_GRAY)
+						local message = LocalMessage.new(text, 0, constants.COLORS.DARK_GRAY)
 						chatService.send(message)
 						wait(1000)
 					end
@@ -779,10 +779,9 @@ function sampev.onServerMessage(color, text)
 		and text:find(serverMessageService.findByCode("waiting-for-free-place").message) then
 			local minutes, seconds = text:match(serverMessageService.findByCode("waiting-for-free-place").message)
 			local time = ((tonumber(minutes) * 60) + tonumber(seconds))
+			local text = string.format(" {FFFFFF}Авторазгрузка начата! Пожалуйста, подождите {ed5a5a}%s секунд...", time)
 			unloading.time = os.time() + time
-			local message = LocalMessage.new(
-				string.format(" {FFFFFF}Авторазгрузка начата! Пожалуйста, подождите {ed5a5a}%s секунд...", time)
-			)
+			local message = LocalMessage.new(text)
 			chatService.send(message)
 			return false
 		end
