@@ -103,13 +103,21 @@ function main()
 		sampRegisterChatCommand
 		(
 			"tch.info",
-			function() infoWindow.toggle() end
+			function()
+				if config.data.settings.selectedScriptStatus > 0 then
+					infoWindow.toggle()
+				end
+			end
 		)
 
 		sampRegisterChatCommand
 		(
             "tch.list",
-			function() mainWindow.toggle() end
+			function()
+				if config.data.settings.selectedScriptStatus > 0 then
+					mainWindow.toggle()
+				end
+			end
         )
 
 		sampRegisterChatCommand
