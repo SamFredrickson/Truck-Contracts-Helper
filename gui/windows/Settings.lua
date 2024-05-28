@@ -53,6 +53,10 @@ local Settings = {
         local autorefillPrice = imgui.new.int(config.data.settings.refillPrice)
         local company = imgui.new.char[256](u8(filters.data.company))
         local minTonsQuantity = imgui.new.int(filters.data.minTonsQuantity)
+        local linesWidth = imgui.new.int(config.data.settings.linesWidth)
+
+        local convertedToFloat4 = imgui.ColorConvertU32ToFloat4(config.data.settings.linesColor)
+        local color = imgui.new.float[4](convertedToFloat4.x, convertedToFloat4.y, convertedToFloat4.z, convertedToFloat4.w)
 
         local isAnyItemActive = false
         local isAnyItemActiveMoreOneSecond = false
@@ -207,14 +211,114 @@ local Settings = {
                                 imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 180))
+                        imgui.SetCursorPos(imgui.ImVec2(5, 175))
+                        imgui.BeginChild("##CameraLinesCheckbox")
+                            if imgui.Checkbox(u8(" Подсвечивать камеры"), imgui.new.bool(config.data.settings.cameraLines)) then
+                                config.data.settings.cameraLines = not config.data.settings.cameraLines
+                                config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Подсвечивать участки камер линиями в пространстве")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 210))
+                        imgui.BeginChild("##CameraLinesText")
+                            imgui.Text(u8(" Ширина линий"))
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 175))
+                        imgui.BeginChild("##CameraLinesColorEdit4")
+                            if imgui.ColorEdit4(u8(" Цвет линий##color"), color) then
+                                config.data.settings.linesColor = imgui.ColorConvertFloat4ToU32(
+                                    imgui.ImVec4(color[0], color[1], color[2], color[3])
+                                )
+                                config.save()
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 205))
+                        imgui.BeginChild("##СameraLinesChild")
+                            imgui.PushItemWidth(200)
+                            if imgui.SliderInt
+                            (
+                                "##cameraLinesWidth", 
+                                linesWidth, 
+                                constants.CAMERA_LINES.MIN_WIDTH, 
+                                constants.CAMERA_LINES.MAX_WIDTH
+                            ) then
+                                config.data.settings.linesWidth = linesWidth[0]
+                                config.save()
+                            end
+                            imgui.PopItemWidth()
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(400, 205))
+                        imgui.BeginChild("##CameraLinesButtons")
+                            if imgui.Button("+ ##CameraLinesPlusButton", imgui.ImVec2(20, 0)) then
+                                linesWidth[0] = (
+                                    linesWidth[0] >= constants.CAMERA_LINES.MAX_WIDTH 
+                                    and constants.CAMERA_LINES.MAX_WIDTH 
+                                    or linesWidth[0] + 1
+                                )
+                                config.data.settings.linesWidth = linesWidth[0]
+                                config.save()
+                            end
+                            if imgui.IsItemActive() then
+                                isAnyItemActive = true
+                                if isAnyItemActiveMoreOneSecond then
+                                    linesWidth[0] = (
+                                        linesWidth[0] >= constants.CAMERA_LINES.MAX_WIDTH 
+                                        and constants.CAMERA_LINES.MAX_WIDTH 
+                                        or linesWidth[0] + 1
+                                    )
+                                    config.data.settings.linesWidth = linesWidth[0]
+                                    config.save()
+                                end
+                            end
+                            if imgui.IsItemActivated() then
+                                isAnyItemActiveMoreOneSecond = false
+                                isAnyItemActive = false
+                                currentTime = nil
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
+                            end
+                            imgui.SameLine()
+                            if imgui.Button("- ##CameraLinesMinusButton", imgui.ImVec2(20, 0)) then
+                                linesWidth[0] = (
+                                    linesWidth[0] <= constants.CAMERA_LINES.MIN_WIDTH 
+                                    and constants.CAMERA_LINES.MIN_WIDTH 
+                                    or linesWidth[0] - 1
+                                )
+                                config.data.settings.linesWidth = linesWidth[0]
+                                config.save()
+                            end
+                            if imgui.IsItemActive() then
+                                isAnyItemActive = true
+                                if isAnyItemActiveMoreOneSecond then
+                                    linesWidth[0] = (
+                                        linesWidth[0] <= constants.CAMERA_LINES.MIN_WIDTH 
+                                        and constants.CAMERA_LINES.MIN_WIDTH 
+                                        or linesWidth[0] - 1
+                                    )
+                                    config.data.settings.linesWidth = linesWidth[0]
+                                    config.save()
+                                end
+                            end
+                            if imgui.IsItemActivated() then
+                                isAnyItemActiveMoreOneSecond = false
+                                isAnyItemActive = false
+                                currentTime = nil
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 240))
                         imgui.BeginChild("##AutomechanicSuggestionsText")
                             imgui.Text(u8(" Принимать предложения"))
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Автоматически принимать предложения от механиков")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 175))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 235))
                         imgui.BeginChild("##AutomechanicSuggestions")
                             if imgui.Checkbox(u8(" Ремонта"), imgui.new.bool(config.data.settings.autorepair)) then
                                 config.data.settings.autorepair = not config.data.settings.autorepair
@@ -226,14 +330,14 @@ local Settings = {
                                 config.save()
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 210))
+                        imgui.SetCursorPos(imgui.ImVec2(5, 265))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairConditionText")
                             imgui.TextColoredRGB(" Если цена ремонта")
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Если цена ремонта меньше либо равна выбранной")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 210))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 265))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairPrice")
                             imgui.PushItemWidth(200)
                             if imgui.SliderInt
@@ -248,17 +352,25 @@ local Settings = {
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(400, 210))
+                        imgui.SetCursorPos(imgui.ImVec2(400, 265))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairButtons")
                             if imgui.Button("+ ##AutomechanicSuggestionsRepairPlusButton", imgui.ImVec2(20, 0)) then
-                                autorepairPrice[0] = autorepairPrice[0] + 1
+                                autorepairPrice[0] = (
+                                    autorepairPrice[0] >= constants.MECHANIC.MAX_REPAIR_PRICE
+                                    and constants.MECHANIC.MAX_REPAIR_PRICE
+                                    or autorepairPrice[0] + 1
+                                )
                                 config.data.settings.repairPrice = autorepairPrice[0]
                                 config.save()
                             end
                             if imgui.IsItemActive() then
                                 isAnyItemActive = true
                                 if isAnyItemActiveMoreOneSecond then
-                                    autorepairPrice[0] = autorepairPrice[0] + 1
+                                    autorepairPrice[0] = (
+                                        autorepairPrice[0] >= constants.MECHANIC.MAX_REPAIR_PRICE
+                                        and constants.MECHANIC.MAX_REPAIR_PRICE
+                                        or autorepairPrice[0] + 1
+                                    )
                                     config.data.settings.repairPrice = autorepairPrice[0]
                                     config.save()
                                 end
@@ -273,14 +385,22 @@ local Settings = {
                             end
                             imgui.SameLine()
                             if imgui.Button("- ##AutomechanicSuggestionsRepairMinusButton", imgui.ImVec2(20, 0)) then
-                                autorepairPrice[0] = autorepairPrice[0] - 1
+                                autorepairPrice[0] = (
+                                    autorepairPrice[0] <= constants.MECHANIC.MIN_REPIAR_PRICE
+                                    and constants.MECHANIC.MIN_REPIAR_PRICE
+                                    or autorepairPrice[0] - 1
+                                )
                                 config.data.settings.repairPrice = autorepairPrice[0]
                                 config.save()
                             end
                             if imgui.IsItemActive() then
                                 isAnyItemActive = true
                                 if isAnyItemActiveMoreOneSecond then
-                                    autorepairPrice[0] = autorepairPrice[0] - 1
+                                    autorepairPrice[0] = (
+                                        autorepairPrice[0] <= constants.MECHANIC.MIN_REPIAR_PRICE
+                                        and constants.MECHANIC.MIN_REPIAR_PRICE
+                                        or autorepairPrice[0] - 1
+                                    )
                                     config.data.settings.repairPrice = autorepairPrice[0]
                                     config.save()
                                 end
@@ -294,14 +414,14 @@ local Settings = {
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 240))
+                        imgui.SetCursorPos(imgui.ImVec2(5, 295))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillConditionText")
                             imgui.TextColoredRGB(" Если цена заправки")
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Если цена заправки меньше либо равна выбранной")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 240))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 295))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillPrice")
                             imgui.PushItemWidth(200)
                             if imgui.SliderInt
@@ -316,17 +436,25 @@ local Settings = {
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(400, 240))
+                        imgui.SetCursorPos(imgui.ImVec2(400, 295))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillButtons")
                             if imgui.Button("+ ##AutomechanicSuggestionsRefillPlusButton", imgui.ImVec2(20, 0)) then
-                                autorefillPrice[0] = autorefillPrice[0] + 1
+                                autorefillPrice[0] = (
+                                    autorefillPrice[0] >= constants.MECHANIC.MAX_REFILL_PRICE
+                                    and constants.MECHANIC.MAX_REFILL_PRICE
+                                    or autorefillPrice[0] + 1
+                                )
                                 config.data.settings.refillPrice = autorefillPrice[0]
                                 config.save()
                             end
                             if imgui.IsItemActive() then
                                 isAnyItemActive = true
                                 if isAnyItemActiveMoreOneSecond then
-                                    autorefillPrice[0] = autorefillPrice[0] + 1
+                                    autorefillPrice[0] = (
+                                        autorefillPrice[0] >= constants.MECHANIC.MAX_REFILL_PRICE
+                                        and constants.MECHANIC.MAX_REFILL_PRICE
+                                        or autorefillPrice[0] + 1
+                                    )
                                     config.data.settings.refillPrice = autorefillPrice[0]
                                     config.save()
                                 end
@@ -341,14 +469,22 @@ local Settings = {
                             end
                             imgui.SameLine()
                             if imgui.Button("- ##AutomechanicSuggestionsRefillMinusButton", imgui.ImVec2(20, 0)) then
-                                autorefillPrice[0] = autorefillPrice[0] - 1
+                                autorefillPrice[0] = (
+                                    autorefillPrice[0] <= constants.MECHANIC.MIN_REFILL_PRICE
+                                    and constants.MECHANIC.MIN_REFILL_PRICE
+                                    or autorefillPrice[0] - 1
+                                )
                                 config.data.settings.refillPrice = autorefillPrice[0]
                                 config.save()
                             end
                             if imgui.IsItemActive() then
                                 isAnyItemActive = true
                                 if isAnyItemActiveMoreOneSecond then
-                                    autorefillPrice[0] = autorefillPrice[0] - 1
+                                    autorefillPrice[0] = (
+                                        autorefillPrice[0] <= constants.MECHANIC.MIN_REFILL_PRICE
+                                        and constants.MECHANIC.MIN_REFILL_PRICE
+                                        or autorefillPrice[0] - 1
+                                    )
                                     config.data.settings.refillPrice = autorefillPrice[0]
                                     config.save()
                                 end

@@ -468,6 +468,30 @@ function main()
 			10
 		):run()
 
+		-- Отрисовка линий камер
+		scheduleService.create
+		(
+			function()
+				if config.data.settings.selectedScriptStatus > 0 and config.data.settings.cameraLines then
+					for _, line in pairs(constants.CAMERA_LINES.VALUES) do
+						local startX, startY, startZ, finishX, finishY, finishZ = table.unpack(line)
+						renderDrawLineBy3dCoords
+						(
+							startX, 
+							startY, 
+							startZ, 
+							finishX, 
+							finishY, 
+							finishZ, 
+							config.data.settings.linesWidth, 
+							argb2abgr(config.data.settings.linesColor), 
+							-0.5
+						)
+					end
+				end
+			end
+		):run()
+
 		while true do
 			wait(-1)
 		end
@@ -1028,4 +1052,47 @@ end
 function imgui.CenterColumnText(text)
     imgui.SetCursorPosX((imgui.GetColumnOffset() + (imgui.GetColumnWidth() / 2)) - imgui.CalcTextSize(text).x / 2)
     imgui.Text(text)
+end
+
+function explode_argb(argb)
+	local a = bit.band(bit.rshift(argb, 24), 0xFF)
+	local r = bit.band(bit.rshift(argb, 16), 0xFF)
+	local g = bit.band(bit.rshift(argb, 8), 0xFF)
+	local b = bit.band(argb, 0xFF)
+	return a, r, g, b
+  end
+
+function join_argb(a, r, g, b)
+	local argb = b  -- b
+	argb = bit.bor(argb, bit.lshift(g, 8))  -- g
+	argb = bit.bor(argb, bit.lshift(r, 16)) -- r
+	argb = bit.bor(argb, bit.lshift(a, 24)) -- a
+	return argb
+end
+
+function argb_to_rgba(argb)
+	local a, r, g, b = explode_argb(argb)
+	return join_argb(r, g, b, a)
+end
+
+function argb2abgr(argb)
+    local abgr = bit.bor(
+        bit.lshift(bit.band(bit.rshift(argb, 24), 0xFF), 24),
+        bit.lshift(bit.band(argb, 0xFF), 16),
+        bit.lshift(bit.band(bit.rshift(argb, 8), 0xFF), 8),
+        bit.band(bit.rshift(argb, 16), 0xFF)
+    )
+    return abgr
+end
+
+function intToHex(int)
+    return '{'..string.sub(bit.tohex(int), 3, 8)..'}'
+end
+
+function renderDrawLineBy3dCoords(posX, posY, posZ, posX2, posY2, posZ2, width, color, radius)
+    local SposX, SposY = convert3DCoordsToScreen(posX, posY, posZ)
+    local SposX2, SposY2 = convert3DCoordsToScreen(posX2, posY2, posZ2)
+    if isPointOnScreen(posX, posY, posZ, radius) or isPointOnScreen(posX2, posY2, posZ2, radius) then
+        renderDrawLine(SposX, SposY, SposX2, SposY2, width, color)
+    end
 end
