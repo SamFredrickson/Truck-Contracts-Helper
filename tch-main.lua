@@ -245,8 +245,10 @@ function main()
 					local contracts = ContractService.CONTRACTS
 					local canUnload = contractsService.CanUnload(contracts)
 					
-					if config.data.settings.autounload 
-					and canUnload 
+					-- Легальный груз
+					if config.data.settings.autounload
+					and canUnload
+					and (race and race.contract)
 					and not unloading.active then
 						local message = Message.new(constants.COMMANDS.UNLOAD)
 						chatService.send(message)
@@ -254,9 +256,10 @@ function main()
 						wait(1000)
 					end
 
-					if config.data.settings.autounload 
+					if config.data.settings.autounload
 					and canUnload
 					and unloading.active
+					and (race and race.contract)
 					and unloading.time then
 						local difftime = os.difftime(unloading.time, os.time())
 						if difftime < 0 then
@@ -268,6 +271,7 @@ function main()
 
 					if config.data.settings.autounload
 					and canUnload
+					and (race and race.contract)
 					and unloading.active
 					and not unloading.notified
 					and not unloading.time then
@@ -276,6 +280,30 @@ function main()
 						local message = LocalMessage.new(text, 0, constants.COLORS.DARK_GRAY)
 						chatService.send(message)
 						wait(1000)
+					end
+
+					-- Нелегальный груз
+					if config.data.settings.autounload
+					and canUnload
+					and (race and not race.contract)
+					and not unloading.active then
+						local message = Message.new(constants.COMMANDS.UNLOAD)
+						chatService.send(message)
+						unloading.active = true
+						wait(1000)
+					end
+
+					if config.data.settings.autounload
+					and canUnload
+					and unloading.active
+					and (race and not race.contract)
+					and unloading.time then
+						local difftime = os.difftime(unloading.time, os.time())
+						if difftime < 0 then
+							local message = Message.new(constants.COMMANDS.UNLOAD)
+							chatService.send(message)
+							wait(1000)
+						end
 					end
 				end
 			end
