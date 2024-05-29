@@ -23,6 +23,16 @@ local PlayerService = {
             return result
         end
 
+        self.getNpc = function()
+            local result = {}
+            for _, handle in pairs(getAllChars()) do
+                if select(2, sampGetPlayerIdByCharHandle(handle)) == -1 and handle ~= PLAYER_PED then
+                    table.insert(result, handle)
+                end
+            end
+            return result
+        end
+
         self.getByHandle = function(players, handle)
             for _, player in pairs(players) do
                 if player.handle == handle then

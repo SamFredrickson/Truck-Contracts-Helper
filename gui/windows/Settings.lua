@@ -211,8 +211,18 @@ local Settings = {
                                 imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши")
                             end
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 175))
+                        imgui.BeginChild('##TransparentCorpses', imgui.ImVec2(250, 100), false)
+                            if imgui.Checkbox(u8(" Прозрачные трупы"), imgui.new.bool(config.data.settings.transparentCorpses)) then
+                                config.data.settings.transparentCorpses = not config.data.settings.transparentCorpses
+                                config.save()
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Отключает столкновение с трупами на дороге")
+                            end
+                        imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 175))
-                        imgui.BeginChild("##CameraLinesCheckbox")
+                        imgui.BeginChild("##CameraLinesCheckbox", imgui.ImVec2(190, 100), false)
                             if imgui.Checkbox(u8(" Подсвечивать камеры"), imgui.new.bool(config.data.settings.cameraLines)) then
                                 config.data.settings.cameraLines = not config.data.settings.cameraLines
                                 config.save()
@@ -222,19 +232,24 @@ local Settings = {
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 210))
-                        imgui.BeginChild("##CameraLinesText")
+                        imgui.BeginChild("##CameraLinesColorText")
+                            imgui.Text(u8(" Цвет линий"))
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 240))
+                        imgui.BeginChild("##CameraLinesWidthText")
                             imgui.Text(u8(" Ширина линий"))
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 175))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 205))
                         imgui.BeginChild("##CameraLinesColorEdit4")
-                            if imgui.ColorEdit4(u8(" Цвет линий##color"), color) then
+                            imgui.PushItemWidth(250)
+                            if imgui.ColorEdit4(u8("##color"), color) then
                                 config.data.settings.linesColor = imgui.ColorConvertFloat4ToU32(
                                     imgui.ImVec4(color[0], color[1], color[2], color[3])
                                 )
                                 config.save()
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 205))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 235))
                         imgui.BeginChild("##СameraLinesChild")
                             imgui.PushItemWidth(200)
                             if imgui.SliderInt
@@ -249,7 +264,7 @@ local Settings = {
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(400, 205))
+                        imgui.SetCursorPos(imgui.ImVec2(400, 235))
                         imgui.BeginChild("##CameraLinesButtons")
                             if imgui.Button("+ ##CameraLinesPlusButton", imgui.ImVec2(20, 0)) then
                                 linesWidth[0] = (
@@ -311,14 +326,14 @@ local Settings = {
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 240))
+                        imgui.SetCursorPos(imgui.ImVec2(5, 270))
                         imgui.BeginChild("##AutomechanicSuggestionsText")
                             imgui.Text(u8(" Принимать предложения"))
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Автоматически принимать предложения от механиков")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 235))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 265))
                         imgui.BeginChild("##AutomechanicSuggestions")
                             if imgui.Checkbox(u8(" Ремонта"), imgui.new.bool(config.data.settings.autorepair)) then
                                 config.data.settings.autorepair = not config.data.settings.autorepair
@@ -330,14 +345,14 @@ local Settings = {
                                 config.save()
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 265))
+                        imgui.SetCursorPos(imgui.ImVec2(5, 295))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairConditionText")
                             imgui.TextColoredRGB(" Если цена ремонта")
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Если цена ремонта меньше либо равна выбранной")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 265))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 295))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairPrice")
                             imgui.PushItemWidth(200)
                             if imgui.SliderInt
@@ -352,7 +367,7 @@ local Settings = {
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(400, 265))
+                        imgui.SetCursorPos(imgui.ImVec2(400, 295))
                         imgui.BeginChild("##AutomechanicSuggestionsRepairButtons")
                             if imgui.Button("+ ##AutomechanicSuggestionsRepairPlusButton", imgui.ImVec2(20, 0)) then
                                 autorepairPrice[0] = (
@@ -414,14 +429,14 @@ local Settings = {
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 295))
+                        imgui.SetCursorPos(imgui.ImVec2(5, 325))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillConditionText")
                             imgui.TextColoredRGB(" Если цена заправки")
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Если цена заправки меньше либо равна выбранной")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(195, 295))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 325))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillPrice")
                             imgui.PushItemWidth(200)
                             if imgui.SliderInt
@@ -436,7 +451,7 @@ local Settings = {
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(400, 295))
+                        imgui.SetCursorPos(imgui.ImVec2(400, 325))
                         imgui.BeginChild("##AutomechanicSuggestionsRefillButtons")
                             if imgui.Button("+ ##AutomechanicSuggestionsRefillPlusButton", imgui.ImVec2(20, 0)) then
                                 autorefillPrice[0] = (

@@ -61,7 +61,8 @@ local CONFIG = {
         refillPrice = 20000,
         cameraLines = true,
         linesColor = 0xFFFF0000,
-        linesWidth = 1
+        linesWidth = 1,
+        transparentCorpses = true
     }
 }
 

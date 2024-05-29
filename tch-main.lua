@@ -520,6 +520,20 @@ function main()
 			end
 		):run()
 
+		-- Отключение коллизии для трупов
+		scheduleService.create
+		(
+			function()
+				local players = playerService.getNpc()
+				local isScriptEnabled = config.data.settings.selectedScriptStatus > 0
+				local isTransparentCorpses = not config.data.settings.transparentCorpses
+				for _, player in pairs(players) do
+					if not isScriptEnabled then setCharCollision(player, true) end
+					if isScriptEnabled then setCharCollision(player, isTransparentCorpses) end
+				end
+			end
+		):run()
+
 		while true do
 			wait(-1)
 		end
