@@ -3,12 +3,14 @@ local Linerunner = require "tch.entities.vehicles.linerunner"
 local Tanker = require "tch.entities.vehicles.tanker"
 local RoadTrain = require "tch.entities.vehicles.roadtrain"
 local Volvo = require "tch.entities.vehicles.volvo"
+local Peterbilt = require "tch.entities.vehicles.peterbilt"
 
 local trucks = { 
     Linerunner.new().id, 
     Tanker.new().id, 
     RoadTrain.new().id,
-	Volvo.new().id
+	Volvo.new().id,
+    Peterbilt.new().id
 }
 
 local Car = {
