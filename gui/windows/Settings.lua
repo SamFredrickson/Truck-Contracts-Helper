@@ -51,6 +51,7 @@ local Settings = {
         local selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
         local autorepairPrice = imgui.new.int(config.data.settings.repairPrice)
         local autorefillPrice = imgui.new.int(config.data.settings.refillPrice)
+        local hotPrice = imgui.new.int(config.data.settings.hotPrice)
         local company = imgui.new.char[256](u8(filters.data.company))
         local minTonsQuantity = imgui.new.int(filters.data.minTonsQuantity)
         local linesWidth = imgui.new.int(config.data.settings.linesWidth)
@@ -330,7 +331,7 @@ local Settings = {
                         imgui.BeginChild("##AutomechanicSuggestionsText")
                             imgui.Text(u8(" Принимать предложения"))
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Автоматически принимать предложения от механиков")
+                                imgui.SetTooltip(u8"Автоматически принимать предложения от механиков или хот-догеров")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 265))
@@ -342,6 +343,11 @@ local Settings = {
                             imgui.SameLine()
                             if imgui.Checkbox(u8(" Заправки"), imgui.new.bool(config.data.settings.autorefill)) then
                                 config.data.settings.autorefill = not config.data.settings.autorefill
+                                config.save()
+                            end
+                            imgui.SameLine()
+                            if imgui.Checkbox(u8(" Хота"), imgui.new.bool(config.data.settings.autoHotDog)) then
+                                config.data.settings.autoHotDog = not config.data.settings.autoHotDog
                                 config.save()
                             end
                         imgui.EndChild()
@@ -513,6 +519,90 @@ local Settings = {
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
                             end
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 355))
+                        imgui.BeginChild("##AutoHotDoggerSuggestionText")
+                            imgui.TextColoredRGB(" Если цена хот-дога")
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8"Если цена хот-дога меньше либо равна выбранной")
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(195, 355))
+                        imgui.BeginChild("##AutoHotDoggerSuggestionPrice")
+                        imgui.PushItemWidth(200)
+                            if imgui.SliderInt
+                            (
+                                "##hotPrice", 
+                                hotPrice, 
+                                constants.HOTDOG.MIN_PRICE, 
+                                constants.HOTDOG.MAX_PRICE
+                            ) then
+                                config.data.settings.hotPrice = hotPrice[0]
+                                config.save()
+                            end
+                        imgui.PopItemWidth()
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(400, 355))
+                        imgui.BeginChild("##AutoHotDoggerSuggestionButtons")
+                        if imgui.Button("+ ##AutoHotDoggerPlusButton", imgui.ImVec2(20, 0)) then
+                            hotPrice[0] = (
+                                hotPrice[0] >= constants.HOTDOG.MAX_PRICE
+                                and constants.HOTDOG.MAX_PRICE
+                                or hotPrice[0] + 1
+                            )
+                            config.data.settings.hotPrice = hotPrice[0]
+                            config.save()
+                        end
+                        if imgui.IsItemActive() then
+                            isAnyItemActive = true
+                            if isAnyItemActiveMoreOneSecond then
+                                hotPrice[0] = (
+                                    hotPrice[0] >= constants.HOTDOG.MAX_PRICE
+                                    and constants.HOTDOG.MAX_PRICE
+                                    or hotPrice[0] + 1
+                                )
+                                config.data.settings.hotPrice = hotPrice[0]
+                                config.save()
+                            end
+                        end
+                        if imgui.IsItemActivated() then
+                            isAnyItemActiveMoreOneSecond = false
+                            isAnyItemActive = false
+                            currentTime = nil
+                        end
+                        if imgui.IsItemHovered() then
+                            imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
+                        end
+                        imgui.SameLine()
+                        if imgui.Button("- ##AutoHotDoggerSuggestionMinusButton", imgui.ImVec2(20, 0)) then
+                            hotPrice[0] = (
+                                hotPrice[0] <= constants.HOTDOG.MIN_PRICE
+                                and constants.HOTDOG.MIN_PRICE
+                                or hotPrice[0] - 1
+                            )
+                            config.data.settings.hotPrice = hotPrice[0]
+                            config.save()
+                        end
+                        if imgui.IsItemActive() then
+                            isAnyItemActive = true
+                            if isAnyItemActiveMoreOneSecond then
+                                hotPrice[0] = (
+                                    hotPrice[0] <= constants.HOTDOG.MIN_PRICE
+                                    and constants.HOTDOG.MIN_PRICE
+                                    or hotPrice[0] - 1
+                                )
+                                config.data.settings.hotPrice = hotPrice[0]
+                                config.save()
+                            end
+                        end
+                        if imgui.IsItemActivated() then
+                            isAnyItemActiveMoreOneSecond = false
+                            isAnyItemActive = false
+                            currentTime = nil
+                        end
+                        if imgui.IsItemHovered() then
+                            imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
+                        end
+                    imgui.EndChild()
                     end
                     if active == 2 then
                         if imgui.BeginTabBar("Contract Tabs") then

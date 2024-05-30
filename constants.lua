@@ -57,8 +57,10 @@ local CONFIG = {
         transparentContracts = true,
         autorepair = false,
         autorefill = false,
+        autoHotDog = false,
         repairPrice = 100,
         refillPrice = 20000,
+        hotPrice = 10000,
         cameraLines = true,
         linesColor = 0xFFFF0000,
         linesWidth = 1,
@@ -71,6 +73,11 @@ local MECHANIC = {
     MAX_REPAIR_PRICE = 10000,
     MIN_REFILL_PRICE = 1,
     MAX_REFILL_PRICE = 500000
+}
+
+local HOTDOG = {
+    MIN_PRICE = 1,
+    MAX_PRICE = 10000
 }
 
 local CONTRACTS = {
@@ -429,6 +436,14 @@ local SERVER_MESSAGES = {
         code = "refill-suggestion"
     },
     {
+        message = "([A-Za-z_]+)%[%d+%] предложил Вам купить хот%-дог. Цена: (%d+) $.",
+        code = "hot-suggestion"
+    },
+    {
+        message = "Вы купили хот%-дог",
+        code = "hot-accepted"
+    },
+    {
         message = "Вы согласились на ремонт транспортного средства",
         code = "repair-accepted"
     },
@@ -766,5 +781,6 @@ return {
     MECHANIC = MECHANIC,
     CONTRACT_FILTERS = CONTRACT_FILTERS,
     SCRIPT_STATUSES = SCRIPT_STATUSES,
-    CAMERA_LINES = CAMERA_LINES
+    CAMERA_LINES = CAMERA_LINES,
+    HOTDOG = HOTDOG
 }

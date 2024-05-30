@@ -77,6 +77,7 @@ local TWO_HOURS = 3600 * 2
 local isSettingsApplied = false
 local hasActiveContract = false
 local isSuccessfulRenting = false
+local hotSuggestion = false
 local race = nil
 
 local unloading = {
@@ -491,6 +492,7 @@ function main()
 				if config.data.settings.selectedScriptStatus > 0 then
 					if repairSuggestion.active then setGameKeyState(11, 255) end
 					if refillSuggestion.active then setGameKeyState(11, 255) end
+					if hotSuggestion then setGameKeyState(11, 255) end
 				end
 			end,
 			10
@@ -874,6 +876,13 @@ function sampev.onServerMessage(color, text)
 			end
 		end
 
+		if config.data.settings.autoHotDog and text:find(serverMessageService.findByCode("hot-suggestion").message) then
+			local name, price = text:match(serverMessageService.findByCode("hot-suggestion").message)
+			if tonumber(price) <= config.data.settings.hotPrice then
+				hotSuggestion = true
+			end
+		end
+
 		if text:find(serverMessageService.findByCode("repair-accepted").message) then
 			repairSuggestion.active = false
 		end
@@ -888,6 +897,10 @@ function sampev.onServerMessage(color, text)
 
 		if text:find(serverMessageService.findByCode("refill-accepted").message) then
 			refillSuggestion.active = false
+		end
+
+		if text:find(serverMessageService.findByCode("hot-accepted").message) then
+			hotSuggestion = false
 		end
 
 		if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
