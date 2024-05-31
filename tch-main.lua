@@ -86,6 +86,10 @@ local unloading = {
 	notified = false
 }
 
+local autounloading = {
+	notified = false
+}
+
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
 end)
@@ -435,20 +439,22 @@ function main()
 					and mainWindow.hideCursor then
 						local point = pointService.getPlayerAutoloadPoint()
 						local contract = contractsService.getContractByAutoloadPoint(point, contracts)
-						
-						if contract and not contractsService.CanAutotake(point) then
+						local canAutoTake = contractsService.CanAutotake(point)
+
+						if contract 
+						and not canAutoTake 
+						and not autounloading.notified then
 							local messages = {
-								LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики"),
-								LocalMessage.new(" {FFFFFF}Подождите {ed5a5a}5 секунд{FFFFFF} или возьмите груз вручную {ed5a5a}(( /tch.list » Взять контракт и загрузить ))")
+								LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики."),
+								LocalMessage.new(" {FFFFFF}Подождите или нажмите комбинацию клавиш {ed5a5a}ALT + Y{FFFFFF} чтобы начать загрузку {ed5a5a}сейчас.")
 							}
 							for _, message in pairs(messages) do
 								chatService.send(message)
 							end
-							wait(5000)
-							return
+							autounloading.notified = true
 						end
 
-						if contract then
+						if contract and canAutoTake then
 							MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
 							MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
 							MenuDialogue.FLAGS.CONTRACT.ID = contract.id
@@ -534,6 +540,32 @@ function main()
 					if isScriptEnabled then setCharCollision(player, isTransparentCorpses) end
 				end
 			end
+		):run()
+
+		-- Прослушка комбинации клавиш для ручной автозагрузки
+		scheduleService.create
+		(
+			function()
+				if config.data.settings.selectedScriptStatus > 0 then
+					if isKeyDown(vkeys.VK_MENU) and isKeyDown(vkeys.VK_Y) then
+						while isKeyDown(vkeys.VK_MENU) and isKeyDown(vkeys.VK_Y) do wait(80) end
+						local contracts = ContractService.CONTRACTS
+						if contractsService.CanTake(contracts) and mainWindow.hideCursor then
+							local point = pointService.getPlayerAutoloadPoint()
+							local contract = contractsService.getContractByAutoloadPoint(point, contracts)
+							if contract then
+								MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
+								MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
+								MenuDialogue.FLAGS.CONTRACT.ID = contract.id
+								local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
+								chatService.send(menuCommandMessage)
+								wait(1000)
+							end
+						end
+					end
+				end
+			end,
+			40
 		):run()
 
 		while true do
@@ -689,6 +721,7 @@ function sampev.onServerMessage(color, text)
 			unloading.active = false
 			unloading.time = nil
 			unloading.notified = false
+			autounloading.notified = false
 			
 			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 			local contract = contractsService.update(
@@ -740,6 +773,7 @@ function sampev.onServerMessage(color, text)
 			unloading.active = false
 			unloading.time = nil
 			unloading.notified = false
+			autounloading.notified = false
 
 			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 			local contract = contractsService.update(
@@ -790,6 +824,7 @@ function sampev.onServerMessage(color, text)
 			unloading.active = false
 			unloading.time = nil
 			unloading.notified = false
+			autounloading.notified = false
 
 			-- Обновляем количество рейсов за сессию
 			config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
