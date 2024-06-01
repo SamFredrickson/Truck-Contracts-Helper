@@ -194,35 +194,43 @@ local POINTS = {
 local AUTOLOAD_POINTS = {
     {
         source = "Лесопилка №1",
-        coords = { x = -449.37, y = -66.01, z = 59.42 }
+        coords = { x = -449.37, y = -66.01, z = 59.42 },
+        autoTakeDistance = 25
     },
     {
         source = "Лесопилка №2",
-        coords = { x = -1978.81, y = -2434.78, z = 30.63 }
+        coords = { x = -1978.81, y = -2434.78, z = 30.63 },
+        autoTakeDistance = 25
     },
     {
         source = "Строительный завод №1",
-        coords = { x = -158.12, y = -289.38, z = 3.91 }
+        coords = { x = -158.12, y = -289.38, z = 3.91 },
+        autoTakeDistance = 60
     },
     {
         source = "Строительный завод №2",
-        coords = { x = 617.18, y = 1224.79, z = 11.72 }
+        coords = { x = 617.18, y = 1224.79, z = 11.72 },
+        autoTakeDistance = 25
     },
     {
         source = "Нефтезавод №1",
-        coords = { x = 256.20, y = 1414.57, z = 10.71 }
+        coords = { x = 256.20, y = 1414.57, z = 10.71 },
+        autoTakeDistance = 25
     },
     {
         source = "Нефтезавод №2",
-        coords = { x = -1046.84, y = -670.79, z = 32.35 }
+        coords = { x = -1046.84, y = -670.79, z = 32.35 },
+        autoTakeDistance = 25
     },
     {
         source = "Склад угля №1",
-        coords = { x = 608.77, y = 847.84, z = -43.15 }
+        coords = { x = 608.77, y = 847.84, z = -43.15 },
+        autoTakeDistance = 25
     },
     {
         source = "Склад угля №2",
-        coords = { x = -1873.02, y = -1720.16, z = 21.75 }
+        coords = { x = -1873.02, y = -1720.16, z = 21.75 },
+        autoTakeDistance = 25
     }
 }
 

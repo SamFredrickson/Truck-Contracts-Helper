@@ -278,8 +278,8 @@ local ContractService = {
 
             for _, driver in pairs(players) do
                 local car = carsService.getByDriver(cars, driver)
-                local isTrailed = car and carsService.IsCarAttachedToTrailer(cars, car) or false
-                local isWithinDistance = driver.IsWithinDistance(point.coords, 50)
+                -- local isTrailed = car and carsService.IsCarAttachedToTrailer(cars, car) or false
+                local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoTakeDistance)
                 
                 if car
                 and car.IsTruck() 
