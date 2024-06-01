@@ -84,7 +84,8 @@ local race = nil
 local unloading = {
 	active = false, 
 	time = nil,
-	notified = false
+	notified = false,
+	tries = 0
 }
 
 local autounloading = {
@@ -250,21 +251,21 @@ function main()
 				if config.data.settings.selectedScriptStatus > 0 then
 					local contracts = ContractService.CONTRACTS
 					local canUnload = contractsService.CanUnload(contracts)
-					
+
 					-- Легальный груз
 					if config.data.settings.autounload
 					and canUnload
 					and (race and race.contract)
-					and not unloading.active then
+					and unloading.tries < 3 
+					and not unloading.time then
+						unloading.tries = unloading.tries + 1
 						local message = Message.new(constants.COMMANDS.UNLOAD)
 						chatService.send(message)
-						unloading.active = true
 						wait(1000)
 					end
 
 					if config.data.settings.autounload
 					and canUnload
-					and unloading.active
 					and (race and race.contract)
 					and unloading.time then
 						local difftime = os.difftime(unloading.time, os.time())
@@ -278,7 +279,7 @@ function main()
 					if config.data.settings.autounload
 					and canUnload
 					and (race and race.contract)
-					and unloading.active
+					and unloading.tries >= 3
 					and not unloading.notified
 					and not unloading.time then
 						unloading.notified = true
@@ -292,16 +293,16 @@ function main()
 					if config.data.settings.autounload
 					and canUnload
 					and (race and not race.contract)
-					and not unloading.active then
+					and unloading.tries < 3 
+					and not unloading.time then
+						unloading.tries = unloading.tries + 1
 						local message = Message.new(constants.COMMANDS.UNLOAD)
 						chatService.send(message)
-						unloading.active = true
 						wait(1000)
 					end
 
 					if config.data.settings.autounload
 					and canUnload
-					and unloading.active
 					and (race and not race.contract)
 					and unloading.time then
 						local difftime = os.difftime(unloading.time, os.time())
@@ -726,7 +727,7 @@ function sampev.onServerMessage(color, text)
 		if text:find(serverMessageService.findByCode("contract-canceled").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			hasActiveContract = false
-			unloading.active = false
+			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
 			autounloading.notified = false
@@ -778,7 +779,7 @@ function sampev.onServerMessage(color, text)
 		if text:find(serverMessageService.findByCode("delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			hasActiveContract = false
-			unloading.active = false
+			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
 			autounloading.notified = false
@@ -829,7 +830,7 @@ function sampev.onServerMessage(color, text)
 		if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			hasActiveContract = false
-			unloading.active = false
+			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
 			autounloading.notified = false
