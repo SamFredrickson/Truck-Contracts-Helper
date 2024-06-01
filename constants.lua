@@ -444,6 +444,10 @@ local SERVER_MESSAGES = {
         code = "hot-accepted"
     },
     {
+        message = "Вы уже кушали",
+        code = "hot-eaten"
+    },
+    {
         message = "Вы согласились на ремонт транспортного средства",
         code = "repair-accepted"
     },

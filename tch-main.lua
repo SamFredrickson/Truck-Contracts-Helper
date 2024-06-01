@@ -17,6 +17,7 @@ local IllegalCargoDialogue = require "tch.samp.dialogues.illegalcargo"
 local SkillDialogue = require "tch.samp.dialogues.skill"
 local RepairSuggestion = require "tch.samp.dialogues.repairsuggestion"
 local RefillSuggestion = require "tch.samp.dialogues.refillsuggestion"
+local HotSuggestion = require "tch.samp.dialogues.hotsuggestion"
 
 local Sound = require "tch.entities.sounds.sound"
 local Contract = require "tch.entities.contracts.contract"
@@ -57,6 +58,7 @@ local illegalCargoDialogue = IllegalCargoDialogue.new()
 local skillDialogue = SkillDialogue.new()
 local repairSuggestion = RepairSuggestion.new()
 local refillSuggestion = RefillSuggestion.new()
+local hotSuggestion = HotSuggestion.new()
 
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
@@ -77,7 +79,6 @@ local TWO_HOURS = 3600 * 2
 local isSettingsApplied = false
 local hasActiveContract = false
 local isSuccessfulRenting = false
-local hotSuggestion = false
 local race = nil
 
 local unloading = {
@@ -498,7 +499,7 @@ function main()
 				if config.data.settings.selectedScriptStatus > 0 then
 					if repairSuggestion.active then setGameKeyState(11, 255) end
 					if refillSuggestion.active then setGameKeyState(11, 255) end
-					if hotSuggestion then setGameKeyState(11, 255) end
+					if hotSuggestion.active then setGameKeyState(11, 255) end
 				end
 			end,
 			10
@@ -660,6 +661,13 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		if config.data.settings.autorefill 
 		and title:find(refillSuggestion.title) 
 		and refillSuggestion.active then
+			sampSendDialogResponse(id, 1, _, _)
+			return false
+		end
+
+		if config.data.settings.autoHotDog 
+		and title:find(hotSuggestion.title) 
+		and hotSuggestion.active then
 			sampSendDialogResponse(id, 1, _, _)
 			return false
 		end
@@ -914,7 +922,7 @@ function sampev.onServerMessage(color, text)
 		if config.data.settings.autoHotDog and text:find(serverMessageService.findByCode("hot-suggestion").message) then
 			local name, price = text:match(serverMessageService.findByCode("hot-suggestion").message)
 			if tonumber(price) <= config.data.settings.hotPrice then
-				hotSuggestion = true
+				hotSuggestion.active = true
 			end
 		end
 
@@ -935,7 +943,11 @@ function sampev.onServerMessage(color, text)
 		end
 
 		if text:find(serverMessageService.findByCode("hot-accepted").message) then
-			hotSuggestion = false
+			hotSuggestion.active = false
+		end
+
+		if text:find(serverMessageService.findByCode("hot-eaten").message) then
+			hotSuggestion.active = false
 		end
 
 		if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
