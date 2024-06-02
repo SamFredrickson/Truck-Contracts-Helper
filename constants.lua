@@ -205,7 +205,7 @@ local AUTOLOAD_POINTS = {
     {
         source = "Строительный завод №1",
         coords = { x = -158.12, y = -289.38, z = 3.91 },
-        autoTakeDistance = 60
+        autoTakeDistance = 50
     },
     {
         source = "Строительный завод №2",

@@ -77,7 +77,6 @@ local pointService = PointsService.new()
 
 local TWO_HOURS = 3600 * 2
 local isSettingsApplied = false
-local hasActiveContract = false
 local isSuccessfulRenting = false
 local race = nil
 
@@ -231,7 +230,7 @@ function main()
 					local contracts = ContractService.CONTRACTS
 					local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
 					if mainWindow.window[0]
-					and not hasActiveContract
+					and not ContractService.CONTRACTS.hasUnknownActiveContract
 					and not isAutoloading
 					and mainWindow.hideCursor
 					and contractsService.CanSearch(contracts) then
@@ -447,8 +446,8 @@ function main()
 						and not canAutoTake 
 						and not autounloading.notified then
 							local messages = {
-								LocalMessage.new(" {FFFFFF}Рядом находятся другие {ed5a5a}дальнобойщики."),
-								LocalMessage.new(" {FFFFFF}Подождите или нажмите комбинацию клавиш {ed5a5a}ALT + Y{FFFFFF} чтобы начать загрузку {ed5a5a}сейчас.")
+								LocalMessage.new(" {FFFFFF}У точки загрузки находятся другие {ed5a5a}дальнобойщики."),
+								LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} комбинацией клавиш {ed5a5a}ALT + Y{FFFFFF} или подождите пока точка будет свободна.")
 							}
 							for _, message in pairs(messages) do
 								chatService.send(message)
@@ -726,7 +725,7 @@ function sampev.onServerMessage(color, text)
 		-- Логика при появлении собщения в чате, что контракт отменен
 		if text:find(serverMessageService.findByCode("contract-canceled").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-			hasActiveContract = false
+			ContractService.CONTRACTS.hasUnknownActiveContract = false
 			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
@@ -756,7 +755,7 @@ function sampev.onServerMessage(color, text)
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
 			ContractService.CONTRACTS = {}
-			hasActiveContract = true
+			ContractService.CONTRACTS.hasUnknownActiveContract = true
 
 			local messages = {
 				LocalMessage.new(" {FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
@@ -778,7 +777,7 @@ function sampev.onServerMessage(color, text)
 		-- Логика при успешной доставки обычного груза
 		if text:find(serverMessageService.findByCode("delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-			hasActiveContract = false
+			ContractService.CONTRACTS.hasUnknownActiveContract = false
 			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
@@ -829,7 +828,7 @@ function sampev.onServerMessage(color, text)
 		-- Логика при успешной доставке нелегального груза
 		if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-			hasActiveContract = false
+			ContractService.CONTRACTS.hasUnknownActiveContract = false
 			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false

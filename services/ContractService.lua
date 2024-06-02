@@ -236,6 +236,14 @@ local ContractService = {
                 and carsService.IsCarAttachedToTrailer(cars, car)
                 and isWithinDistance then return true end
             end
+
+            if car and car.IsTruck() then
+                if not sampIsDialogActive()
+                and not sampIsChatInputActive()
+                and carsService.IsCarAttachedToTrailer(cars, car)
+                and isWithinDistance
+                and ContractService.CONTRACTS.hasUnknownActiveContract then return true end
+            end
         
             return false
         end
@@ -278,9 +286,8 @@ local ContractService = {
 
             for _, driver in pairs(players) do
                 local car = carsService.getByDriver(cars, driver)
-                -- local isTrailed = car and carsService.IsCarAttachedToTrailer(cars, car) or false
                 local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoTakeDistance)
-                
+
                 if car
                 and car.IsTruck() 
                 and driver.handle ~= player.handle
