@@ -291,7 +291,7 @@ function main()
 					-- Нелегальный груз
 					if config.data.settings.autounload
 					and canUnload
-					and (race and not race.contract)
+					and ((race and not race.contract) or contractsService.hasUnknownActiveContract)
 					and unloading.tries < 3 
 					and not unloading.time then
 						unloading.tries = unloading.tries + 1
@@ -302,7 +302,7 @@ function main()
 
 					if config.data.settings.autounload
 					and canUnload
-					and (race and not race.contract)
+					and ((race and not race.contract) or contractsService.hasUnknownActiveContract)
 					and unloading.time then
 						local difftime = os.difftime(unloading.time, os.time())
 						if difftime < 0 then
