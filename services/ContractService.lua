@@ -54,6 +54,7 @@ local points =
 local ContractService = {
     new = function()
         local self = Service.new()
+        self.hasUnknownActiveContract = false
 
         self.parse = function(text)
             local list = {}
@@ -242,7 +243,7 @@ local ContractService = {
                 and not sampIsChatInputActive()
                 and carsService.IsCarAttachedToTrailer(cars, car)
                 and isWithinDistance
-                and ContractService.hasUnknownActiveContract then return true end
+                and self.hasUnknownActiveContract then return true end
             end
         
             return false
