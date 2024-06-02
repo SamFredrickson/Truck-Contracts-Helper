@@ -37,7 +37,7 @@ local information = Information.new
         raceTime
     ),
     InfoEntry.new(
-        "Нелегальный груз доступен через:", 
+        "Нелегальный груз:", 
         "illegal-cargo-time", 
         illegalCargoAvailableAtFormatted
     ),

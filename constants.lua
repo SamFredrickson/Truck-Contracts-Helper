@@ -491,9 +491,9 @@ local STATISTICS_ENTRIES =  {
         hidden = false
     },
     {
-        name = "Нелегальный груз доступен через:",
+        name = "Нелегальный груз:",
         code = "illegal-cargo-time",
-        short_name = "Нелегальный груз доступен через:",
+        short_name = "Нелегальный груз:",
         hidden = false
     },
     {
