@@ -219,6 +219,14 @@ local ContractService = {
                 and isWithinDistance then return true end
             end
 
+            if car and car.IsTruck() then
+                if not sampIsDialogActive()
+                and not sampIsChatInputActive()
+                and carsService.IsCarAttachedToTrailer(cars, car)
+                and isWithinDistance
+                and self.hasUnknownActiveContract then return true end
+            end
+
             -- ѕроверка разгрузки нелегального груза
             local isWithinDistance = 
             (
@@ -236,14 +244,6 @@ local ContractService = {
                 and not sampIsChatInputActive()
                 and carsService.IsCarAttachedToTrailer(cars, car)
                 and isWithinDistance then return true end
-            end
-
-            if car and car.IsTruck() then
-                if not sampIsDialogActive()
-                and not sampIsChatInputActive()
-                and carsService.IsCarAttachedToTrailer(cars, car)
-                and isWithinDistance
-                and self.hasUnknownActiveContract then return true end
             end
         
             return false
