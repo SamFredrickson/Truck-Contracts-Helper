@@ -754,8 +754,12 @@ function sampev.onServerMessage(color, text)
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
-			ContractService.CONTRACTS = {}
-			contractsService.hasUnknownActiveContract = true
+			local contract = contractsService.findActive(ContractService.CONTRACTS)
+			
+			if not contract then
+				ContractService.CONTRACTS = {}
+				contractsService.hasUnknownActiveContract = true
+			end 
 
 			local messages = {
 				LocalMessage.new(" {FFFFFF}У вас уже есть {ed5a5a}активный {FFFFFF}контракт"),

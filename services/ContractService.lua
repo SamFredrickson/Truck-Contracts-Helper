@@ -219,6 +219,7 @@ local ContractService = {
                 and isWithinDistance then return true end
             end
 
+            -- Проверка разгрузки неопределенного груза (если игрок перезагрузил скрипт во время активного контракта)
             if car and car.IsTruck() then
                 if not sampIsDialogActive()
                 and not sampIsChatInputActive()
