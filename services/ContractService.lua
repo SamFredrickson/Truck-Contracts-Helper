@@ -242,7 +242,7 @@ local ContractService = {
                 and not sampIsChatInputActive()
                 and carsService.IsCarAttachedToTrailer(cars, car)
                 and isWithinDistance
-                and ContractService.CONTRACTS.hasUnknownActiveContract then return true end
+                and ContractService.hasUnknownActiveContract then return true end
             end
         
             return false

@@ -230,7 +230,7 @@ function main()
 					local contracts = ContractService.CONTRACTS
 					local isAutoloading = (config.data.settings.autoload and pointService.getPlayerAutoloadPoint())
 					if mainWindow.window[0]
-					and not ContractService.CONTRACTS.hasUnknownActiveContract
+					and not ContractService.hasUnknownActiveContract
 					and not isAutoloading
 					and mainWindow.hideCursor
 					and contractsService.CanSearch(contracts) then
@@ -725,7 +725,7 @@ function sampev.onServerMessage(color, text)
 		-- Ћогика при по€влении собщени€ в чате, что контракт отменен
 		if text:find(serverMessageService.findByCode("contract-canceled").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-			ContractService.CONTRACTS.hasUnknownActiveContract = false
+			ContractService.hasUnknownActiveContract = false
 			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
@@ -755,7 +755,7 @@ function sampev.onServerMessage(color, text)
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
 			ContractService.CONTRACTS = {}
-			ContractService.CONTRACTS.hasUnknownActiveContract = true
+			ContractService.hasUnknownActiveContract = true
 
 			local messages = {
 				LocalMessage.new(" {FFFFFF}” вас уже есть {ed5a5a}активный {FFFFFF}контракт"),
@@ -777,7 +777,7 @@ function sampev.onServerMessage(color, text)
 		-- Ћогика при успешной доставки обычного груза
 		if text:find(serverMessageService.findByCode("delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-			ContractService.CONTRACTS.hasUnknownActiveContract = false
+			ContractService.hasUnknownActiveContract = false
 			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
@@ -828,7 +828,7 @@ function sampev.onServerMessage(color, text)
 		-- Ћогика при успешной доставке нелегального груза
 		if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
-			ContractService.CONTRACTS.hasUnknownActiveContract = false
+			ContractService.hasUnknownActiveContract = false
 			unloading.tries = 0
 			unloading.time = nil
 			unloading.notified = false
