@@ -170,7 +170,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Скрывать раздраюащее окно документов \nпосле покупки товара.")
+                                imgui.SetTooltip(u8"Скрывать окно с информацией о товаре после загрузки.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 85))
