@@ -92,11 +92,22 @@ local Settings = {
                 imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
                 imgui.BeginChild("##Buttons", imgui.ImVec2(150, 410), true)
                     for index, name in pairs(tabs) do
-                        imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
-                        if imgui.Button(u8(name), imgui.ImVec2(140, 45)) then
-                            active = index
-                        end
-                        imgui.PopStyleVar()
+                       if active == index then
+                            imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.90, 0.26, 0.26, 1.00))
+                            imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
+                            if imgui.Button(u8(name), imgui.ImVec2(140, 45)) then
+                                active = index
+                            end
+                            imgui.PopStyleVar()
+                            imgui.PopStyleColor(1)
+                       end
+                       if active ~= index then
+                            imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
+                            if imgui.Button(u8(name), imgui.ImVec2(140, 45)) then
+                                active = index
+                            end
+                            imgui.PopStyleVar()
+                       end
                     end
                 imgui.EndChild()
                 imgui.SetCursorPos(imgui.ImVec2(160, 28))
