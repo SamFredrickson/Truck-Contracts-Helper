@@ -353,7 +353,7 @@ local HOTKEYS = {
         text = "Курсор списка контрактов",
         buttonText = "SHIFT + C",
         first = 16,
-        second = 87,
+        second = 67,
         single = false,
         position = { 10, 93 }
     }
