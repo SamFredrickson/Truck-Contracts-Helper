@@ -567,20 +567,66 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
-					if isKeyDown(vkeys.VK_MENU) and isKeyDown(vkeys.VK_Y) then
-						while isKeyDown(vkeys.VK_MENU) and isKeyDown(vkeys.VK_Y) do wait(80) end
-						local contracts = ContractService.CONTRACTS
-						if contractsService.CanTake(contracts) and mainWindow.hideCursor then
-							local point = pointService.getPlayerAutoloadPoint()
-							local contract = contractsService.getContractByAutoloadPoint(point, contracts)
-							if contract then
-								MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
-								MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
-								MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-								local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
-								chatService.send(menuCommandMessage)
-								wait(1000)
+					local index, hotkey = table.unpack(Hotkeys.new().getByName("take-and-load"))
+					if hotkey.first and hotkey.second then
+						if isKeyDown(hotkey.first) and isKeyDown(hotkey.second) then
+							while isKeyDown(hotkey.first) and isKeyDown(hotkey.second) do wait(80) end
+							local contracts = ContractService.CONTRACTS
+							if contractsService.CanTake(contracts) and mainWindow.hideCursor then
+								local point = pointService.getPlayerAutoloadPoint()
+								local contract = contractsService.getContractByAutoloadPoint(point, contracts)
+								if contract then
+									MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
+									MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
+									MenuDialogue.FLAGS.CONTRACT.ID = contract.id
+									local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
+									chatService.send(menuCommandMessage)
+									wait(1000)
+								end
 							end
+						end
+					end
+					if hotkey.first and not hotkey.second then
+						if isKeyDown(hotkey.first) then
+							while isKeyDown(hotkey.first) do wait(80) end
+							local contracts = ContractService.CONTRACTS
+							if contractsService.CanTake(contracts) and mainWindow.hideCursor then
+								local point = pointService.getPlayerAutoloadPoint()
+								local contract = contractsService.getContractByAutoloadPoint(point, contracts)
+								if contract then
+									MenuDialogue.FLAGS.CONTRACT.IS_LOADING = true
+									MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
+									MenuDialogue.FLAGS.CONTRACT.ID = contract.id
+									local menuCommandMessage = Message.new(constants.COMMANDS.MENU)
+									chatService.send(menuCommandMessage)
+									wait(1000)
+								end
+							end
+						end
+					end
+				end
+			end,
+			40
+		):run()
+
+		-- Прослушка комбинации на отмену текущего контракта
+		scheduleService.create
+		(
+			function()
+				if config.data.settings.selectedScriptStatus > 0 then
+					local index, hotkey = table.unpack(Hotkeys.new().getByName("cancel-contract"))
+					if hotkey.first and hotkey.second then
+						if isKeyDown(hotkey.first) and isKeyDown(hotkey.second) then
+							while isKeyDown(hotkey.first) and isKeyDown(hotkey.second) do wait(80) end
+							MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = true
+                            chatService.send(Message.new(constants.COMMANDS.MENU))
+						end
+					end
+					if hotkey.first and not hotkey.second then
+						if isKeyDown(hotkey.first) then
+							while isKeyDown(hotkey.first) do wait(80) end
+							MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = true
+                            chatService.send(Message.new(constants.COMMANDS.MENU))
 						end
 					end
 				end

@@ -20,6 +20,7 @@ local HotKeysManager = {
         self.previousHotKey = nil
         self.first = nil
         self.second = nil
+        self.changed = false
 
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
@@ -39,6 +40,7 @@ local HotKeysManager = {
                                     and not self.second
                                     and not includes(key, forbidden) then
                                         self.first = value
+                                        self.changed = true
                                     end
                                     if self.first
                                     and not self.second 
@@ -46,6 +48,7 @@ local HotKeysManager = {
                                     and not includes(key, forbidden)
                                     and not select(2, table.unpack(self.previousHotKey)).single then
                                         self.second = value
+                                        self.changed = true
                                     end
                                     if key == "VK_ESCAPE" then
                                         self.deactivate()
@@ -59,9 +62,9 @@ local HotKeysManager = {
                                         local format = not second and "%s" or "%s + %s"
                                         local text = string.format(format, first, second)
                 
-                                        hotKeys.data[index].first = self.first and self.first or hotKeys.data[index].first
-                                        hotKeys.data[index].second = self.second and self.second or hotKeys.data[index].second
-                                        hotKeys.data[index].buttonText = text
+                                        if self.changed then hotKeys.data[index].first = self.first end
+                                        if self.changed then hotKeys.data[index].second = self.second end
+                                        hotKeys.data[index].buttonText = text == "false" and hotkey.buttonText or text
                 
                                         self.first = nil
                                         self.second = nil
@@ -128,18 +131,19 @@ local HotKeysManager = {
                     imgui.EndChild()
                 end
                 
-                imgui.SetCursorPos(imgui.ImVec2(4, 165))
+                imgui.SetCursorPos(imgui.ImVec2(5, 165))
                 imgui.BeginChild("##HotKeyManagerButtons")
-                    if imgui.Button(u8("Подтвердить"), imgui.ImVec2(100, 30)) then
+                    imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
+                    if imgui.Button(u8("Подтвердить"), imgui.ImVec2(145, 30)) then
                         local index, hotkey = table.unpack(self.previousHotKey)
                         local first = self.first and vkeys.id_to_name(self.first):upper() or false
                         local second = self.second and vkeys.id_to_name(self.second):upper() or false
                         local format = not second and "%s" or "%s + %s"
                         local text = string.format(format, first, second)
 
-                        hotKeys.data[index].first = self.first and self.first or hotKeys.data[index].first
-                        hotKeys.data[index].second = self.second and self.second or hotKeys.data[index].second
-                        hotKeys.data[index].buttonText = text
+                        if self.changed then hotKeys.data[index].first = self.first end
+                        if self.changed then hotKeys.data[index].second = self.second end
+                        hotKeys.data[index].buttonText = text == "false" and hotkey.buttonText or text
 
                         self.first = nil
                         self.second = nil
@@ -147,23 +151,16 @@ local HotKeysManager = {
                         self.deactivate()
                         hotKeys.save()
                     end
+                    imgui.PopStyleVar()
                     imgui.SameLine()
-                    if imgui.Button(u8(select(2, table.unpack(self.previousHotKey)).deleted and "Вернуть" or "Удалить"), imgui.ImVec2(80, 30)) then
-                        local index, hotkey = table.unpack(self.previousHotKey)
-                        hotKeys.data[index].deleted = not hotKeys.data[index].deleted
-                        self.first = nil
-                        self.second = nil
-                        self.menu.activate()
-                        self.deactivate()
-                        hotKeys.save()
-                    end
-                    imgui.SameLine()
-                    if imgui.Button(u8("Отменить"), imgui.ImVec2(100, 30)) then
+                    imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
+                    if imgui.Button(u8("Отменить"), imgui.ImVec2(140, 30)) then
                         self.menu.activate()
                         self.deactivate()
                         self.first = nil
                         self.second = nil
                     end
+                    imgui.PopStyleVar()
                 imgui.EndChild()
                 imgui.End()
             end

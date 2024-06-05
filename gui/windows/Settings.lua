@@ -635,6 +635,7 @@ local Settings = {
                             for index, hotkey in pairs(Hotkeys.new().data) do
                                 local text = string.format("%s##%d", u8(hotkey.buttonText), index)
                                 if imgui.Button(text, imgui.ImVec2(250, 25)) then
+                                    hotKeysManager.changed = false
                                     hotKeysManager.menu = self
                                     hotKeysManager.previousHotKey = { index, hotkey }
                                     self.deactivate()
