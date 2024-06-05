@@ -464,9 +464,10 @@ function main()
 						if contract 
 						and not canAutoTake 
 						and not autounloading.notified then
+							local index, hotkey = table.unpack(Hotkeys.new().getByName("take-and-load"))
 							local messages = {
 								LocalMessage.new(" {FFFFFF}У точки загрузки находятся другие {ed5a5a}дальнобойщики."),
-								LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} комбинацией клавиш {ed5a5a}ALT + Y{FFFFFF} или подождите пока точка будет свободна.")
+								LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами {ed5a5a}" .. hotkey.buttonText .. "{FFFFFF} или подождите пока точка будет свободна.")
 							}
 							for _, message in pairs(messages) do
 								chatService.send(message)
