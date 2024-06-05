@@ -381,8 +381,8 @@ local SCRIPT_COMMANDS = {
     "{FCCB06}/tch.list{EFF1F3} Ч показать / скрыть список контрактов",
     "{FCCB06}/tch.coords.send {EFF1F3}[текст] Ч отправить свое местоположение в рацию",
     "{FCCB06}/tch.info {EFF1F3} Ч показать / скрыть панель со статистикой внизу",
-    "{FCCB06}/tch.pin {EFF1F3}[номер] Ч закрепить контракт в самом вверху списка",
-    "{FCCB06}/tch.unpin {EFF1F3}[номер] Ч открепить контракт в самом вверху списка"
+    "{FCCB06}/tch.pin {EFF1F3}[номер контракта] Ч закрепить контракт в списке",
+    "{FCCB06}/tch.unpin {EFF1F3}[номер контракта] Ч открепить контракт в списке"
 }
 
 local COLOR_LIST = {
@@ -821,6 +821,8 @@ local SCRIPT_STATUSES = {
     u8"¬ключен"
 }
 
+local PINS = {}
+
 return {
     SCRIPT_INFO = SCRIPT_INFO,
     COLORS = COLORS,
@@ -848,5 +850,6 @@ return {
     CAMERA_LINES = CAMERA_LINES,
     HOTDOG = HOTDOG,
     SCRIPT_COMMANDS = SCRIPT_COMMANDS,
-    HOTKEYS = HOTKEYS
+    HOTKEYS = HOTKEYS,
+    PINS = PINS
 }

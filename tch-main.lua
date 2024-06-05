@@ -143,9 +143,38 @@ function main()
 				config.data.settings.selectedScriptStatus = selectedScriptStatus
 				settingsWindow.selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
 				config.save()
+			end
+        )
 
-				for k, v in pairs(vkeys) do
-					if k == "VK_LCONTROL" or k == "VK_C" then print(k,v) end
+		sampRegisterChatCommand
+		(
+            "tch.pin",
+			function(contractId)
+				contractId = tonumber(contractId)
+				if contractId == nil or contractId == "" then
+					local localMessage = LocalMessage.new("{ed5a5a}/tch.pin{FFFFFF} [номер контракта]")
+					chatService.send(localMessage)
+					return
+				end
+				for _, pin in pairs(constants.PINS) do
+					if pin == contractId then return end
+				end
+				table.insert(constants.PINS, contractId)
+			end
+        )
+
+		sampRegisterChatCommand
+		(
+            "tch.unpin",
+			function(contractId)
+				contractId = tonumber(contractId)
+				if contractId == nil or contractId == "" then
+					local localMessage = LocalMessage.new("{ed5a5a}/tch.unpin{FFFFFF} [номер контракта]")
+					chatService.send(localMessage)
+					return
+				end
+				for index, pin in pairs(constants.PINS) do
+					if pin == contractId then table.remove(constants.PINS, index) end
 				end
 			end
         )

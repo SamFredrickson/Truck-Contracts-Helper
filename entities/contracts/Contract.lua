@@ -1,4 +1,5 @@
 local encoding = require "encoding"
+local String = require "tch.entities.string"
 local constants = require "tch.constants"
 
 encoding.default = "CP1251"
@@ -17,10 +18,14 @@ local Contract = {
         self.company = company
         self.IsActive = IsActive or false
 
+        local isPinned = String.includes(tonumber(self.id), constants.PINS)
+        self.sort = isPinned and 0 or self.sort
+
         self.toString = function()
-            return string.format(
+            return string.format
+            (
                 "%s%d. %s -> %s[%d / %d]", 
-                self.top and "[TOP] " or "",
+                isPinned and "[PIN] " or self.top and "[TOP] " or "",
                 self.id, 
                 self.source, 
                 self.destination,
