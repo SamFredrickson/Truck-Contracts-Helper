@@ -38,6 +38,7 @@ local CarService = require "tch.services.carservice"
 local HttpService = require "tch.services.httpservice"
 local PointsService = require "tch.services.pointsservice"
 local Config = require "tch.common.config"
+local Hotkeys = require "tch.common.storage.hotkeys"
 
 script_author(constants.SCRIPT_INFO.AUTHOR)
 script_version(constants.SCRIPT_INFO.VERSION)
@@ -93,6 +94,8 @@ local autounloading = {
 
 imgui.OnInitialize(function()
     imgui.GetIO().IniFilename = nil
+	local glyph_ranges = imgui.GetIO().Fonts:GetGlyphRangesCyrillic()
+	bigFontSize = imgui.GetIO().Fonts:AddFontFromFileTTF(getFolderPath(0x14) .. '\\trebucbd.ttf', 28.0, _, glyph_ranges)
 end)
 
 function main()
@@ -130,6 +133,21 @@ function main()
 		(
             "tch.menu",
 			function() settingsWindow.toggle() end
+        )
+
+		sampRegisterChatCommand
+		(
+            "tch.toggle",
+			function() 
+				local selectedScriptStatus = config.data.settings.selectedScriptStatus == 0 and 1 or 0
+				config.data.settings.selectedScriptStatus = selectedScriptStatus
+				settingsWindow.selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
+				config.save()
+
+				for k, v in pairs(vkeys) do
+					if k == "VK_LCONTROL" or k == "VK_C" then print(k,v) end
+				end
+			end
         )
 
 		sampRegisterChatCommand
@@ -384,11 +402,12 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 and config.data.settings.drift then
+					local index, hotkey = table.unpack(Hotkeys.new().getByName("drift"))
 					if isCharInAnyCar(PLAYER_PED) then
 						local car = storeCarCharIsInNoSave(PLAYER_PED)
 						local speed = getCarSpeed(car)
 						setCarCollision(car, true)
-						if isKeyDown(vkeys.VK_SHIFT) 
+						if isKeyDown(hotkey.first) 
 						and isVehicleOnAllWheels(car)
 						and doesVehicleExist(car)
 						and speed > 0.5 then
@@ -1090,7 +1109,7 @@ function sampev.onGivePlayerMoney(money)
 end
 
 -- Утилитные функции
-in_array = function(needle, array)
+includes = function(needle, array)
     for _, value in pairs(array) do
         if needle == value then
             return true

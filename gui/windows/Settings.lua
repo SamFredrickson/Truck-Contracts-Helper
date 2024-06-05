@@ -4,7 +4,9 @@ local encoding = require "encoding"
 local Config = require "tch.common.config"
 local Statistics = require "tch.common.storage.statistics"
 local Filters = require "tch.common.storage.filters"
+local Hotkeys = require "tch.common.storage.hotkeys"
 local Window = require "tch.gui.windows.window"
+local HotKeysManager = require "tch.gui.windows.hotkeysmanager"
 local Sound = require "tch.entities.sounds.sound"
 local LocalMessage = require "tch.entities.chat.localmessage"
 local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesentry"
@@ -18,6 +20,8 @@ encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local config = Config.new()
 
+local hotKeys = Hotkeys.new()
+local hotKeysManager = HotKeysManager.new()
 local pointsService = PointsService.new()
 local driverCoordinatesService = DriverCoordinatesEntryService.new()
 local chatService = ChatService.new()
@@ -39,7 +43,8 @@ local Settings = {
 
         local active = 1
         local tabs = {
-            "Основное", 
+            "Основное",
+            "Команды и горячие \n         клавиши",
             "Контракты",
             "Статистика",
             "Взаимодействие с\n       игроками"
@@ -48,7 +53,7 @@ local Settings = {
         local clists = imgui.new['const char*'][#constants.COLOR_LIST](constants.COLOR_LIST)
         local selectedClist = imgui.new.int(config.data.settings.clistChoice)
         local scriptStatuses = imgui.new['const char*'][#constants.SCRIPT_STATUSES](constants.SCRIPT_STATUSES)
-        local selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
+        self.selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
         local autorepairPrice = imgui.new.int(config.data.settings.repairPrice)
         local autorefillPrice = imgui.new.int(config.data.settings.refillPrice)
         local hotPrice = imgui.new.int(config.data.settings.hotPrice)
@@ -83,11 +88,7 @@ local Settings = {
             function() return self.window[0] end,
             function(player)
                 RedTheme.new()
-                imgui.SetNextWindowPos(
-                    position, 
-                    imgui.Cond.FirstUseEver, 
-                    imgui.ImVec2(0.5, 0.5)
-                )
+                imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
                 imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
                 imgui.BeginChild("##Buttons", imgui.ImVec2(150, 410), true)
@@ -132,11 +133,11 @@ local Settings = {
                             if imgui.Combo
                             (
                                 "##ScriptStatus", 
-                                selectedScriptStatus, 
+                                self.selectedScriptStatus, 
                                 scriptStatuses, 
                                 #constants.SCRIPT_STATUSES
                             ) then
-                                config.data.settings.selectedScriptStatus = selectedScriptStatus[0]
+                                config.data.settings.selectedScriptStatus = self.selectedScriptStatus[0]
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
@@ -616,6 +617,41 @@ local Settings = {
                     imgui.EndChild()
                     end
                     if active == 2 then
+                        imgui.SetCursorPos(imgui.ImVec2(10, 5))
+                        imgui.BeginChild("##HotKeyAndCommandsIntro")
+                            imgui.TextColoredRGB("{AAAAAA}В данном разделе можно узнать существующие команды скрипта и \n{AAAAAA}установить горячие клавиши.")
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(10, 45))
+                        imgui.BeginChild("##Commands")
+                            imgui.TextColoredRGB("{F4CBC6}Доступные команды: ")
+                            for _, command in pairs(constants.SCRIPT_COMMANDS) do imgui.TextColoredRGB(command) end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(10, 218))
+                        imgui.BeginChild("##HotKeysTitle")
+                            imgui.TextColoredRGB("{F4CBC6}Доступные горячие клавиши: ")
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(190, 240))
+                        imgui.BeginChild("##HotKeysButtons")
+                            for index, hotkey in pairs(Hotkeys.new().data) do
+                                local text = string.format("%s##%d", u8(hotkey.buttonText), index)
+                                if imgui.Button(text, imgui.ImVec2(250, 25)) then
+                                    hotKeysManager.menu = self
+                                    hotKeysManager.previousHotKey = { index, hotkey }
+                                    self.deactivate()
+                                    hotKeysManager.activate()
+                                end
+                            end
+                        imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(10, 240))
+                        imgui.BeginChild("##HotKeysTexts", imgui.ImVec2(200, 100))
+                            for _, hotkey in pairs(Hotkeys.new().data) do
+                                local x, y = table.unpack(hotkey.position)
+                                imgui.SetCursorPosY(y)
+                                imgui.Text(u8(hotkey.text))
+                            end
+                        imgui.EndChild()
+                    end
+                    if active == 3 then
                         if imgui.BeginTabBar("Contract Tabs") then
                             if imgui.BeginTabItem(u8"Сортировка") then
                                 imgui.Columns(4)
@@ -783,7 +819,7 @@ local Settings = {
                             end
                         end
                     end
-                    if active == 3 then
+                    if active == 4 then
                         imgui.Columns(2)
                         imgui.CenterColumnText(u8'Название') imgui.SetColumnWidth(-1, 285)
                         imgui.NextColumn()
@@ -802,7 +838,7 @@ local Settings = {
                             imgui.Columns(1)
                         end
                     end
-                    if active == 4 then
+                    if active == 5 then
                        if imgui.BeginTabBar("Players Tab") then
                             if imgui.BeginTabItem(u8"Координаты") then
                                 if #DriverCoordinatesEntryService.ENTRIES <= 0 then

@@ -318,6 +318,38 @@ local CONTRACT_FILTERS = {
     }
 }
 
+local HOTKEYS = {
+    {
+        name = "drift",
+        text = "ƒрифт",
+        buttonText = "SHIFT",
+        first = 16, 
+        single = true,
+        deleted = false,
+        position = { 10, 5 }
+    },
+    {
+        name = "take-and-load",
+        text = "¬з€ть контракт и загрузить",
+        buttonText = "ALT + Y",
+        first = 19,
+        second = 89,
+        single = false,
+        deleted = false,
+        position = { 10, 35 }
+    },
+    {
+        name = "cancel-contract",
+        text = "ќтменить контракт",
+        buttonText = "CTRL + C",
+        first = 162,
+        second = 67,
+        single = false,
+        deleted = false,
+        position = { 10, 63 }
+    }
+}
+
 SCRIPT_INFO.NAME = string.format(
     "Truck Contracts Helper %s (%d)", 
     SCRIPT_INFO.VERSION, 
@@ -331,6 +363,17 @@ local COMMANDS = {
     CLIST   = "/clist %d",
     LOCK    = "/lock",
     SKILL   = "/tskill"
+}
+
+local SCRIPT_COMMANDS = {
+    "{FCCB06}/tch.menu{EFF1F3} Ч главное меню",
+    "{FCCB06}/tch.toggle{EFF1F3} Ч включить / выключить скрипт",
+    "{FCCB06}/tch.update{EFF1F3} Ч начать обновление скрипта",
+    "{FCCB06}/tch.list{EFF1F3} Ч показать / скрыть список контрактов",
+    "{FCCB06}/tch.coords.send {EFF1F3}[текст] Ч отправить свое местоположение в рацию",
+    "{FCCB06}/tch.info {EFF1F3} Ч показать / скрыть панель со статистикой внизу",
+    "{FCCB06}/tch.pin {EFF1F3}[номер] Ч закрепить контракт в самом вверху списка",
+    "{FCCB06}/tch.unpin {EFF1F3}[номер] Ч открепить контракт в самом вверху списка"
 }
 
 local COLOR_LIST = {
@@ -794,5 +837,7 @@ return {
     CONTRACT_FILTERS = CONTRACT_FILTERS,
     SCRIPT_STATUSES = SCRIPT_STATUSES,
     CAMERA_LINES = CAMERA_LINES,
-    HOTDOG = HOTDOG
+    HOTDOG = HOTDOG,
+    SCRIPT_COMMANDS = SCRIPT_COMMANDS,
+    HOTKEYS = HOTKEYS
 }
