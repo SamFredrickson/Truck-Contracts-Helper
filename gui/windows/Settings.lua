@@ -644,7 +644,7 @@ local Settings = {
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(10, 240))
-                        imgui.BeginChild("##HotKeysTexts", imgui.ImVec2(200, 100))
+                        imgui.BeginChild("##HotKeysTexts", imgui.ImVec2(200, 150))
                             for _, hotkey in pairs(Hotkeys.new().data) do
                                 local x, y = table.unpack(hotkey.position)
                                 imgui.SetCursorPosY(y)

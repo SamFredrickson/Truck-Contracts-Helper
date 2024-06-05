@@ -338,9 +338,18 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
-					if isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) then
-						while isKeyDown(vkeys.VK_SHIFT) and isKeyDown(vkeys.VK_C) do wait(80) end
-						mainWindow.hideCursor = not mainWindow.hideCursor
+					local index, hotkey = table.unpack(Hotkeys.new().getByName("cursor"))
+					if hotkey.first and hotkey.second then
+						if isKeyDown(hotkey.first) and isKeyDown(hotkey.second) then
+							while isKeyDown(hotkey.first) and isKeyDown(hotkey.second) do wait(80) end
+							mainWindow.hideCursor = not mainWindow.hideCursor
+						end
+					end
+					if hotkey.first and not hotkey.second then
+						if isKeyDown(hotkey.first) then
+							while isKeyDown(hotkey.first) do wait(80) end
+							mainWindow.hideCursor = not mainWindow.hideCursor
+						end
 					end
 				end
 			end,

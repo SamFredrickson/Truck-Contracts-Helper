@@ -336,7 +336,7 @@ local HOTKEYS = {
         second = 89,
         single = false,
         deleted = false,
-        position = { 10, 35 }
+        position = { 10, 33 }
     },
     {
         name = "cancel-contract",
@@ -347,6 +347,15 @@ local HOTKEYS = {
         single = false,
         deleted = false,
         position = { 10, 63 }
+    },
+    {
+        name = "cursor",
+        text = "Курсор списка контрактов",
+        buttonText = "SHIFT + C",
+        first = 16,
+        second = 87,
+        single = false,
+        position = { 10, 93 }
     }
 }
 
