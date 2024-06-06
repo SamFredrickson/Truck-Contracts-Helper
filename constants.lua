@@ -1,4 +1,5 @@
 local encoding = require "encoding"
+local Array = require "tch.common.array"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -23,8 +24,8 @@ local COLORS = {
 }
 
 local REGEXP = {
-    MULTIPLE_CONTRACTS = "({.-}%d+%. {.-}%W+ №%d %-%> %W+{.-}%W+{.-}%d+ из %d+ т%.	{.-}[%w\128-\255-]+)",
-    SINGLE_CONTRACT = "{.-}(%d+)%. {.-}(%W+ №%d+) %-%> (%W+){.-}(%W+){.-}(%d+) из (%d+) т%.	{.-}([%w\128-\255-]+)"
+    MULTIPLE_CONTRACTS = "({.-}%d+%. {.-}%W+ №%d %-%> %W+{.-}%W+{.-}%d+ из %d+ т%.	{.-}[%w\128-\255-%s]+)",
+    SINGLE_CONTRACT = "{.-}(%d+)%. {.-}(%W+ №%d+) %-%> (%W+){.-}(%W+){.-}(%d+) из (%d+) т%.	{.-}([%w\128-\255-%s]+)"
 }
 
 local MAX_TRUCK_DRIVER_LEVEL = 26
@@ -821,7 +822,7 @@ local SCRIPT_STATUSES = {
     u8"Включен"
 }
 
-local PINS = {}
+local PINS = Array({})
 
 return {
     SCRIPT_INFO = SCRIPT_INFO,
