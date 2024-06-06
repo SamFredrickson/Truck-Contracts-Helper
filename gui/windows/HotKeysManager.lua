@@ -6,6 +6,7 @@ local Config = require "tch.common.config"
 local RedTheme = require "tch.gui.themes.red"
 local vkeys = require "vkeys"
 local Hotkeys = require "tch.common.storage.hotkeys"
+local Array = require "tch.common.array"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -25,7 +26,7 @@ local HotKeysManager = {
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
         local size = imgui.ImVec2(300, 200)
-        local forbidden = { "VK_ESCAPE", "VK_RETURN", "VK_BACK", "VK_LBUTTON", "VK_RBUTTON" }
+        local forbidden = Array({ "VK_ESCAPE", "VK_RETURN", "VK_BACK", "VK_LBUTTON", "VK_RBUTTON" })
 
         lua_thread.create
         (
@@ -38,14 +39,14 @@ local HotKeysManager = {
                                 if value < 160 or value > 165 then
                                     if not self.first
                                     and not self.second
-                                    and not includes(key, forbidden) then
+                                    and not forbidden:Includes(key) then
                                         self.first = value
                                         self.changed = true
                                     end
                                     if self.first
                                     and not self.second 
                                     and self.first ~= value
-                                    and not includes(key, forbidden)
+                                    and not forbidden:Includes(key)
                                     and not select(2, table.unpack(self.previousHotKey)).single then
                                         self.second = value
                                         self.changed = true

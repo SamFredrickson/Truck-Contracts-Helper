@@ -6,6 +6,8 @@ local PointsService = require "tch.services.pointsservice"
 local Filters = require "tch.common.storage.filters"
 local constants = require "tch.constants"
 local encoding = require "encoding"
+local Array = require "tch.common.array"
+require "tch.common.lua-string"
 
 local Linerunner = require "tch.entities.vehicles.linerunner"
 local Tanker = require "tch.entities.vehicles.tanker"
@@ -57,13 +59,13 @@ local ContractService = {
         self.hasUnknownActiveContract = false
 
         self.parse = function(text)
-            local list = {}
+            local result = Array({})
             local filters = Filters.new()
             for contract in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
                 local isAllowed = false
                 local id, source, destination, cargo, amountFirst, amountSecond, company 
                     = contract:match(constants.REGEXP.SINGLE_CONTRACT)
-        
+                
                 local amount = { 
                     first = amountFirst, 
                     second = amountSecond 
@@ -103,9 +105,9 @@ local ContractService = {
                 local isCompany = 
                 (
                     function()
-                        if filters.data.company == nil or #string.gsub(filters.data.company, "^%s*(.-)%s*$", "%1") == 0 then return true end
-                        if filters.data.company:find(entity.company:lower()) then return true end
-                        return false
+                        if (filters.data.company):isblank() or (filters.data.company):isempty() then return true end
+                        local companies = Array((filters.data.company):split(",")):Map(function(company) return company:trim() end)
+                        return companies:Includes((entity.company):lower():trim())
                     end
                 )()
                 
@@ -128,15 +130,11 @@ local ContractService = {
                 )()
 
                 if (isSource and isCompany and isProperTonQuantity) or isTop then 
-                    table.insert(list, entity) 
+                    result:Push(entity)
                 end
             end
 
-            table.sort(list, function(a, b)
-                return a.sort < b.sort
-            end)
-
-            return list
+            return result:Sort(function(a, b) return a.sort < b.sort end)
         end
 
         self.findById = function(id, contracts)

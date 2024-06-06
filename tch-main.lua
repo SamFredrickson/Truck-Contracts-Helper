@@ -3,6 +3,7 @@ local encoding = require "encoding"
 local vkeys = require "vkeys"
 local sampev = require "samp.events"
 local imgui = require "mimgui"
+require "tch.common.lua-string"
 
 local MainWindow = require "tch.gui.windows.main"
 local SettingsWindow = require "tch.gui.windows.settings"
@@ -39,6 +40,7 @@ local HttpService = require "tch.services.httpservice"
 local PointsService = require "tch.services.pointsservice"
 local Config = require "tch.common.config"
 local Hotkeys = require "tch.common.storage.hotkeys"
+local Array = require "tch.common.array"
 
 script_author(constants.SCRIPT_INFO.AUTHOR)
 script_version(constants.SCRIPT_INFO.VERSION)
@@ -154,12 +156,12 @@ function main()
 				if contractId == nil or contractId == "" then
 					local localMessage = LocalMessage.new("{ed5a5a}/tch.pin{FFFFFF} [номер контракта]")
 					chatService.send(localMessage)
-					return
+					return false
 				end
-				for _, pin in pairs(constants.PINS) do
-					if pin == contractId then return end
+				if not constants.PINS:Includes(contractId) then
+					constants.PINS:Push(contractId)
 				end
-				table.insert(constants.PINS, contractId)
+				return true
 			end
         )
 
@@ -171,11 +173,12 @@ function main()
 				if contractId == nil or contractId == "" then
 					local localMessage = LocalMessage.new("{ed5a5a}/tch.unpin{FFFFFF} [номер контракта]")
 					chatService.send(localMessage)
-					return
+					return false
 				end
-				for index, pin in pairs(constants.PINS) do
-					if pin == contractId then table.remove(constants.PINS, index) end
-				end
+				constants.PINS = constants.PINS.Filter(function(id)
+					return contractId ~= id
+				end)
+				return true
 			end
         )
 
@@ -1194,15 +1197,6 @@ function sampev.onGivePlayerMoney(money)
 end
 
 -- Утилитные функции
-includes = function(needle, array)
-    for _, value in pairs(array) do
-        if needle == value then
-            return true
-        end
-    end
-    return false
-end
-
 function trim(s)
 	return (string.gsub(s, "^%s*(.-)%s*$", "%1"))
 end
