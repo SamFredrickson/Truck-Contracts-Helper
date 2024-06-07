@@ -738,7 +738,7 @@ local Settings = {
                                 imgui.EndChild()
                                 imgui.SetCursorPos(imgui.ImVec2(175, 65))
                                 imgui.BeginChild("##MinTonsQuantitySlider")
-                                    imgui.PushItemWidth(270)
+                                    imgui.PushItemWidth(220)
                                     if imgui.SliderInt
                                     (
                                         "##tonsQuantity", 
@@ -750,6 +750,68 @@ local Settings = {
                                         filters.save()
                                     end
                                     imgui.PopItemWidth()
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(400, 65))
+                                imgui.BeginChild("##MinTonsQuantityButtons")
+                                if imgui.Button("+ ##MinTonsQuantityPlusButton", imgui.ImVec2(20, 0)) then
+                                    minTonsQuantity[0] = (
+                                        minTonsQuantity[0] >= constants.MAX_TONS_QUANTITY
+                                        and constants.MAX_TONS_QUANTITY
+                                        or minTonsQuantity[0] + 1
+                                    )
+                                    config.data.settings.minTonsQuantity = minTonsQuantity[0]
+                                    config.save()
+                                end
+                                if imgui.IsItemActive() then
+                                    isAnyItemActive = true
+                                    if isAnyItemActiveMoreOneSecond then
+                                        minTonsQuantity[0] = (
+                                            minTonsQuantity[0] >= constants.MAX_TONS_QUANTITY
+                                            and constants.MAX_TONS_QUANTITY
+                                            or minTonsQuantity[0] + 1
+                                        )
+                                        config.data.settings.minTonsQuantity = minTonsQuantity[0]
+                                        config.save()
+                                    end
+                                end
+                                if imgui.IsItemActivated() then
+                                    isAnyItemActiveMoreOneSecond = false
+                                    isAnyItemActive = false
+                                    currentTime = nil
+                                end
+                                if imgui.IsItemHovered() then
+                                    imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
+                                end
+                                imgui.SameLine()
+                                if imgui.Button("- ##MinTonsQuantityMinusButton", imgui.ImVec2(20, 0)) then
+                                    minTonsQuantity[0] = (
+                                        minTonsQuantity[0] <= constants.MIN_TONS_QUANTITY
+                                        and constants.MIN_TONS_QUANTITY
+                                        or minTonsQuantity[0] - 1
+                                    )
+                                    config.data.settings.minTonsQuantity = minTonsQuantity[0]
+                                    config.save()
+                                end
+                                if imgui.IsItemActive() then
+                                    isAnyItemActive = true
+                                    if isAnyItemActiveMoreOneSecond then
+                                        minTonsQuantity[0] = (
+                                        minTonsQuantity[0] <= constants.MIN_TONS_QUANTITY
+                                            and constants.MIN_TONS_QUANTITY
+                                            or minTonsQuantity[0] - 1
+                                        )
+                                        config.data.settings.minTonsQuantity = minTonsQuantity[0]
+                                        config.save()
+                                    end
+                                end
+                                if imgui.IsItemActivated() then
+                                    isAnyItemActiveMoreOneSecond = false
+                                    isAnyItemActive = false
+                                    currentTime = nil
+                                end
+                                if imgui.IsItemHovered() then
+                                    imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
+                                end
                                 imgui.EndChild()
                                 imgui.SetCursorPos(imgui.ImVec2(5, 115))
                                 imgui.BeginChild("##OtherFiltersText")
