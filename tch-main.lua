@@ -111,6 +111,18 @@ function main()
 
 		httpService.getAvailableUpdates()
 
+		local cars = carsService.get()
+		local players = playerService.get()
+
+		local player = playerService.getByHandle(players, PLAYER_PED)
+		local car = carsService.getByDriver(cars, player)
+
+		if car 
+		and car.IsTruck() 
+		and carsService.IsCarAttachedToTrailer(cars, car) then
+			contractsService.hasUnknownActiveContract = true
+		end
+
 		sampRegisterChatCommand
 		(
 			"tch.info",
