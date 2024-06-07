@@ -201,7 +201,7 @@ local AUTOLOAD_POINTS = {
     {
         source = "Лесопилка №2",
         coords = { x = -1978.81, y = -2434.78, z = 30.63 },
-        autoTakeDistance = 35
+        autoTakeDistance = 40
     },
     {
         source = "Строительный завод №1",
@@ -437,7 +437,7 @@ local SERVER_MESSAGES = {
         code = "has-active-contract"
     },
     {
-        message = "У Вас нет активного контракта, получить его можно в транспортной компании",
+        message = "%[Ошибка%]{.-} У Вас нет активного контракта, получить его можно в транспортной компании",
         code = "hasnt-active-contract"
     },
     {
@@ -479,6 +479,10 @@ local SERVER_MESSAGES = {
     {
         message = "У Вас отсутствует груз",
         code = "no-cargo-attached"
+    },
+    {
+        message = "Вы потеряли часть груза",
+        code = "cargo-lost"
     },
     {
         message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+)",
