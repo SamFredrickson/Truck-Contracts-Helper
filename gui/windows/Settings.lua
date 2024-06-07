@@ -201,7 +201,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Автоматически брать самый выгодный \nконракт и получать груз на точке загрузки.")
+                                imgui.SetTooltip(u8"Автоматически брать самый выгодный \nконтракт и получать груз на точке загрузки.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 145))
