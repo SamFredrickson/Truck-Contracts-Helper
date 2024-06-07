@@ -211,7 +211,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Автоматически открывать окно со статистикой \nи прочей информацией во время работы")
+                                imgui.SetTooltip(u8"Автоматически открывать окно со статистикой \nи прочей информацией во время работы.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 145))
@@ -221,7 +221,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши")
+                                imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 175))
@@ -231,7 +231,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Отключает столкновение с трупами на дороге")
+                                imgui.SetTooltip(u8"Отключает столкновение с трупами на дороге.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 175))
@@ -241,7 +241,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Подсвечивать участки камер линиями в пространстве")
+                                imgui.SetTooltip(u8"Подсвечивать участки камер линиями в пространстве.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(5, 210))
@@ -343,7 +343,7 @@ local Settings = {
                         imgui.BeginChild("##AutomechanicSuggestionsText")
                             imgui.Text(u8(" Принимать предложения"))
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Автоматически принимать предложения от механиков или хот-догеров")
+                                imgui.SetTooltip(u8"Автоматически принимать предложения от механиков или хот-догеров.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 265))
@@ -367,7 +367,7 @@ local Settings = {
                         imgui.BeginChild("##AutomechanicSuggestionsRepairConditionText")
                             imgui.TextColoredRGB(" Если цена ремонта")
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Если цена ремонта меньше либо равна выбранной")
+                                imgui.SetTooltip(u8"Если цена ремонта меньше либо равна выбранной.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 295))
@@ -451,7 +451,7 @@ local Settings = {
                         imgui.BeginChild("##AutomechanicSuggestionsRefillConditionText")
                             imgui.TextColoredRGB(" Если цена заправки")
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Если цена заправки меньше либо равна выбранной")
+                                imgui.SetTooltip(u8"Если цена заправки меньше либо равна выбранной.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 325))
@@ -535,7 +535,7 @@ local Settings = {
                         imgui.BeginChild("##AutoHotDoggerSuggestionText")
                             imgui.TextColoredRGB(" Если цена хот-дога")
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Если цена хот-дога меньше либо равна выбранной")
+                                imgui.SetTooltip(u8"Если цена хот-дога меньше либо равна выбранной.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 355))
@@ -733,7 +733,7 @@ local Settings = {
                                 imgui.BeginChild("##MinTonsQuantityText")
                                     imgui.Text(u8(" Минимальное кол-во тонн:"))
                                     if imgui.IsItemHovered() then
-                                        imgui.SetTooltip(u8"Скрывать контракты у которых остаток \nменьше либо равен выбранному значению")
+                                        imgui.SetTooltip(u8"Скрывать контракты у которых остаток \nменьше либо равен выбранному значению.")
                                     end
                                 imgui.EndChild()
                                 imgui.SetCursorPos(imgui.ImVec2(175, 65))
@@ -828,7 +828,7 @@ local Settings = {
                                     filters.save()
                                 end
                                 if imgui.IsItemHovered() then
-                                    imgui.SetTooltip(u8"Показывать контракты в порт Лос-Сантос")
+                                    imgui.SetTooltip(u8"Показывать контракты в порт Лос-Сантос.")
                                 end
                                 imgui.SameLine()
                                 if imgui.Checkbox(u8(" Порт Сан-Фиерро"), imgui.new.bool(not filters.data.destinations[2].hidden)) then
@@ -840,14 +840,14 @@ local Settings = {
                                     filters.save()
                                 end
                                 if imgui.IsItemHovered() then
-                                    imgui.SetTooltip(u8"Показывать контракты в порт Сан-Фиерро")
+                                    imgui.SetTooltip(u8"Показывать контракты в порт Сан-Фиерро.")
                                 end
                                 if imgui.Checkbox(u8(" Всегда показывать топовые (рек.)"), imgui.new.bool(filters.data.top)) then
                                     filters.data.top = not filters.data.top
                                     filters.save()
                                 end
                                 if imgui.IsItemHovered() then
-                                    imgui.SetTooltip(u8"Игнорировать все фильтры в данном окне, \nесли контракт является топовым (TOP)")
+                                    imgui.SetTooltip(u8"Игнорировать все фильтры в данном окне, \nесли контракт является топовым (TOP).")
                                 end
                                 imgui.EndChild()
                                 imgui.SetCursorPos(imgui.ImVec2(175, 155))
