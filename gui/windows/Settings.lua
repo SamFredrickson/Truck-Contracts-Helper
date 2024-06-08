@@ -759,8 +759,8 @@ local Settings = {
                                         and constants.MAX_TONS_QUANTITY
                                         or minTonsQuantity[0] + 1
                                     )
-                                    config.data.settings.minTonsQuantity = minTonsQuantity[0]
-                                    config.save()
+                                    filters.data.minTonsQuantity = minTonsQuantity[0]
+                                    filters.save()
                                 end
                                 if imgui.IsItemActive() then
                                     isAnyItemActive = true
@@ -770,8 +770,8 @@ local Settings = {
                                             and constants.MAX_TONS_QUANTITY
                                             or minTonsQuantity[0] + 1
                                         )
-                                        config.data.settings.minTonsQuantity = minTonsQuantity[0]
-                                        config.save()
+                                        filters.data.minTonsQuantity = minTonsQuantity[0]
+                                        filters.save()
                                     end
                                 end
                                 if imgui.IsItemActivated() then
@@ -789,8 +789,8 @@ local Settings = {
                                         and constants.MIN_TONS_QUANTITY
                                         or minTonsQuantity[0] - 1
                                     )
-                                    config.data.settings.minTonsQuantity = minTonsQuantity[0]
-                                    config.save()
+                                    filters.data.minTonsQuantity = minTonsQuantity[0]
+                                    filters.save()
                                 end
                                 if imgui.IsItemActive() then
                                     isAnyItemActive = true
@@ -800,8 +800,8 @@ local Settings = {
                                             and constants.MIN_TONS_QUANTITY
                                             or minTonsQuantity[0] - 1
                                         )
-                                        config.data.settings.minTonsQuantity = minTonsQuantity[0]
-                                        config.save()
+                                        filters.data.minTonsQuantity = minTonsQuantity[0]
+                                        filters.save()
                                     end
                                 end
                                 if imgui.IsItemActivated() then
