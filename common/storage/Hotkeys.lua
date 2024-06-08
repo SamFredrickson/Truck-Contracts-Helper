@@ -7,7 +7,7 @@ local u8 = encoding.UTF8
 
 local Hotkeys = {
     new = function()
-        local self = Json.new("hotkeys", constants.HOTKEYS)
+        local self = Json.new("hotkeys2", constants.HOTKEYS)
 
         self.save = function()
             file = io.open(self.filepath, "w")
