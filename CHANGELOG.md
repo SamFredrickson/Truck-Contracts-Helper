@@ -1,5 +1,11 @@
 # Список изменений
 Все видимые изменения проекта будут документироваться в данном файле.
+## [1.7.1] - 2024-06-08
+
+### Исправлено
+- Не работала по дефолту заданная комбинация клавиш **ALT + Y**
+- Не сохранялось минимальное количество тон в фильтрах, если использовать кнопки плюса и минуса 
+
 ## [1.7.0] - 2024-06-08
 
 ### Добавлено
@@ -123,3 +129,4 @@
 [1.5.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.5.1/tch-release-1.5.1.rar
 [1.6.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.6.0/tch-release-1.6.0.rar
 [1.7.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.0/tch-release-1.7.0.rar
+[1.7.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.1/tch-release-1.7.1.rar
