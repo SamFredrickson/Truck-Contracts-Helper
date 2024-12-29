@@ -19,6 +19,7 @@ local SkillDialogue = require "tch.samp.dialogues.skill"
 local RepairSuggestion = require "tch.samp.dialogues.repairsuggestion"
 local RefillSuggestion = require "tch.samp.dialogues.refillsuggestion"
 local HotSuggestion = require "tch.samp.dialogues.hotsuggestion"
+local AcceptDialogue = require "tch.samp.dialogues.accept"
 
 local Sound = require "tch.entities.sounds.sound"
 local Contract = require "tch.entities.contracts.contract"
@@ -38,6 +39,7 @@ local PlayerService = require "tch.services.playerservice"
 local CarService = require "tch.services.carservice"
 local HttpService = require "tch.services.httpservice"
 local PointsService = require "tch.services.pointsservice"
+local OfferService = require "tch.services.offerservice"
 local Config = require "tch.common.config"
 local Hotkeys = require "tch.common.storage.hotkeys"
 local Array = require "tch.common.array"
@@ -62,6 +64,7 @@ local skillDialogue = SkillDialogue.new()
 local repairSuggestion = RepairSuggestion.new()
 local refillSuggestion = RefillSuggestion.new()
 local hotSuggestion = HotSuggestion.new()
+local acceptDialogue = AcceptDialogue.new()
 
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
@@ -77,6 +80,7 @@ local carsService = CarService.new()
 local driverCoordinatesService = DriverCoordinatesEntryService.new()
 local httpService = HttpService.new()
 local pointService = PointsService.new()
+local offerService = OfferService.new()
 
 local TWO_HOURS = 3600 * 2
 local isSettingsApplied = false
@@ -566,19 +570,6 @@ function main()
 			end
 		):run()
 
-		-- Проверка на активное предложение от механика
-		scheduleService.create
-		(
-			function()
-				if config.data.settings.selectedScriptStatus > 0 then
-					if repairSuggestion.active then setGameKeyState(11, 255) end
-					if refillSuggestion.active then setGameKeyState(11, 255) end
-					if hotSuggestion.active then setGameKeyState(11, 255) end
-				end
-			end,
-			10
-		):run()
-
 		-- Отрисовка линий камер
 		scheduleService.create
 		(
@@ -771,26 +762,35 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 			return false
 		end
 
-		if config.data.settings.autorepair 
-		and title:find(repairSuggestion.title) 
-		and repairSuggestion.active then
-			sampSendDialogResponse(id, 1, _, _)
-			return false
+		if title:find(acceptDialogue.title) then
+			local offers = offerService.parse(text)
+			for _, offer in pairs(offers) do
+				if config.data.settings.autorepair and offer.title:find("Заправка транспорта") then
+					
+				end
+			end
 		end
 
-		if config.data.settings.autorefill 
-		and title:find(refillSuggestion.title) 
-		and refillSuggestion.active then
-			sampSendDialogResponse(id, 1, _, _)
-			return false
-		end
+		-- if config.data.settings.autorepair 
+		-- and title:find(repairSuggestion.title) 
+		-- and repairSuggestion.active then
+		-- 	sampSendDialogResponse(id, 1, _, _)
+		-- 	return false
+		-- end
 
-		if config.data.settings.autoHotDog 
-		and title:find(hotSuggestion.title) 
-		and hotSuggestion.active then
-			sampSendDialogResponse(id, 1, _, _)
-			return false
-		end
+		-- if config.data.settings.autorefill 
+		-- and title:find(refillSuggestion.title) 
+		-- and refillSuggestion.active then
+		-- 	sampSendDialogResponse(id, 1, _, _)
+		-- 	return false
+		-- end
+
+		-- if config.data.settings.autoHotDog 
+		-- and title:find(hotSuggestion.title) 
+		-- and hotSuggestion.active then
+		-- 	sampSendDialogResponse(id, 1, _, _)
+		-- 	return false
+		-- end
 
 		if config.data.settings.documentsDialogue then
 			if documentsDialogue.title == title then
@@ -1006,19 +1006,21 @@ function sampev.onServerMessage(color, text)
 			return false
 		end
 
-		if config.data.settings.autorepair and text:find(serverMessageService.findByCode("repair-suggestion").message) then
-			local name, price = text:match(serverMessageService.findByCode("repair-suggestion").message)
-			if tonumber(price) <= config.data.settings.repairPrice then
-				repairSuggestion.active = true
-			end
-		end
+		-- if config.data.settings.autorepair and text:find(serverMessageService.findByCode("repair-suggestion").message) then
+		-- 	local name, price = text:match(serverMessageService.findByCode("repair-suggestion").message)
+		-- 	local price = price:gsub('%D+', '') 
+		-- 	if tonumber(price) <= config.data.settings.repairPrice then
+		-- 		print(name, price)
+		-- 	end
+		-- end
 
-		if config.data.settings.autorefill and text:find(serverMessageService.findByCode("refill-suggestion").message) then
-			local name, liters, price = text:match(serverMessageService.findByCode("refill-suggestion").message)
-			if tonumber(price) <= config.data.settings.refillPrice then
-				refillSuggestion.active = true
-			end
-		end
+		-- if config.data.settings.autorefill and text:find(serverMessageService.findByCode("refill-suggestion").message) then
+		-- 	local name, liters, price = text:match(serverMessageService.findByCode("refill-suggestion").message)
+		-- 	local price = price:gsub('%D+', '') 
+		-- 	if tonumber(price) <= config.data.settings.refillPrice then
+		-- 		refillSuggestion.active = true
+		-- 	end
+		-- end
 
 		if config.data.settings.autoHotDog and text:find(serverMessageService.findByCode("hot-suggestion").message) then
 			local name, price = text:match(serverMessageService.findByCode("hot-suggestion").message)
