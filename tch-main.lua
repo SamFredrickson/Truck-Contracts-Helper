@@ -82,6 +82,7 @@ local TWO_HOURS = 3600 * 2
 local isSettingsApplied = false
 local isSuccessfulRenting = false
 local race = nil
+local illegalCargoDialogueShowedAt = nil
 
 local unloading = {
 	active = false, 
@@ -804,37 +805,14 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 		end
 
 		if title:find(illegalCargoDialogue.title) then
+			illegalCargoDialogueShowedAt = os.time()
 			illegalCargoDialogue.isActive = true
 		end
 
-		if not title:find(illegalCargoDialogue.title) then
+		if not title:find(illegalCargoDialogue.title) 
+		and os.difftime(os.time(), illegalCargoDialogueShowedAt) > 10 then
+			illegalCargoAvailableAt = nil
 			illegalCargoDialogue.isActive = false
-		end
-	end
-end
-
-function sampev.onSendDialogResponse(dialogId, button, list, input)
-	if illegalCargoDialogue.isActive and button == 1 then
-		illegalCargoDialogue.isActive = false
-		
-		-- Обновляем тайминги
-		config.data.settings.lastIllegalCargoUnloadedAt = os.time()
-		local illegalCargoAvailableAt = config.data.settings.lastIllegalCargoUnloadedAt + TWO_HOURS
-		local illegalCargoDiffTime = os.difftime(illegalCargoAvailableAt, os.time())
-		local illegalCargoAvailableAtFormatted = Time.new(illegalCargoDiffTime).toString()
-		infoWindow.information.cargo.setValue(illegalCargoAvailableAtFormatted)
-
-		-- Обновляем информацию о текущем рейсе
-		race = Race.new(nil, os.time())
-
-		infoWindow.information.race.setValue("{32CD32}Нелегальный груз{FFFFFF}")
-		config.save()
-
-		if config.data.settings.autohideContractsList then
-			local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
-			chatService.send(localMessage)
-			mainWindow.hideCursor = true
-			mainWindow.deactivate()
 		end
 	end
 end
@@ -1079,6 +1057,32 @@ function sampev.onServerMessage(color, text)
 
 		-- Проверка на аренду фуры, чтобы учесть статистику
 		if text:find(serverMessageService.findByCode("successful-renting").message) then isSuccessfulRenting = true end
+
+		-- Проверка на успешную загрузку нелегального груза
+		if illegalCargoDialogue.isActive and text:find(serverMessageService.findByCode("successful-loading").message) then
+			illegalCargoAvailableAt = nil
+			illegalCargoDialogue.isActive = false
+
+			-- Обновляем тайминги
+			config.data.settings.lastIllegalCargoUnloadedAt = os.time()
+			local illegalCargoAvailableAt = config.data.settings.lastIllegalCargoUnloadedAt + TWO_HOURS
+			local illegalCargoDiffTime = os.difftime(illegalCargoAvailableAt, os.time())
+			local illegalCargoAvailableAtFormatted = Time.new(illegalCargoDiffTime).toString()
+			infoWindow.information.cargo.setValue(illegalCargoAvailableAtFormatted)
+
+			-- Обновляем информацию о текущем рейсе
+			race = Race.new(nil, os.time())
+
+			infoWindow.information.race.setValue("{32CD32}Нелегальный груз{FFFFFF}")
+			config.save()
+
+			if config.data.settings.autohideContractsList then
+				local localMessage = LocalMessage.new(" {FFFFFF}Список контрактов успешно скрыт {ed5a5a}(( /tch.list ))")
+				chatService.send(localMessage)
+				mainWindow.hideCursor = true
+				mainWindow.deactivate()
+			end
+		end
 			
 		-- Проверка на отправленные в рацию координаты
 		if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then

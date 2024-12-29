@@ -531,6 +531,10 @@ local SERVER_MESSAGES = {
     {
         message = "Не флуди!",
         code = "flood"
+    },
+    {
+        message = "Вы успешно загрузились. Отправляйтесь на разгрузку",
+        code = "successful-loading"
     }
 }
 
