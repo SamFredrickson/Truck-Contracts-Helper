@@ -1,5 +1,10 @@
 # Список изменений
 Все видимые изменения проекта будут документироваться в данном файле.
+## [1.7.2] - 2024-12-29
+
+### Исправлено
+- Работа таймера нелегального груза при его взятии
+
 ## [1.7.1] - 2024-06-08
 
 ### Исправлено
@@ -130,3 +135,4 @@
 [1.6.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.6.0/tch-release-1.6.0.rar
 [1.7.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.0/tch-release-1.7.0.rar
 [1.7.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.1/tch-release-1.7.1.rar
+[1.7.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.2/tch-release-1.7.2.rar
