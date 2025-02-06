@@ -16,9 +16,6 @@ local SuggestionDialogue = require "tch.samp.dialogues.suggestion"
 local DocumentsDialogue = require "tch.samp.dialogues.documents"
 local IllegalCargoDialogue = require "tch.samp.dialogues.illegalcargo"
 local SkillDialogue = require "tch.samp.dialogues.skill"
-local RepairSuggestion = require "tch.samp.dialogues.repairsuggestion"
-local RefillSuggestion = require "tch.samp.dialogues.refillsuggestion"
-local HotSuggestion = require "tch.samp.dialogues.hotsuggestion"
 
 local Sound = require "tch.entities.sounds.sound"
 local Contract = require "tch.entities.contracts.contract"
@@ -59,9 +56,6 @@ local suggestionDialogue = SuggestionDialogue.new()
 local documentsDialogue = DocumentsDialogue.new()
 local illegalCargoDialogue = IllegalCargoDialogue.new()
 local skillDialogue = SkillDialogue.new()
-local repairSuggestion = RepairSuggestion.new()
-local refillSuggestion = RefillSuggestion.new()
-local hotSuggestion = HotSuggestion.new()
 
 local contract = Contract.new()
 local mainWindow = MainWindow.new()
@@ -566,19 +560,6 @@ function main()
 			end
 		):run()
 
-		-- Проверка на активное предложение от механика
-		scheduleService.create
-		(
-			function()
-				if config.data.settings.selectedScriptStatus > 0 then
-					if repairSuggestion.active then setGameKeyState(11, 255) end
-					if refillSuggestion.active then setGameKeyState(11, 255) end
-					if hotSuggestion.active then setGameKeyState(11, 255) end
-				end
-			end,
-			10
-		):run()
-
 		-- Отрисовка линий камер
 		scheduleService.create
 		(
@@ -768,27 +749,6 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 			infoWindow.information.experienceToLevel.setTitle(title)
 
 			sampSendDialogResponse(id, 0, _, _)
-			return false
-		end
-
-		if config.data.settings.autorepair 
-		and title:find(repairSuggestion.title) 
-		and repairSuggestion.active then
-			sampSendDialogResponse(id, 1, _, _)
-			return false
-		end
-
-		if config.data.settings.autorefill 
-		and title:find(refillSuggestion.title) 
-		and refillSuggestion.active then
-			sampSendDialogResponse(id, 1, _, _)
-			return false
-		end
-
-		if config.data.settings.autoHotDog 
-		and title:find(hotSuggestion.title) 
-		and hotSuggestion.active then
-			sampSendDialogResponse(id, 1, _, _)
 			return false
 		end
 
@@ -1004,51 +964,6 @@ function sampev.onServerMessage(color, text)
 			local message = LocalMessage.new(text)
 			chatService.send(message)
 			return false
-		end
-
-		if config.data.settings.autorepair and text:find(serverMessageService.findByCode("repair-suggestion").message) then
-			local name, price = text:match(serverMessageService.findByCode("repair-suggestion").message)
-			if tonumber(price) <= config.data.settings.repairPrice then
-				repairSuggestion.active = true
-			end
-		end
-
-		if config.data.settings.autorefill and text:find(serverMessageService.findByCode("refill-suggestion").message) then
-			local name, liters, price = text:match(serverMessageService.findByCode("refill-suggestion").message)
-			if tonumber(price) <= config.data.settings.refillPrice then
-				refillSuggestion.active = true
-			end
-		end
-
-		if config.data.settings.autoHotDog and text:find(serverMessageService.findByCode("hot-suggestion").message) then
-			local name, price = text:match(serverMessageService.findByCode("hot-suggestion").message)
-			if tonumber(price) <= config.data.settings.hotPrice then
-				hotSuggestion.active = true
-			end
-		end
-
-		if text:find(serverMessageService.findByCode("repair-accepted").message) then
-			repairSuggestion.active = false
-		end
-
-		if text:find(serverMessageService.findByCode("repair-already").message) then
-			repairSuggestion.active = false
-		end
-
-		if text:find(serverMessageService.findByCode("repair-not-required").message) then
-			repairSuggestion.active = false
-		end
-
-		if text:find(serverMessageService.findByCode("refill-accepted").message) then
-			refillSuggestion.active = false
-		end
-
-		if text:find(serverMessageService.findByCode("hot-accepted").message) then
-			hotSuggestion.active = false
-		end
-
-		if text:find(serverMessageService.findByCode("hot-eaten").message) then
-			hotSuggestion.active = false
 		end
 
 		if config.data.settings.autounload and text:find(serverMessageService.findByCode("no-cargo-attached").message) then
