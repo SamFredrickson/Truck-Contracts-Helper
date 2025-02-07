@@ -1155,16 +1155,18 @@ function sampev.onServerMessage(color, text)
 				playerService.get(), 
 				PLAYER_PED
 			)
-			currentBlip.isActive = false
-			currentBlip.coords = { x = x, y = y, z = z }
-			local messages = {
-				LocalMessage.new(" Вы получили координаты другого {ed5a5a}дальнобойщика{FFFFFF} по рации.", 300),
-				LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + Y {FFFFFF}чтобы поставить метку.", 300)
-			}
-			for _, message in pairs(messages) do
-				chatService.send(message)
+			if player.name ~= nickname then
+				currentBlip.isActive = false
+				currentBlip.coords = { x = x, y = y, z = z }
+				local messages = {
+					LocalMessage.new(" Вы получили координаты другого {ed5a5a}дальнобойщика{FFFFFF} по рации.", 300),
+					LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + Y {FFFFFF}чтобы поставить метку.", 300)
+				}
+				for _, message in pairs(messages) do
+					chatService.send(message)
+				end
+				setAudioStreamState(tickSound.audioStream, AudioStreamState.PLAY)
 			end
-			setAudioStreamState(tickSound.audioStream, AudioStreamState.PLAY)
 		end
 	end
 end
