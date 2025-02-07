@@ -46,8 +46,7 @@ local Settings = {
             "Основное",
             "Команды и горячие \n         клавиши",
             "Контракты",
-            "Статистика",
-            "Взаимодействие с\n       игроками"
+            "Статистика"
         }
 
         local clists = imgui.new['const char*'][#constants.COLOR_LIST](constants.COLOR_LIST)
@@ -285,23 +284,6 @@ local Settings = {
                                 config.data.settings.linesWidth = linesWidth[0]
                                 config.save()
                             end
-                            if imgui.IsItemActive() then
-                                isAnyItemActive = true
-                                if isAnyItemActiveMoreOneSecond then
-                                    linesWidth[0] = (
-                                        linesWidth[0] >= constants.CAMERA_LINES.MAX_WIDTH 
-                                        and constants.CAMERA_LINES.MAX_WIDTH 
-                                        or linesWidth[0] + 1
-                                    )
-                                    config.data.settings.linesWidth = linesWidth[0]
-                                    config.save()
-                                end
-                            end
-                            if imgui.IsItemActivated() then
-                                isAnyItemActiveMoreOneSecond = false
-                                isAnyItemActive = false
-                                currentTime = nil
-                            end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
                             end
@@ -314,23 +296,6 @@ local Settings = {
                                 )
                                 config.data.settings.linesWidth = linesWidth[0]
                                 config.save()
-                            end
-                            if imgui.IsItemActive() then
-                                isAnyItemActive = true
-                                if isAnyItemActiveMoreOneSecond then
-                                    linesWidth[0] = (
-                                        linesWidth[0] <= constants.CAMERA_LINES.MIN_WIDTH 
-                                        and constants.CAMERA_LINES.MIN_WIDTH 
-                                        or linesWidth[0] - 1
-                                    )
-                                    config.data.settings.linesWidth = linesWidth[0]
-                                    config.save()
-                                end
-                            end
-                            if imgui.IsItemActivated() then
-                                isAnyItemActiveMoreOneSecond = false
-                                isAnyItemActive = false
-                                currentTime = nil
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
@@ -628,58 +593,6 @@ local Settings = {
                             end
                             imgui.Columns(1)
                         end
-                    end
-                    if active == 5 then
-                       if imgui.BeginTabBar("Players Tab") then
-                            if imgui.BeginTabItem(u8"Координаты") then
-                                if #DriverCoordinatesEntryService.ENTRIES <= 0 then
-                                    imgui.Text(u8"Список координат пуст.")
-                                end
-                                if #DriverCoordinatesEntryService.ENTRIES > 0 then
-                                    imgui.Columns(3)
-                                    imgui.CenterColumnText(u8'Отправитель') imgui.SetColumnWidth(-1, 130)
-                                    imgui.NextColumn()
-                                    imgui.CenterColumnText(u8'Сообщение') imgui.SetColumnWidth(-1, #DriverCoordinatesEntryService.ENTRIES <= 12 and 226 or 218)
-                                    imgui.NextColumn()
-                                    imgui.CenterColumnText(u8'Опции')
-                                    imgui.Columns(1)
-                                    imgui.Separator()
-
-                                    for id, entry in pairs(DriverCoordinatesEntryService.ENTRIES) do
-                                        imgui.Columns(3)
-                                        imgui.CenterColumnText(entry.getNickname())
-                                        if imgui.IsItemHovered() then
-                                            imgui.SetTooltip(u8(entry.nickname))
-                                        end
-                                        imgui.NextColumn()
-                                        imgui.CenterColumnText(u8(entry.getMessage()))
-                                        if imgui.IsItemHovered() then
-                                            imgui.SetTooltip(u8(entry.message))
-                                        end
-                                        imgui.NextColumn()
-                                        if imgui.Button(u8"Мет.##" .. tostring(id)) then
-                                            Sound.new("mark.wav", 80).play()
-                                            removeBlip(entry.blip)
-                                            entry.blip = addSpriteBlipForCoord(entry.x, entry.y, entry.z, 41)
-                                            local localMessage = LocalMessage.new("Метка установлена на карте", nil, constants.COLORS.GOLD)
-                                            chatService.send(localMessage)
-                                        end
-                                        if imgui.IsItemHovered() then
-                                            imgui.SetTooltip(u8"Поставить метку на карте.")
-                                        end
-                                        imgui.SameLine()
-                                        if imgui.Button(u8"Удал.##" .. tostring(id)) then
-                                            removeBlip(entry.blip)
-                                            driverCoordinatesService.delete(DriverCoordinatesEntryService.ENTRIES, id)
-                                        end
-                                        if imgui.IsItemHovered() then
-                                            imgui.SetTooltip(u8"Удалить запись и метку на карте.")
-                                        end
-                                        imgui.Columns(1)
-                                    end
-                                end
-                            end
-                       end
                     end
                     imgui.EndChild()
                 end

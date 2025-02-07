@@ -10,7 +10,8 @@ local PlayerService = {
             for _, handle in pairs(getAllChars()) do
                 local isSuccess, id = sampGetPlayerIdByCharHandle(handle)
                 if isSuccess then
-                    local player = Player.new(
+                    local player = Player.new
+                    (
                         id,
                         sampGetPlayerNickname(id),
                         sampGetPlayerHealth(id),

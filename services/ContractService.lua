@@ -284,6 +284,13 @@ local ContractService = {
             local players = playerService.get()
             local player = playerService.getByHandle(players, PLAYER_PED)
 
+            for _, car in pairs(cars) do
+                if car.IsTrailer() then
+                    local isWithinDistance = car.IsWithinDistance(point.coords, point.autoTakeDistance)
+                    if isWithinDistance then return false end
+                end
+            end
+
             for _, driver in pairs(players) do
                 local car = carsService.getByDriver(cars, driver)
                 local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoTakeDistance)

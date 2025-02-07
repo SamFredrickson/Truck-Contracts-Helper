@@ -38,6 +38,7 @@ local PointsService = require "tch.services.pointsservice"
 local Config = require "tch.common.config"
 local Hotkeys = require "tch.common.storage.hotkeys"
 local Array = require "tch.common.array"
+local AudioStreamState = require("moonloader").audiostream_state
 
 script_author(constants.SCRIPT_INFO.AUTHOR)
 script_version(constants.SCRIPT_INFO.VERSION)
@@ -61,6 +62,8 @@ local contract = Contract.new()
 local mainWindow = MainWindow.new()
 local settingsWindow = SettingsWindow.new()
 local infoWindow = InfoWindow.new()
+local markSound = Sound.new("mark.wav", 0.8)
+local tickSound = Sound.new("tick.wav", 5)
 
 local contractsService = ContractService.new()
 local chatService = ChatService.new()
@@ -77,6 +80,11 @@ local isSettingsApplied = false
 local isSuccessfulRenting = false
 local race = nil
 local illegalCargoDialogueShowedAt = nil
+local currentBlip = {
+	blip = nil, 
+	coords = nil,
+	isActive = false
+}
 
 local unloading = {
 	active = false, 
@@ -248,32 +256,25 @@ function main()
 
 		sampRegisterChatCommand
 		(
-            "tch.coords.send",
+            "tch.sos",
 			function(args) 
 				if config.data.settings.selectedScriptStatus > 0 then
-					if args == nil or args == "" then
-						local localMessage = LocalMessage.new("{ed5a5a}/tch.coords.send{FFFFFF} [текст сообщения]")
-						chatService.send(localMessage)
-						return
-					end
-	
-					local player = playerService.getByHandle(
-						playerService.get(), 
+					local player = playerService.getByHandle
+					(
+						playerService.get(),
 						PLAYER_PED
 					)
-	
 					local message = Message.new
 					(
 						string.format
 						(
-							"/j %s %f|%f|%f", 
-							args, 
+							"/j %s GPS: %.1f, %.1f, %.1f", 
+							args:isempty() and "Помогите!" or args,
 							player.coords.x, 
 							player.coords.y, 
 							player.coords.z
 						)
 					)
-	
 					chatService.send(message)
 				end
 			end
@@ -395,6 +396,42 @@ function main()
 			40
 		):run()
 
+		-- Прослушка комбинации клавиш для принятия координат с рации
+		scheduleService.create
+		(
+			function()
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip and not currentBlip.isActive then
+					if isKeyDown(18) and isKeyDown(89) then
+						while isKeyDown(18) and isKeyDown(89) do wait(80) end
+						removeBlip(currentBlip.blip)
+						currentBlip.blip = addSpriteBlipForCoord
+						(
+							currentBlip.coords.x, 
+							currentBlip.coords.y, 
+							currentBlip.coords.z, 
+							41
+						)
+						currentBlip.isActive = true
+						local messages = {
+							LocalMessage.new(" Метка успешно {ed5a5a}поставлена{FFFFFF} на карте."),
+							LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + N {FFFFFF}чтобы убрать метку.")
+						}
+						for _, message in pairs(messages) do
+							chatService.send(message)
+						end
+						setAudioStreamState(markSound.audioStream, AudioStreamState.PLAY)
+					end
+				end
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip then
+					if isKeyDown(18) and isKeyDown(78) then
+						while isKeyDown(18) and isKeyDown(78) do wait(80) end
+						removeBlip(currentBlip.blip)
+					end
+				end
+			end,
+			40
+		):run()
+
 		-- Прослушка на возможность дать цвет ника, закрыть машину, показать окно
 		scheduleService.create
 		(
@@ -479,18 +516,14 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.selectedScriptStatus > 0 then
-					if #DriverCoordinatesEntryService.ENTRIES > 0 then
-						local player = playerService.getByHandle(
-							playerService.get(), 
-							PLAYER_PED
-						)
-						for _, entry in pairs(DriverCoordinatesEntryService.ENTRIES) do
-							local coords = { x = entry.x, y = entry.y, z = entry.z }
-							if player.IsWithinDistance(coords, 20) then
-								removeBlip(entry.blip)
-							end
-						end
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords then
+					local player = playerService.getByHandle
+					(
+						playerService.get(), 
+						PLAYER_PED
+					)
+					if player.IsWithinDistance(currentBlip.coords, 20) then
+						removeBlip(currentBlip.blip)
 					end
 				end
 			end
@@ -999,60 +1032,28 @@ function sampev.onServerMessage(color, text)
 			end
 		end
 			
-		-- Проверка на отправленные в рацию координаты
 		if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
-			local nickname, message, x, y, z = text:match(
-				serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
+			local nickname, message, x, y, z = text:match
+			(
+				serverMessageService
+				.findByCode("truck-driver-chat-new-message-with-coords")
+				.message
 			)
-
-			local player = playerService.getByHandle(
+			local player = playerService.getByHandle
+			(
 				playerService.get(), 
 				PLAYER_PED
 			)
-
-			if player.name ~= nickname then
-				local driverCoordinatesEntry = DriverCoordinatesEntry.new(
-					nickname,
-					message,
-					x, y, z
-				)
-
-				local data = driverCoordinatesService.findByNickname(
-					DriverCoordinatesEntryService.ENTRIES,
-					nickname
-				)
-
-				if data then
-					driverCoordinatesService.update(
-						DriverCoordinatesEntryService.ENTRIES, 
-						data.id,
-						{ 
-							nickname = driverCoordinatesEntry.nickname, 
-							message = driverCoordinatesEntry.message,
-							x = driverCoordinatesEntry.x,
-							y = driverCoordinatesEntry.y, 
-							z = driverCoordinatesEntry.z
-						}
-					)
-					removeBlip(data.item.blip)
-				end
-
-				if not data then
-					driverCoordinatesService.create(
-						DriverCoordinatesEntryService.ENTRIES, 
-						driverCoordinatesEntry
-					)
-				end
-
-				local localMessage = LocalMessage.new(
-					" {FFFFFF}Координаты успешно внесены в список " ..
-					"{ed5a5a}(( /tch.menu » Взаимодействие с игроками ))",
-					500
-				)
-
-				chatService.send(localMessage)
-				Sound.new("tick.wav", 100).play()
+			currentBlip.isActive = false
+			currentBlip.coords = { x = x, y = y, z = z }
+			local messages = {
+				LocalMessage.new(" Вы получили координаты другого {ed5a5a}дальнобойщика{FFFFFF} по рации.", 300),
+				LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + Y {FFFFFF}чтобы поставить метку.", 300)
+			}
+			for _, message in pairs(messages) do
+				chatService.send(message)
 			end
+			setAudioStreamState(tickSound.audioStream, AudioStreamState.PLAY)
 		end
 	end
 end

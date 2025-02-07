@@ -489,7 +489,7 @@ local SERVER_MESSAGES = {
         code = "truck-driver-chat-new-message"
     },
     {
-        message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+) (.+)|(.+)|(.+)",
+        message = "%[J%] ([A-Za-z_]+)%[%d+%]: {.-}(.+) GPS: (.+), (.+), (.+)",
         code = "truck-driver-chat-new-message-with-coords"
     },
     {

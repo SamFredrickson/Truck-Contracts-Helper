@@ -20,7 +20,8 @@ local CarService = {
                 local maxPassengers = getMaximumNumberOfPassengers(handle)
                 local isLocked = getCarDoorLockStatus(handle)
 
-                local car = Car.new(
+                local car = Car.new
+                (
                     id,
                     name and name:lower() or "unknown",
                     model,
