@@ -1075,6 +1075,50 @@ function sampev.onServerMessage(color, text)
 			end
 		end
 
+		-- Учитываем полученный расход с покупки рем. комплекта в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("repair-kit-acquired").message)) then
+			local expense = text:match(serverMessageService.findByCode("repair-kit-acquired").message)
+			local cars = carsService.get()
+			local players = playerService.get()
+
+			local player = playerService.getByHandle(players, PLAYER_PED)
+			local car = carsService.getByDriver(cars, player)
+
+			if car and car.IsTruck() then
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+				config.save()
+			end
+		end
+
+		-- Учитываем полученный расход с покупки канистры в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("gasoline-canister-acquired").message)) then
+			local expense = text:match(serverMessageService.findByCode("gasoline-canister-acquired").message)
+			local cars = carsService.get()
+			local players = playerService.get()
+
+			local player = playerService.getByHandle(players, PLAYER_PED)
+			local car = carsService.getByDriver(cars, player)
+
+			if car and car.IsTruck() then
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+				config.save()
+			end
+		end
+
 		-- Учитываем полученный расход с заправки в статистику заработка
 		if ((race and race.contract) and text:find(serverMessageService.findByCode("refill-accepted").message)) then
 			local expense = text:match(serverMessageService.findByCode("refill-accepted").message)

@@ -505,6 +505,14 @@ local SERVER_MESSAGES = {
         code = "repair-suggestion"
     },
     {
+        message = "Вы успешно приобрели комплект для ремонта за $(%d+)",
+        code = "repair-kit-acquired"
+    },
+    {
+        message = "Вы купили канистру %[%d+ литров%] за $(%d+)",
+        code = "gasoline-canister-acquired"
+    },
+    {
         message = "([A-Za-z_]+)%[%d+%] предложил Вам заправить транспортное средство на (%d+) литров. Цена: (%d+) $.",
         code = "refill-suggestion"
     },
