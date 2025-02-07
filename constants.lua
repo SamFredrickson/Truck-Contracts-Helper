@@ -461,8 +461,16 @@ local SERVER_MESSAGES = {
         code = "income"
     },
     {
+        message = "Вы заправили %d+ литров топлива за (%d+) вирт",
+        code = "refilled-at-gas-station"
+    },
+    {
         message = "Вы получили дополнительно {.-}%$(%d+) {.-}при сдаче груза за улучшение семьи",
         code = "family-income"
+    },
+    {
+        message = "Вы получили $(%d+) при выполнении ежед. квеста за улучшение семьи",
+        code = "quest-income"
     },
     {
         message = "За выполненный контракт Вы получили {.-}(%d+) опыта",
@@ -513,7 +521,7 @@ local SERVER_MESSAGES = {
         code = "hot-eaten"
     },
     {
-        message = "Вы согласились на ремонт транспортного средства",
+        message = "Вы согласились на ремонт транспортного средства от {.-}[A-Za-z_]+%[%d+%]{.-} за {.-}$(%d+){.-}%.",
         code = "repair-accepted"
     },
     {
@@ -521,7 +529,7 @@ local SERVER_MESSAGES = {
         code = "repair-already"
     },
     {
-        message = "Вы купили (%d+) литров топлива",
+        message = "Вы купили %d+ литров топлива за (%d+) вирт",
         code = "refill-accepted"
     },
     {

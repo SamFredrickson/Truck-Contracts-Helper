@@ -972,7 +972,7 @@ function sampev.onServerMessage(color, text)
 		end
 
 		-- Учитываем полученный штраф в статистику заработка
-		if text:find(serverMessageService.findByCode("fine").message) then
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("fine").message)) then
 			local fine = text:match(serverMessageService.findByCode("fine").message)
 
 			-- Обновляем конфигурацию
@@ -984,6 +984,117 @@ function sampev.onServerMessage(color, text)
 			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
 
 			config.save()
+		end
+
+		-- Учитываем полученный доход с разгрузки в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("income").message)) then
+			local commission, income = text:match(serverMessageService.findByCode("income").message)
+
+			-- Обновляем конфигурацию
+			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + income
+			config.data.settings.totalEarnings = config.data.settings.totalEarnings + income
+			
+			-- Обновляем значения в окне
+			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+			config.save()
+		end
+
+		-- Учитываем полученный семейный доход с разгрузки в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("family-income").message)) then
+			local familyIncome = text:match(serverMessageService.findByCode("family-income").message)
+
+			-- Обновляем конфигурацию
+			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + familyIncome
+			config.data.settings.totalEarnings = config.data.settings.totalEarnings + familyIncome
+			
+			-- Обновляем значения в окне
+			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+			config.save()
+		end
+
+		-- Учитываем полученный квест-доход с разгрузки в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("quest-income").message)) then
+			local questIncome = text:match(serverMessageService.findByCode("quest-income").message)
+
+			-- Обновляем конфигурацию
+			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + questIncome
+			config.data.settings.totalEarnings = config.data.settings.totalEarnings + questIncome
+			
+			-- Обновляем значения в окне
+			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+			config.save()
+		end
+
+		-- Учитываем полученный расход с заправки в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("refilled-at-gas-station").message)) then
+			local expense = text:match(serverMessageService.findByCode("refilled-at-gas-station").message)
+			local cars = carsService.get()
+			local players = playerService.get()
+
+			local player = playerService.getByHandle(players, PLAYER_PED)
+			local car = carsService.getByDriver(cars, player)
+
+			if car and car.IsTruck() then
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+				config.save()
+			end
+		end
+
+		-- Учитываем полученный расход с починки в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("repair-accepted").message)) then
+			local expense = text:match(serverMessageService.findByCode("repair-accepted").message)
+			local cars = carsService.get()
+			local players = playerService.get()
+
+			local player = playerService.getByHandle(players, PLAYER_PED)
+			local car = carsService.getByDriver(cars, player)
+
+			if car and car.IsTruck() then
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+				config.save()
+			end
+		end
+
+		-- Учитываем полученный расход с заправки в статистику заработка
+		if ((race and race.contract) and text:find(serverMessageService.findByCode("refill-accepted").message)) then
+			local expense = text:match(serverMessageService.findByCode("refill-accepted").message)
+			local cars = carsService.get()
+			local players = playerService.get()
+
+			local player = playerService.getByHandle(players, PLAYER_PED)
+			local car = carsService.getByDriver(cars, player)
+
+			if car and car.IsTruck() then
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+
+				config.save()
+			end
 		end
 
 		-- Логика при получении сообщения об освобождении места для груза
@@ -1088,24 +1199,25 @@ end
 
 function sampev.onGivePlayerMoney(money)
 	if config.data.settings.selectedScriptStatus > 0 then
-		local cars = carsService.get()
-		local players = playerService.get()
+		if ((race and not race.contract) or illegalCargoDialogue.isActive) then 
+			local cars = carsService.get()
+			local players = playerService.get()
 
-		local player = playerService.getByHandle(players, PLAYER_PED)
-		local car = carsService.getByDriver(cars, player)
+			local player = playerService.getByHandle(players, PLAYER_PED)
+			local car = carsService.getByDriver(cars, player)
 
-		if car and car.IsTruck() then
-			-- Обновляем конфигурацию
-			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
-			config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
-			
-			-- Обновляем значения в окне
-			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
+			if car and car.IsTruck() then
+				-- Обновляем конфигурацию
+				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
+				config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
+				
+				-- Обновляем значения в окне
+				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
 
-			config.save()
+				config.save()
+			end
 		end
-
 		-- Проверка на аренду фуры
 		lua_thread.create
 		(
