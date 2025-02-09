@@ -93,6 +93,25 @@ local CONTRACTS = {
     { source = "Склад угля №2", destination = "Порт ЛС", sort = 9, top = false }
 }
 
+local PROFIT_AND_LOSS = {
+    { name = "Нефтезавод №1", sum = 0, profit = true, enabled = true, sort = 1 },
+    { name = "Нефтезавод №2", sum = 0, profit = true, enabled = true, sort = 2 },
+    { name = "Склад угля №1", sum = 0, profit = true, enabled = true, sort = 3 },
+    { name = "Склад угля №2", sum = 0, profit = true, enabled = true, sort = 4 },
+    { name = "Лесопилка №1", sum = 0, profit = true, enabled = true, sort = 5 },
+    { name = "Лесопилка №2", sum = 0, profit = true, enabled = true, sort = 6 },
+    { name = "Строительный завод №1", sum = 0, profit = true, enabled = true, sort = 7 },
+    { name = "Строительный завод №2", sum = 0, profit = true, enabled = true, sort = 8 },
+    { name = "Нелегальный груз", sum = 0, profit = true, enabled = true, sort = 9 },
+    { name = "Семейный бонус", sum = 0, profit = true, enabled = true, sort = 10 },
+    { name = "Штрафы с камер", sum = 0, profit = false, enabled = true, sort = 11 },
+    { name = "Заправка на станции", sum = 0, profit = false, enabled = true, sort = 12 },
+    { name = "Заправка механиком", sum = 0, profit = false, enabled = true, sort = 13 },
+    { name = "Починка механиком", sum = 0, profit = false, enabled = true, sort = 14 },
+    { name = "Канистры", sum = 0, profit = false, enabled = true, sort = 15 },
+    { name = "Рем. комплекты", sum = 0, profit = false, enabled = true, sort = 16 },
+    { name = "Неизвестный источник", sum = 0, profit = true, enabled = true, sort = 17 }
+}
 local POINTS = {
     { 
         source = "Нефтезавод №2", 
@@ -554,54 +573,62 @@ local SERVER_MESSAGES = {
     }
 }
 
-local STATISTICS_ENTRIES =  {
+local STATISTICS_ENTRIES = {
     {
-        name = "Рейс:",
-        code = "race",
-        short_name = "Рейс:",
-        hidden = false
+        show = true,
+        short_name = "Текущий рейс",
+        position = {10, 75},
+        name = "Текущий рейс",
+        code = "race"
     },
     {
-        name = "Время в рейсе:",
-        code = "race-time",
-        short_name = "Время в рейсе:",
-        hidden = false
+        show = false,
+        short_name = "Таймер нелегального груза",
+        position = {225, 75},
+        name = "Таймер нелегального груза",
+        code = "illegal-cargo-time"
     },
     {
-        name = "Нелегальный груз:",
-        code = "illegal-cargo-time",
-        short_name = "Нелегальный груз:",
-        hidden = false
+        show = true,
+        short_name = "Время в рейсе",
+        position = {10, 105},
+        name = "Время в рейсе",
+        code = "race-time"
     },
     {
-        name = "Опыта за сессию:",
-        code = "session-experience",
-        short_name = "Опыта за сессию:",
-        hidden = false
+        show = true,
+        short_name = "Опыта за сессию",
+        position = {225, 105},
+        name = "Опыта за сессию",
+        code = "session-experience"
     },
     {
-        name = "Опыта до N уровня:",
-        code = "experience-to-level",
-        short_name = "Опыта до N уровня:",
-        hidden = false
+        show = true,
+        short_name = "Опыта до N уровня",
+        position = {10, 135},
+        name = "Опыта до N уровня",
+        code = "experience-to-level"
     },
     {
-        name = "Рейсов за сессию:",
-        code = "session-races",
-        short_name = "Рейсов за сессию:",
-        hidden = false
+        show = true,
+        short_name = "Рейсов за сессию",
+        position = {225, 135},
+        name = "Рейсов за сессию",
+        code = "session-races"
     },
     {
-        name = "Заработано за сессию:",
-        code = "session-earnings",
-        short_name = "Заработано за сессию:",
-        hidden = false
+        show = true,
+        short_name = "Заработано за сессию",
+        position = {10, 165},
+        name = "Заработано за сессию",
+        code = "session-earnings"
     },
     {
-        name = "Заработано за всё время:",
-        code = "total-earnings",
-        short_name = "Заработано за всё время:",
-        hidden = false
+        show = true,
+        short_name = "Заработано за всё время",
+        position = {225, 165},
+        name = "Заработано за всё время",
+        code = "total-earnings"
     }
 }
 
@@ -876,5 +903,6 @@ return {
     HOTDOG = HOTDOG,
     SCRIPT_COMMANDS = SCRIPT_COMMANDS,
     HOTKEYS = HOTKEYS,
+    PROFIT_AND_LOSS = PROFIT_AND_LOSS,
     PINS = PINS
 }

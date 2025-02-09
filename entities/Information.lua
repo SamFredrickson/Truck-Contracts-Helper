@@ -1,3 +1,7 @@
+local ProfitAndLoss = require "tch.common.storage.profitandloss"
+local Array = require "tch.common.array"
+local Number = require "tch.entities.number"
+
 local Information = {
     new = function(race, raceTime, cargo, sessionExperience, experienceToLevel, raceQuantity, sessionEarnings, totalEarnings)
         local self = {}
@@ -117,10 +121,20 @@ local Information = {
                 totalEarnings.value = value
             end,
             getValue = function()
-                return string.format(
+                local sum = Array(ProfitAndLoss.new().data)
+                :Filter(function(element) return element.enabled end)
+                :Map(function(element) return element.sum end)
+                :Reduce(function(accumulator, element) return accumulator + element end)
+
+                local sumFormatted = Number
+                .new(sum or 0)
+                .format(0, "", "{F2545B}")
+
+                return string.format
+                (
                     "{FFFFFF}%s {32CD32}%s$", 
                     totalEarnings.title, 
-                    totalEarnings.value
+                    sumFormatted
                 )
             end
         }

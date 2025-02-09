@@ -5,9 +5,9 @@ local Json = require "tch.common.storage.json"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 
-local Hotkeys = {
+local ProfitAndLoss = {
     new = function()
-        local self = Json.new("hotkeys2", constants.HOTKEYS)
+        local self = Json.new("pl", constants.PROFIT_AND_LOSS)
         self.save = function()
             file = io.open(self.filepath, "w")
             local json = encodeJson(self.data)
@@ -16,9 +16,9 @@ local Hotkeys = {
             return self.data
         end
         self.getByName = function(name)
-            for index, hotkey in pairs(self.data) do
-                if hotkey.name == name then
-                    return { index, hotkey }
+            for index, item in pairs(self.data) do
+                if item.name == name then
+                    return { index, item }
                 end
             end
             return false
@@ -27,4 +27,4 @@ local Hotkeys = {
     end
 }
 
-return Hotkeys
+return ProfitAndLoss

@@ -3,11 +3,14 @@ local ffi = require 'ffi'
 local encoding = require "encoding"
 local Config = require "tch.common.config"
 local Statistics = require "tch.common.storage.statistics"
+local ProfitAndLoss = require "tch.common.storage.profitandloss"
 local Filters = require "tch.common.storage.filters"
 local Hotkeys = require "tch.common.storage.hotkeys"
 local Window = require "tch.gui.windows.window"
 local HotKeysManager = require "tch.gui.windows.hotkeysmanager"
 local Sound = require "tch.entities.sounds.sound"
+local Number = require "tch.entities.number"
+local Array = require "tch.common.array"
 local LocalMessage = require "tch.entities.chat.localmessage"
 local DriverCoordinatesEntry = require "tch.entities.coords.drivercoordinatesentry"
 local DriverCoordinatesEntryService = require "tch.services.drivercoordinatesentryservice"
@@ -187,7 +190,7 @@ local Settings = {
                                 config.save()
                             end
                             if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8"Прятать список контрактов, \nесли есть активный контракт.")
+                                imgui.SetTooltip(u8"Прятать список контрактов, если есть активный контракт.")
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 115))
@@ -576,22 +579,108 @@ local Settings = {
                         end
                     end
                     if active == 4 then
-                        imgui.Columns(2)
-                        imgui.CenterColumnText(u8'Название') imgui.SetColumnWidth(-1, 285)
-                        imgui.NextColumn()
-                        imgui.CenterColumnText(u8'Видимость')
-                        imgui.Columns(1)
-                        imgui.Separator()
-                        for index, item in pairs(Statistics.new().data) do
-                            imgui.Columns(2)
-                            imgui.CenterColumnText(u8(item.short_name)) 
-                            imgui.NextColumn()
-                            if imgui.Button(u8(item.hidden and "Показывать##" or "Скрывать##") .. index, imgui.ImVec2(155, 0)) then
+                        if imgui.BeginTabBar("Statistics") then
+                            if imgui.BeginTabItem(u8("Параметры отображения")) then
+                                imgui.SetCursorPos(imgui.ImVec2(10, 35))
+                                imgui.BeginChild("##StatisticsExplanationText")
+                                    imgui.TextColoredRGB("{AAAAAA}В данном разделе вы можете настроить отображение элементов \n{AAAAAA}на панели в нижней части экрана.")
+                                imgui.EndChild()
                                 local statistics = Statistics.new()
-                                statistics.data[index].hidden = not item.hidden
-                                statistics.save()
+                                for index, item in pairs(statistics.data) do
+                                    local x, y = table.unpack(item.position)
+                                    imgui.SetCursorPos(imgui.ImVec2(x, y))
+                                    imgui.BeginChild("##StatisticsChild" .. index, imgui.ImVec2(250, 100), false)
+                                        if imgui.Checkbox(u8(item.short_name), imgui.new.bool(statistics.data[index].show)) then
+                                            statistics.data[index].show = not statistics.data[index].show 
+                                            statistics.save()
+                                        end
+                                    imgui.EndChild()
+                                end
+                                imgui.EndTabItem()
                             end
-                            imgui.Columns(1)
+                            if imgui.BeginTabItem(u8("Доходы / Расходы")) then
+                                imgui.SetCursorPos(imgui.ImVec2(10, 35))
+                                imgui.BeginChild("##StatisticsPlExplanationText")
+                                    imgui.TextColoredRGB("{AAAAAA}В данном разделе вы сможете ознакомиться с более детальной \n{AAAAAA}статистикой {3e9c35}доходов{AAAAAA} и {b4140e}расходов{AAAAAA}.")
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(10, 85))
+                                imgui.BeginChild("##StatisticsPlExplanationText")
+                                    imgui.TextColoredRGB("{ffcc00}(!) Чтобы сбросить общий заработок полностью необходимо обнулить \n{ffcc00}или {3e9c35}деактивировать{ffcc00} каждый элемент в таблице {3e9c35}доходов{ffcc00} и {b4140e}расходов{ffcc00}.")
+                                imgui.EndChild()
+                                imgui.SetCursorPos(imgui.ImVec2(0, 115))
+                                imgui.BeginChild("##StatisticsPlTable")
+                                    imgui.Separator()
+                                    imgui.Columns(3)
+                                    imgui.CenterColumnText(u8("Название")) 
+                                    imgui.NextColumn()
+                                    imgui.CenterColumnText(u8("Доход / Расход")) 
+                                    imgui.NextColumn()
+                                    imgui.CenterColumnText(u8("Опции")) 
+                                    imgui.NextColumn()
+                                    imgui.Columns(1)
+                                    imgui.Separator()
+                                    local profitAndLoss = ProfitAndLoss.new()
+                                    for index, item in pairs(profitAndLoss.data) do
+                                        local sum = string.format
+                                        (
+                                            "%s%s$", 
+                                            "{32CD32}", 
+                                            Number.new(item.sum).format(0, "", "{F2545B}")
+                                        )
+                                        imgui.Columns(3)
+                                        imgui.Spacing()
+                                        imgui.Text(u8(item.name)) imgui.SetColumnWidth(-1, 165)
+                                        imgui.NextColumn()
+                                        imgui.Spacing()
+                                        imgui.CenterColumnTextRgb(sum)
+                                        imgui.NextColumn()
+                                        if imgui.Button(u8(item.enabled and "Деакт.##" or "Акт.##") .. index, imgui.ImVec2(70, 0)) then
+                                            profitAndLoss.data[index].enabled = not profitAndLoss.data[index].enabled
+                                            profitAndLoss.save()
+                                        end
+                                        if imgui.IsItemHovered() then
+                                            local message = item.enabled 
+                                            and "Нажмите, если не хотите включать этот пункт в общий заработок"
+                                            or "Нажмите, если хотите включать этот пункт в общий заработок"
+                                            imgui.SetTooltip(u8(message))
+                                        end
+                                        imgui.SameLine()
+                                        if imgui.Button(u8"Сброс##" .. index) then
+                                            profitAndLoss.data[index].sum = 0
+                                            profitAndLoss.save()
+                                        end
+                                        if imgui.IsItemHovered() then
+                                            imgui.SetTooltip(u8("Нажмите, чтобы сбросить текущее состояние до нуля"))
+                                        end
+                                        imgui.Columns(1)
+                                        imgui.Separator()
+                                    end
+
+                                    local sum = Array(profitAndLoss.data)
+                                    :Filter(function(element) return element.enabled end)
+                                    :Map(function(element) return element.sum end)
+                                    :Reduce(function(accumulator, element) return accumulator + element end)
+
+                                    local formattedSum = string.format
+                                    (
+                                        "%s%s$", 
+                                        "{32CD32}", 
+                                        Number.new(sum or 0).format(0, "", "{F2545B}")
+                                    )
+                                    imgui.Columns(3)
+                                    imgui.Spacing()
+                                    imgui.Text(u8("Общий заработок")) imgui.SetColumnWidth(-1, 165)
+                                    imgui.NextColumn()
+                                    imgui.Spacing()
+                                    imgui.CenterColumnTextRgb(formattedSum)
+                                    imgui.NextColumn()
+                                    imgui.Spacing()
+                                    imgui.CenterColumnTextRgb(u8("-"))
+                                    imgui.Columns(1)
+                                    imgui.Separator()
+                                imgui.EndChild()
+                                imgui.EndTabItem()
+                            end
                         end
                     end
                     imgui.EndChild()

@@ -37,6 +37,7 @@ local HttpService = require "tch.services.httpservice"
 local PointsService = require "tch.services.pointsservice"
 local Config = require "tch.common.config"
 local Hotkeys = require "tch.common.storage.hotkeys"
+local ProfitAndLoss = require "tch.common.storage.profitandloss"
 local Array = require "tch.common.array"
 local AudioStreamState = require("moonloader").audiostream_state
 
@@ -876,26 +877,22 @@ function sampev.onServerMessage(color, text)
 			unloading.time = nil
 			unloading.notified = false
 			autounloading.notified = false
-
 			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
-			local contract = contractsService.update(
+			local contract = contractsService.update
+			(
 				contractId,
 				{ IsActive = false },
 				ContractService.CONTRACTS
 			)
-
 			if config.data.settings.autohideContractsList then
 				mainWindow.hideCursor = true
 				mainWindow.activate()
 			end
-
 			-- Обновляем количество рейсов за сессию
 			config.data.settings.sessionRaceQuantity = config.data.settings.sessionRaceQuantity + 1
 			infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
-
 			-- Устанавливаем время окончания рейса
 			if race then race.finishedAt = os.time() end
-
 			config.save()
 		end
 
@@ -903,7 +900,6 @@ function sampev.onServerMessage(color, text)
 		if text:find(serverMessageService.findByCode("delivery-start").message) then
 			local isLoading = MenuDialogue.FLAGS.CONTRACT.IS_LOADING
 			local isNextToAutoloadPoint = pointService.getPlayerAutoloadPoint()
-			
 			if isLoading and isNextToAutoloadPoint then
 				local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
 				chatService.send(loadCommandMessage)
@@ -974,60 +970,61 @@ function sampev.onServerMessage(color, text)
 		-- Учитываем полученный штраф в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("fine").message)) then
 			local fine = text:match(serverMessageService.findByCode("fine").message)
-
+			local profitAndLoss = ProfitAndLoss.new()
+			local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Штрафы с камер"))
 			-- Обновляем конфигурацию
 			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - fine
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings - fine
-			
+			profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(fine)
 			-- Обновляем значения в окне
 			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+			profitAndLoss.save()
 			config.save()
 		end
 
 		-- Учитываем полученный доход с разгрузки в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("income").message)) then
 			local commission, income = text:match(serverMessageService.findByCode("income").message)
-
+			local profitAndLoss = ProfitAndLoss.new()
+			local profitAndLossName = profitAndLoss.getByName(race and race.contract.source or "Неизвестный источник")
+			local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLossName)
 			-- Обновляем конфигурацию
 			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + income
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings + income
-			
+			profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum + tonumber(income)
 			-- Обновляем значения в окне
 			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+			profitAndLoss.save()
 			config.save()
 		end
 
 		-- Учитываем полученный семейный доход с разгрузки в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("family-income").message)) then
 			local familyIncome = text:match(serverMessageService.findByCode("family-income").message)
-
+			local profitAndLoss = ProfitAndLoss.new()
+			local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Семейный бонус"))
 			-- Обновляем конфигурацию
 			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + familyIncome
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings + familyIncome
-			
+			profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum + tonumber(familyIncome)
 			-- Обновляем значения в окне
 			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+			profitAndLoss.save()
 			config.save()
 		end
 
 		-- Учитываем полученный квест-доход с разгрузки в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("quest-income").message)) then
 			local questIncome = text:match(serverMessageService.findByCode("quest-income").message)
-
+			local profitAndLoss = ProfitAndLoss.new()
+			local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Семейный бонус"))
 			-- Обновляем конфигурацию
 			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + questIncome
 			config.data.settings.totalEarnings = config.data.settings.totalEarnings + questIncome
-			
+			profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum + tonumber(questIncome)
 			-- Обновляем значения в окне
 			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-			infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+			profitAndLoss.save()
 			config.save()
 		end
 
@@ -1041,14 +1038,15 @@ function sampev.onServerMessage(color, text)
 			local car = carsService.getByDriver(cars, player)
 
 			if car and car.IsTruck() then
+				local profitAndLoss = ProfitAndLoss.new()
+				local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Заправка на станции"))
 				-- Обновляем конфигурацию
 				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
 				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
-				
+				profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(expense)
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+				profitAndLoss.save()
 				config.save()
 			end
 		end
@@ -1063,14 +1061,15 @@ function sampev.onServerMessage(color, text)
 			local car = carsService.getByDriver(cars, player)
 
 			if car and car.IsTruck() then
+				local profitAndLoss = ProfitAndLoss.new()
+				local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Починка механиком"))
 				-- Обновляем конфигурацию
 				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
 				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
-				
+				profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(expense)
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+				profitAndLoss.save()
 				config.save()
 			end
 		end
@@ -1085,14 +1084,15 @@ function sampev.onServerMessage(color, text)
 			local car = carsService.getByDriver(cars, player)
 
 			if car and car.IsTruck() then
+				local profitAndLoss = ProfitAndLoss.new()
+				local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Рем. комплекты"))
 				-- Обновляем конфигурацию
 				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
 				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
-				
+				profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(expense)
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+				profitAndLoss.save()
 				config.save()
 			end
 		end
@@ -1107,14 +1107,15 @@ function sampev.onServerMessage(color, text)
 			local car = carsService.getByDriver(cars, player)
 
 			if car and car.IsTruck() then
+				local profitAndLoss = ProfitAndLoss.new()
+				local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Канистры"))
 				-- Обновляем конфигурацию
 				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
 				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
-				
+				profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(expense)
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+				profitAndLoss.save()
 				config.save()
 			end
 		end
@@ -1129,14 +1130,15 @@ function sampev.onServerMessage(color, text)
 			local car = carsService.getByDriver(cars, player)
 
 			if car and car.IsTruck() then
+				local profitAndLoss = ProfitAndLoss.new()
+				local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Заправка механиком"))
 				-- Обновляем конфигурацию
 				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - expense
 				config.data.settings.totalEarnings = config.data.settings.totalEarnings - expense
-				
+				profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(expense)
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+				profitAndLoss.save()
 				config.save()
 			end
 		end
@@ -1254,13 +1256,14 @@ function sampev.onGivePlayerMoney(money)
 
 			if car and car.IsTruck() then
 				-- Обновляем конфигурацию
+				local profitAndLoss = ProfitAndLoss.new()
+				local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Нелегальный груз"))
 				config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + money
 				config.data.settings.totalEarnings = config.data.settings.totalEarnings + money
-				
+				profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum + money
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
+				profitAndLoss.save()
 				config.save()
 			end
 		end
@@ -1277,8 +1280,6 @@ function sampev.onGivePlayerMoney(money)
 				
 				-- Обновляем значения в окне
 				infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
-				infoWindow.information.totalEarnings.setValue(Number.new(config.data.settings.totalEarnings).format(0, "", "{F2545B}"))
-
 				config.save()
 				return
 			end
@@ -1346,6 +1347,62 @@ end
 function imgui.CenterColumnText(text)
     imgui.SetCursorPosX((imgui.GetColumnOffset() + (imgui.GetColumnWidth() / 2)) - imgui.CalcTextSize(text).x / 2)
     imgui.Text(text)
+end
+
+function imgui.CenterColumnTextRgb(text)
+	local width = imgui.GetWindowWidth()
+    local style = imgui.GetStyle()
+    local colors = style.Colors
+    local ImVec4 = imgui.ImVec4
+
+    local explode_argb = function(argb)
+        local a = bit.band(bit.rshift(argb, 24), 0xFF)
+        local r = bit.band(bit.rshift(argb, 16), 0xFF)
+        local g = bit.band(bit.rshift(argb, 8), 0xFF)
+        local b = bit.band(argb, 0xFF)
+        return a, r, g, b
+    end
+
+    local getcolor = function(color)
+        if color:sub(1, 6):upper() == 'SSSSSS' then
+            local r, g, b = colors[1].x, colors[1].y, colors[1].z
+            local a = tonumber(color:sub(7, 8), 16) or colors[1].w * 255
+            return ImVec4(r, g, b, a / 255)
+        end
+        local color = type(color) == 'string' and tonumber(color, 16) or color
+        if type(color) ~= 'number' then return end
+        local r, g, b, a = explode_argb(color)
+        return imgui.ImVec4(r/255, g/255, b/255, a/255)
+    end
+
+    local render_text = function(text_)
+        for w in text_:gmatch('[^\r\n]+') do
+			local textsize = w:gsub('{.-}', '')
+            local text_width = imgui.CalcTextSize(u8(textsize)).x
+			imgui.SetCursorPosX((imgui.GetColumnOffset() + (imgui.GetColumnWidth() / 2)) - text_width / 2)
+            local text, colors_, m = {}, {}, 1
+            w = w:gsub('{(......)}', '{%1FF}')
+            while w:find('{........}') do
+                local n, k = w:find('{........}')
+                local color = getcolor(w:sub(n + 1, k - 1))
+                if color then
+                    text[#text], text[#text + 1] = w:sub(m, n - 1), w:sub(k + 1, #w)
+                    colors_[#colors_ + 1] = color
+                    m = n
+                end
+                w = w:sub(1, n - 1) .. w:sub(k + 1, #w)
+            end
+            if text[0] then
+                for i = 0, #text do
+                    imgui.TextColored(colors_[i] or colors[1], u8(text[i]))
+                    imgui.SameLine(nil, 0)
+                end
+                imgui.NewLine()
+            else imgui.Text(u8(w)) end
+        end
+    end
+
+    render_text(text)
 end
 
 function explode_argb(argb)
