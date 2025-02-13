@@ -33,17 +33,17 @@ local filters = Filters.new()
 local Settings = {
     new = function()
         local self = Window.new()
-        self.title = u8(
-            string.format(
+        self.title = u8
+        (
+            string.format
+            (
                 "Главное меню (v%s)", 
                 constants.SCRIPT_INFO.VERSION
             )
         )
-
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
         local size = imgui.ImVec2(620, 450)
-
         local active = 1
         local tabs = {
             "Основное",
@@ -53,6 +53,8 @@ local Settings = {
         }
 
         local clists = imgui.new['const char*'][#constants.COLOR_LIST](constants.COLOR_LIST)
+        local contractWindowTypes = imgui.new['const char*'][#constants.CONTRACT_LIST_WINDOW_TYPES](constants.CONTRACT_LIST_WINDOW_TYPES)
+        local selectedContractWindowTypes = imgui.new.int(config.data.settings.contractWindowTypes)
         local selectedClist = imgui.new.int(config.data.settings.clistChoice)
         local scriptStatuses = imgui.new['const char*'][#constants.SCRIPT_STATUSES](constants.SCRIPT_STATUSES)
         self.selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
@@ -251,6 +253,10 @@ local Settings = {
                         imgui.BeginChild("##CameraLinesWidthText")
                             imgui.Text(u8(" Ширина линий"))
                         imgui.EndChild()
+                        imgui.SetCursorPos(imgui.ImVec2(5, 270))
+                        imgui.BeginChild("##ContractWindowTypesText")
+                            imgui.Text(u8(" Список контрактов"))
+                        imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 205))
                         imgui.BeginChild("##CameraLinesColorEdit4")
                             imgui.PushItemWidth(250)
@@ -304,7 +310,19 @@ local Settings = {
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
                             end
                         imgui.EndChild()
-                        imgui.SetCursorPos(imgui.ImVec2(5, 270))
+                        imgui.SetCursorPos(imgui.ImVec2(195, 265))
+                        imgui.BeginChild("##ContractWindowTypesChild", imgui.ImVec2(385, 55), false)
+                            if imgui.Combo
+                            (
+                                "##ContractWindowTypesList",
+                                selectedContractWindowTypes,
+                                contractWindowTypes,
+                                #constants.CONTRACT_LIST_WINDOW_TYPES
+                            ) then
+                                config.data.settings.contractWindowTypes = selectedContractWindowTypes[0]
+                                config.save()
+                            end
+                        imgui.EndChild()
                     imgui.EndChild()
                     end
                     if active == 2 then
@@ -357,11 +375,15 @@ local Settings = {
                                 imgui.Columns(1)
                                 imgui.Separator()
                                 for index, data in pairs(pointsService.get()) do
+                                    imgui.Separator()
                                     imgui.Columns(4)
+                                    imgui.Spacing()
                                     imgui.CenterColumnText(string.format("%s -> %s", u8(data.point.source), u8(data.point.destination)))
                                     imgui.NextColumn()
+                                    imgui.Spacing()
                                     imgui.CenterColumnText(u8(data.point.top and "Да" or "Нет"))
                                     imgui.NextColumn()
+                                    imgui.Spacing()
                                     imgui.CenterColumnText(tostring(data.point.sort))
                                     imgui.NextColumn()
                                     if imgui.Button(u8"Выше##" .. data.id) then

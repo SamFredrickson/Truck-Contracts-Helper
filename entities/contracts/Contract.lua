@@ -1,8 +1,10 @@
 local encoding = require "encoding"
 local constants = require "tch.constants"
+local Config = require "tch.common.config"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
+local config = Config.new()
 
 local Contract = {
     new = function(id, sort, top, source, destination, cargo, amount, company, IsActive)
@@ -23,7 +25,7 @@ local Contract = {
         self.toString = function()
             return string.format
             (
-                "%s%d. %s -> %s[%d / %d]", 
+                (config.data.settings.contractWindowTypes + 1) == 3 and "%s%d. %s -> %s" or "%s%d. %s -> %s[%d / %d]",
                 isPinned and "[PIN] " or self.top and "[TOP] " or "",
                 self.id, 
                 self.source, 

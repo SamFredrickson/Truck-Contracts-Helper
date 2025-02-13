@@ -1121,7 +1121,7 @@ function sampev.onServerMessage(color, text)
 		end
 
 		-- Учитываем полученный расход с заправки в статистику заработка
-		if ((race and race.contract) and text:find(serverMessageService.findByCode("refill-accepted").message)) then
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("refill-accepted").message)) then
 			local expense = text:match(serverMessageService.findByCode("refill-accepted").message)
 			local cars = carsService.get()
 			local players = playerService.get()

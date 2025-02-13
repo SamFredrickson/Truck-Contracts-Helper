@@ -29,7 +29,6 @@ local Car = {
         self.isLocked = isLocked
         self.handle = handle
         self.coords = Coords.new(x, y, z)
-
         self.getDriver = function()
             local driverHandle = getDriverOfCar(self.handle)
             local isSuccess, id = sampGetPlayerIdByCharHandle(driverHandle)
@@ -45,7 +44,6 @@ local Car = {
             end
             return false
         end
-
         self.getPassengers = function()
             local result = {}
             for i = 1, self.maxPassengers do
@@ -64,7 +62,6 @@ local Car = {
             end
             return result
         end
-
         self.IsWithinDistance = function(coords, distance)
             local distanceBetweenCoords = getDistanceBetweenCoords3d
             (
@@ -77,7 +74,6 @@ local Car = {
             )
             return distanceBetweenCoords <= distance
         end
-
         self.IsTruck = function()
             for _, truck in pairs(trucks) do
                 if self.model == truck then
@@ -86,7 +82,6 @@ local Car = {
             end
             return false
         end
-
         self.IsTrailer = function()
             for _, trailer in pairs(trailers) do
                 if self.model == trailer then
@@ -95,7 +90,6 @@ local Car = {
             end
             return false
         end
-
         return self
     end
 }

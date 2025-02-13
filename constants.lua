@@ -65,7 +65,8 @@ local CONFIG = {
         cameraLines = true,
         linesColor = 0xFFFF0000,
         linesWidth = 1,
-        transparentCorpses = true
+        transparentCorpses = true,
+        contractWindowTypes = 0
     }
 }
 
@@ -442,6 +443,12 @@ local COLOR_LIST = {
     u8"[33] Белый"
 }
 
+local CONTRACT_LIST_WINDOW_TYPES = {
+    u8("Большой"),
+    u8("Средний"),
+    u8("Маленький")
+}
+
 local SERVER_MESSAGES = {
     {
         message = "Вы успешно арендовали фуру. Для начала работы используйте {.-}%(%( /tmenu %)%)",
@@ -548,7 +555,7 @@ local SERVER_MESSAGES = {
         code = "hot-eaten"
     },
     {
-        message = "Вы согласились на ремонт транспортного средства от {.-}[A-Za-z_]+%[%d+%]{.-} за {.-}$(%d+){.-}%.",
+        message = "Вы согласились на ремонт транспортного средства от {.-}[A-Za-z_]+{.-} за {.-}$(%d+){.-}%.",
         code = "repair-accepted"
     },
     {
@@ -904,5 +911,6 @@ return {
     SCRIPT_COMMANDS = SCRIPT_COMMANDS,
     HOTKEYS = HOTKEYS,
     PROFIT_AND_LOSS = PROFIT_AND_LOSS,
+    CONTRACT_LIST_WINDOW_TYPES = CONTRACT_LIST_WINDOW_TYPES,
     PINS = PINS
 }
