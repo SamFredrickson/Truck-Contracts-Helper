@@ -401,7 +401,7 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.selectedScriptStatus > 0 and currentBlip and not currentBlip.isActive then
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords and not currentBlip.isActive then
 					if isKeyDown(18) and isKeyDown(89) then
 						while isKeyDown(18) and isKeyDown(89) do wait(80) end
 						removeBlip(currentBlip.blip)
@@ -423,7 +423,7 @@ function main()
 						setAudioStreamState(markSound.audioStream, AudioStreamState.PLAY)
 					end
 				end
-				if config.data.settings.selectedScriptStatus > 0 and currentBlip then
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords then
 					if isKeyDown(18) and isKeyDown(78) then
 						while isKeyDown(18) and isKeyDown(78) do wait(80) end
 						removeBlip(currentBlip.blip)
