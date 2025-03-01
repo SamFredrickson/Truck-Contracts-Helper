@@ -1,4 +1,12 @@
 # Список изменений
+## [1.8.1] - 2025-03-01
+
+### Исправлено
+- Вылет скрипта при использовании горячей клаваиши ALT + Y
+
+### Изменено
+- Актуализировано название команды скрипта (/tch.coords.send -> /tch.sos)
+
 ## [1.8.0] - 2025-02-16
 
 ### Добавлено
@@ -149,3 +157,4 @@
 [1.7.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.1/tch-release-1.7.1.rar
 [1.7.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.7.2/tch-release-1.7.2.rar
 [1.8.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.8.0/tch-release-1.8.0.rar
+[1.8.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.8.1/tch-release-1.8.1.rar
