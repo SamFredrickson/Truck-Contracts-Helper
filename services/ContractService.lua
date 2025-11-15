@@ -134,8 +134,7 @@ local ContractService = {
                 end
             end
 
-            local contracts = result:Sort(function(a, b) return a.sort < b.sort end)
-            local contractsGroup = contracts:Reduce
+            local contractsGroup = result:Reduce
             (
                 function(acc, current)
                     if not acc[current.sort] then acc[current.sort] = Array({}) end
@@ -145,13 +144,22 @@ local ContractService = {
                 Array({})
             ) or Array({})
 
+            local contractsGroupKeys =
+            (
+                function()
+                    local result = Array({})
+                    for index, _ in pairs(contractsGroup) do result:Push(index) end
+                    return result:Sort()
+                end
+            )()
+
             local result = 
             (
                 function()
                     local result = Array({})
-                    for _, contracts in pairs(contractsGroup) do
-                        local sorted = contracts:Sort(function(a, b) return tonumber(a.amount.first) < tonumber(b.amount.first) end)
-                        for _, contract in pairs(sorted) do result:Push(contract) end
+                    for _, contractsGroupKey in pairs(contractsGroupKeys) do
+                        local sortedContracts = contractsGroup[contractsGroupKey]:Sort(function(a, b) return tonumber(a.amount.first) < tonumber(b.amount.first) end)
+                        for _, contract in pairs(sortedContracts) do result:Push(contract) end
                     end
                     return result
                 end
