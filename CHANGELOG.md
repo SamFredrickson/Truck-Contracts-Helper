@@ -1,4 +1,9 @@
 # Список изменений
+## [1.9.2] - 2025-11-15
+
+### Исправлено
+- Некорректная сортировка контрактов от лучших к худшим
+
 ## [1.9.1] - 2025-10-15
 
 ### Добавлено
@@ -164,3 +169,4 @@
 [1.8.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.8.0/tch-release-1.8.0.rar
 [1.8.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.8.1/tch-release-1.8.1.rar
 [1.9.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.1/tch-release-1.9.1.rar
+[1.9.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.2/tch-release-1.9.2.rar

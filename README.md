@@ -1,4 +1,4 @@
-# [Помощник для работы с контрактами дальнобойщика на проекте Evolve Role Play](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.1/tch-release-1.9.1.rar)
+# [Помощник для работы с контрактами дальнобойщика на проекте Evolve Role Play](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.2/tch-release-1.9.1.rar)
 Данный помощник позволяет комфортно работать с контрактами и взаимодействовать с другими игроками.
 
 * Кликабельный список контрактов в правом углу экрана
@@ -15,7 +15,7 @@
 -   [Mimgui](https://github.com/THE-FYP/mimgui/releases/download/v1.7.0/mimgui-v1.7.0.zip) (скопировать папку '**mimgui**' (не содержимое папки) из архива в каталог '**moonloader/lib/**')
 ## Установка
 ### Для пользователей
-1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.1/tch-release-1.9.1.rar) архив с файлами скрипта
+1. [Скачать](https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.2/tch-release-1.9.1.rar) архив с файлами скрипта
 2. Распаковать скачанный архив в папку **moonloader** в корне игры
 ### Для разработчиков
 1. Зайти в папку **moonloader** в корне игры
