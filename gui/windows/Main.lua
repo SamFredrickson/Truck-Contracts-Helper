@@ -27,7 +27,6 @@ local Main = {
         local screenX, screenY = getScreenResolution()
         local contractWindowTypeSizes = { { 415, 370 }, { 420, 290 }, { 320, 230 } }
         local position = imgui.ImVec2(config.data.settings.contractsScreenX or screenX - 420, config.data.settings.contractsScreenY or screenY - 410)
-        print(config.data.settings.contractWindowTypes)
         imgui.OnFrame
         (
             function() return self.window[0] end,
