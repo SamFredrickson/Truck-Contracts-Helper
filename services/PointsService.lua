@@ -65,10 +65,7 @@ local PointsService = {
         end
 
         self.getPlayerAutoloadPoint = function()
-            local player = playerService.getByHandle(
-                playerService.get(), 
-                PLAYER_PED
-            )
+            local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
             for _, point in pairs(constants.AUTOLOAD_POINTS) do
                 if player.IsWithinDistance(point.coords, 15) then
                     return point

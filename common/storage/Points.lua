@@ -7,7 +7,7 @@ local u8 = encoding.UTF8
 
 local Points = {
     new = function()
-        local self = Json.new("points", constants.POINTS)
+        local self = Json.new("points_v2", constants.POINTS)
 
         self.save = function()
             file = io.open(self.filepath, "w")

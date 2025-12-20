@@ -24,8 +24,8 @@ local COLORS = {
 }
 
 local REGEXP = {
-    MULTIPLE_CONTRACTS = "({.-}%d+%. {.-}%W+ №%d %-%> %W+{.-}%W+{.-}%d+ из %d+ т%.	{.-}[%w\128-\255-%s]+)",
-    SINGLE_CONTRACT = "{.-}(%d+)%. {.-}(%W+ №%d+) %-%> (%W+){.-}(%W+){.-}(%d+) из (%d+) т%.	{.-}([%w\128-\255-%s]+)"
+    MULTIPLE_CONTRACTS = "({.-}%d+%. {.-}%W+ №%d %-%> %W+..{.-}%W+{.-}%d+ из %d+ т%.	{.-}[%w\128-\255-%s]+)",
+    SINGLE_CONTRACT = "{.-}(%d+)%. {.-}(%W+ №%d+) %-%> (.+){.-}(%W+){.-}(%d+) из (%d+) т%.	{.-}([%w\128-\255-%s]+)"
 }
 
 local MAX_TRUCK_DRIVER_LEVEL = 26
@@ -84,35 +84,42 @@ local HOTDOG = {
 
 local CONTRACTS = {
     { source = "Нефтезавод №2", destination = "Порт СФ", sort = 1, top = true },
-    { source = "Склад угля №2", destination = "Порт СФ", sort = 2, top = true },
-    { source = "Лесопилка №1", destination = "Порт СФ", sort = 3, top = true },
-    { source = "Лесопилка №2", destination = "Порт СФ", sort = 4, top = true },
-    { source = "Строительный завод №1", destination = "Порт СФ", sort = 5, top = true },
-    { source = "Строительный завод №1", destination = "Порт ЛС", sort = 6, top = false },
-    { source = "Лесопилка №1", destination = "Порт ЛС", sort = 7, top = false },
-    { source = "Лесопилка №2", destination = "Порт ЛС", sort = 8, top = false },
-    { source = "Склад угля №2", destination = "Порт ЛС", sort = 9, top = false }
+    { source = "Нефтевышка №1", destination = "Нефтезавод №1", sort = 2, top = true },
+    { source = "Нефтевышка №2", destination = "Нефтезавод №1", sort = 3, top = true },
+    { source = "Нефтевышка №3", destination = "Нефтезавод №1", sort = 4, top = true },
+    { source = "Склад угля №2", destination = "Порт СФ", sort = 5, top = true },
+    { source = "Лесопилка №1", destination = "Порт СФ", sort = 6, top = true },
+    { source = "Лесопилка №2", destination = "Порт СФ", sort = 7, top = true },
+    { source = "Строительный завод №1", destination = "Порт СФ", sort = 8, top = true },
+    { source = "Строительный завод №1", destination = "Порт ЛС", sort = 9, top = false },
+    { source = "Лесопилка №1", destination = "Порт ЛС", sort = 10, top = false },
+    { source = "Лесопилка №2", destination = "Порт ЛС", sort = 11, top = false },
+    { source = "Склад угля №2", destination = "Порт ЛС", sort = 12, top = false }
 }
 
 local PROFIT_AND_LOSS = {
     { name = "Нефтезавод №1", sum = 0, profit = true, enabled = true, sort = 1 },
     { name = "Нефтезавод №2", sum = 0, profit = true, enabled = true, sort = 2 },
-    { name = "Склад угля №1", sum = 0, profit = true, enabled = true, sort = 3 },
-    { name = "Склад угля №2", sum = 0, profit = true, enabled = true, sort = 4 },
-    { name = "Лесопилка №1", sum = 0, profit = true, enabled = true, sort = 5 },
-    { name = "Лесопилка №2", sum = 0, profit = true, enabled = true, sort = 6 },
-    { name = "Строительный завод №1", sum = 0, profit = true, enabled = true, sort = 7 },
-    { name = "Строительный завод №2", sum = 0, profit = true, enabled = true, sort = 8 },
-    { name = "Нелегальный груз", sum = 0, profit = true, enabled = true, sort = 9 },
-    { name = "Семейный бонус", sum = 0, profit = true, enabled = true, sort = 10 },
-    { name = "Штрафы с камер", sum = 0, profit = false, enabled = true, sort = 11 },
-    { name = "Заправка на станции", sum = 0, profit = false, enabled = true, sort = 12 },
-    { name = "Заправка механиком", sum = 0, profit = false, enabled = true, sort = 13 },
-    { name = "Починка механиком", sum = 0, profit = false, enabled = true, sort = 14 },
-    { name = "Канистры", sum = 0, profit = false, enabled = true, sort = 15 },
-    { name = "Рем. комплекты", sum = 0, profit = false, enabled = true, sort = 16 },
-    { name = "Неизвестный источник", sum = 0, profit = true, enabled = true, sort = 17 }
+    { name = "Нефтевышка №1", sum = 0, profit = true, enabled = true, sort = 3 },
+    { name = "Нефтевышка №2", sum = 0, profit = true, enabled = true, sort = 4 },
+    { name = "Нефтевышка №3", sum = 0, profit = true, enabled = true, sort = 5 },
+    { name = "Склад угля №1", sum = 0, profit = true, enabled = true, sort = 6 },
+    { name = "Склад угля №2", sum = 0, profit = true, enabled = true, sort = 7 },
+    { name = "Лесопилка №1", sum = 0, profit = true, enabled = true, sort = 8 },
+    { name = "Лесопилка №2", sum = 0, profit = true, enabled = true, sort = 9 },
+    { name = "Строительный завод №1", sum = 0, profit = true, enabled = true, sort = 10 },
+    { name = "Строительный завод №2", sum = 0, profit = true, enabled = true, sort = 11 },
+    { name = "Нелегальный груз", sum = 0, profit = true, enabled = true, sort = 12 },
+    { name = "Семейный бонус", sum = 0, profit = true, enabled = true, sort = 13 },
+    { name = "Штрафы с камер", sum = 0, profit = false, enabled = true, sort = 14 },
+    { name = "Заправка на станции", sum = 0, profit = false, enabled = true, sort = 15 },
+    { name = "Заправка механиком", sum = 0, profit = false, enabled = true, sort = 16 },
+    { name = "Починка механиком", sum = 0, profit = false, enabled = true, sort = 17 },
+    { name = "Канистры", sum = 0, profit = false, enabled = true, sort = 18 },
+    { name = "Рем. комплекты", sum = 0, profit = false, enabled = true, sort = 19 },
+    { name = "Неизвестный источник", sum = 0, profit = true, enabled = true, sort = 20 }
 }
+
 local POINTS = {
     { 
         source = "Нефтезавод №2", 
@@ -120,94 +127,112 @@ local POINTS = {
         sort = 1, 
         top = true 
     },
+     { 
+        source = "Нефтевышка №1", 
+        destination = "Нефтезавод №1", 
+        sort = 2,
+        top = false
+    },
+    { 
+        source = "Нефтевышка №2", 
+        destination = "Нефтезавод №1", 
+        sort = 3,
+        top = false
+    },
+    { 
+        source = "Нефтевышка №3", 
+        destination = "Нефтезавод №1", 
+        sort = 4,
+        top = false
+    },
     { 
         source = "Лесопилка №1", 
         destination = "Порт СФ", 
-        sort = 2, 
+        sort = 5, 
         top = true 
     },
     { 
         source = "Склад угля №2", 
         destination = "Порт СФ", 
-        sort = 3, 
+        sort = 6, 
         top = true 
     },
     { 
         source = "Строительный завод №1", 
         destination = "Порт СФ", 
-        sort = 4, 
+        sort = 7, 
         top = true
     },
     { 
         source = "Лесопилка №2", 
         destination = "Порт СФ", 
-        sort = 5,
+        sort = 8,
         top = true
     },
     { 
         source = "Строительный завод №1", 
         destination = "Порт ЛС", 
-        sort = 6,
+        sort = 9,
         top = false
     },
     { 
         source = "Нефтезавод №2", 
         destination = "Порт ЛС", 
-        sort = 7, 
+        sort = 10, 
         top = false 
     },
     { 
         source = "Лесопилка №1", 
         destination = "Порт ЛС",
-        sort = 8, 
+        sort = 11, 
         top = false
     },
     { 
         source = "Лесопилка №2", 
         destination = "Порт ЛС",
-        sort = 9, 
+        sort = 12, 
         top = false
     },
     { 
         source = "Склад угля №2", 
         destination = "Порт ЛС",
-        sort = 10,
-        top = false
-    },
-    { 
-        source = "Нефтезавод №1", 
-        destination = "Порт СФ", 
-        sort = 11, 
-        top = false 
-    },
-    { 
-        source = "Строительный завод №2", 
-        destination = "Порт СФ", 
-        sort = 12,
-        top = false 
-    },
-    { 
-        source = "Склад угля №1", 
-        destination = "Порт СФ", 
         sort = 13,
         top = false
     },
     { 
+        source = "Нефтезавод №1", 
+        destination = "Порт СФ", 
+        sort = 14, 
+        top = false 
+    },
+    { 
+        source = "Строительный завод №2", 
+        destination = "Порт СФ", 
+        sort = 15,
+        top = false 
+    },
+    { 
+        source = "Склад угля №1", 
+        destination = "Порт СФ", 
+        sort = 16,
+        top = false
+    },
+    { 
         source = "Строительный завод №2", 
         destination = "Порт ЛС", 
-        sort = 14,
+        sort = 17,
         top = false 
     },
     { 
         source = "Склад угля №1", 
         destination = "Порт ЛС", 
-        sort = 15,
+        sort = 18,
         top = false
     },
     { 
         source = "Нефтезавод №1", 
         destination = "Порт ЛС", 
-        sort = 16,
+        sort = 19,
         top = false
     }
 }
@@ -251,6 +276,21 @@ local AUTOLOAD_POINTS = {
     {
         source = "Склад угля №2",
         coords = { x = -1873.02, y = -1720.16, z = 21.75 },
+        autoTakeDistance = 25
+    },
+    {
+        source = "Нефтевышка №1",
+        coords = { x = -1908.1339111328, y = 1379.0545654297, z = 7.1875 },
+        autoTakeDistance = 25
+    },
+    {
+        source = "Нефтевышка №2",
+        coords = { x = -241.92864990234, y = -1720.7690429688, z = 3.2260446548462 },
+        autoTakeDistance = 25
+    },
+    {
+        source = "Нефтевышка №3",
+        coords = { x = 2279.1794433594, y = -2395.0749511719, z = 13.546875 },
         autoTakeDistance = 25
     }
 }
@@ -330,6 +370,33 @@ local CONTRACT_FILTERS = {
             destinations = {
                 { name = "Порт Лос-Сантос", short_name = "Порт ЛС", hidden = false },
                 { name = "Порт Сан-Фиерро", short_name = "Порт СФ", hidden = false }
+            }
+        },
+        { 
+            name = "Нефтевышка №1",
+            x = 10,
+            y = 387,
+            destinations = {
+                { name = "Нефтезавод №1", short_name = "Нефтезавод №1", hidden = false },
+                { name = "Нефтезавод №2", short_name = "Нефтезавод №2", hidden = true }
+            }
+        },
+        { 
+            name = "Нефтевышка №2",
+            x = 10,
+            y = 416,
+            destinations = {
+                { name = "Нефтезавод №1", short_name = "Нефтезавод №1", hidden = false },
+                { name = "Нефтезавод №2", short_name = "Нефтезавод №2", hidden = true }
+            }
+        },
+        { 
+            name = "Нефтевышка №3",
+            x = 10,
+            y = 445,
+            destinations = {
+                { name = "Нефтезавод №1", short_name = "Нефтезавод №1", hidden = false },
+                { name = "Нефтезавод №2", short_name = "Нефтезавод №2", hidden = true }
             }
         }
     },

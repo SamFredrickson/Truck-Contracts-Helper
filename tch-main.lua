@@ -174,9 +174,7 @@ function main()
 					chatService.send(localMessage)
 					return false
 				end
-				if not constants.PINS:Includes(contractId) then
-					constants.PINS:Push(contractId)
-				end
+				if not constants.PINS:Includes(contractId) then constants.PINS:Push(contractId) end
 				return true
 			end
         )
@@ -405,21 +403,13 @@ function main()
 					if isKeyDown(18) and isKeyDown(89) then
 						while isKeyDown(18) and isKeyDown(89) do wait(80) end
 						removeBlip(currentBlip.blip)
-						currentBlip.blip = addSpriteBlipForCoord
-						(
-							currentBlip.coords.x, 
-							currentBlip.coords.y, 
-							currentBlip.coords.z, 
-							41
-						)
+						currentBlip.blip = addSpriteBlipForCoord(currentBlip.coords.x, currentBlip.coords.y, currentBlip.coords.z, 41)
 						currentBlip.isActive = true
 						local messages = {
 							LocalMessage.new(" Метка успешно {ed5a5a}поставлена{FFFFFF} на карте."),
 							LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + N {FFFFFF}чтобы убрать метку.")
 						}
-						for _, message in pairs(messages) do
-							chatService.send(message)
-						end
+						for _, message in pairs(messages) do chatService.send(message) end
 						setAudioStreamState(markSound.audioStream, AudioStreamState.PLAY)
 					end
 				end
@@ -440,7 +430,6 @@ function main()
 				if config.data.settings.selectedScriptStatus > 0 and not isSettingsApplied then
 					local cars = carsService.get()
 					local players = playerService.get()
-
 					local player = playerService.getByHandle(players, PLAYER_PED)
 					local car = carsService.getByDriver(cars, player)
 
@@ -878,12 +867,7 @@ function sampev.onServerMessage(color, text)
 			unloading.notified = false
 			autounloading.notified = false
 			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
-			local contract = contractsService.update
-			(
-				contractId,
-				{ IsActive = false },
-				ContractService.CONTRACTS
-			)
+			local contract = contractsService.update(contractId, { IsActive = false }, ContractService.CONTRACTS)
 			if config.data.settings.autohideContractsList then
 				mainWindow.hideCursor = true
 				mainWindow.activate()
@@ -964,6 +948,31 @@ function sampev.onServerMessage(color, text)
 			if contract then
 				race = Race.new(contract, os.time())
 				infoWindow.information.race.setValue(trim(race.getContract()))
+			end
+
+			if httpService.version and (httpService.version.number > constants.SCRIPT_INFO.VERSION_NUMBER) then
+				chatService.send
+				(
+					LocalMessage.new
+					(
+						string.format
+						(
+							" {FFFFFF}Доступна новая версия скрипта " .. 
+							" {ed5a5a}Truck Contracts Helper {FFFFFF}(%s).", 
+							httpService.version.full_number
+						),
+						1000
+					)
+				)
+				chatService.send
+				(
+					LocalMessage.new
+					(
+						" {FFFFFF}Введите команду {ed5a5a}/tch.update{FFFFFF}" .. 
+						" чтобы начать скачивание по ссылке.",
+						1000
+					)
+				)
 			end
 		end
 
@@ -1250,7 +1259,6 @@ function sampev.onGivePlayerMoney(money)
 		if ((race and not race.contract) or illegalCargoDialogue.isActive) then 
 			local cars = carsService.get()
 			local players = playerService.get()
-
 			local player = playerService.getByHandle(players, PLAYER_PED)
 			local car = carsService.getByDriver(cars, player)
 

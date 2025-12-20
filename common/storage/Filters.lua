@@ -7,7 +7,7 @@ local u8 = encoding.UTF8
 
 local Filters = {
     new = function()
-        local self = Json.new("filters", constants.CONTRACT_FILTERS)
+        local self = Json.new("filters_v2", constants.CONTRACT_FILTERS)
 
         self.save = function()
             file = io.open(self.filepath, "w")

@@ -18,15 +18,14 @@ local Contract = {
         self.amount = amount
         self.company = company
         self.IsActive = IsActive or false
-
-        local isPinned = constants.PINS:Includes(tonumber(self.id))
-        self.sort = isPinned and 0 or self.sort
+        self.IsPinned = constants.PINS:Includes(tonumber(self.id))
+        self.sort = self.IsPinned and 0 or self.sort
 
         self.toString = function()
             return string.format
             (
                 (config.data.settings.contractWindowTypes + 1) == 3 and "%s%d. %s -> %s" or "%s%d. %s -> %s[%d / %d]",
-                isPinned and "[PIN] " or self.top and "[TOP] " or "",
+                self.IsPinned and "[PIN] " or self.top and "[TOP] " or "",
                 self.id, 
                 self.source, 
                 self.destination,

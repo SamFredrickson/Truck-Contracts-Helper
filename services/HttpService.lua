@@ -16,39 +16,41 @@ local HttpService = {
 
         self.getAvailableUpdates = function()
             local path = os.tmpname()
-            if doesFileExist(fpath) then
-                os.remove(fpath)
-            end
-            downloadUrlToFile(
+            if doesFileExist(fpath) then os.remove(fpath) end
+            
+            downloadUrlToFile
+            (
                 constants.SCRIPT_INFO.VERSION_URL,
                 path,
                 function(_, status, _, _)
                     if status == moonloader.download_status.STATUSEX_ENDDOWNLOAD then
-                        if not doesFileExist(path) then
-                            return false
-                        end
+                        if not doesFileExist(path) then return false end
                         local file = io.open(path, "r")
-                        if not file then
-                            return false
-                        end
+                        if not file then return false end
+
                         local content = decodeJson(file:read("*a"))
                         self.version = content
                         file:close()
                         os.remove(path)
 
                         if content.number > constants.SCRIPT_INFO.VERSION_NUMBER then
-                            chatService.send(
-                                LocalMessage.new(
-                                    string.format(
+                            chatService.send
+                            (
+                                LocalMessage.new
+                                (
+                                    string.format
+                                    (
                                         " {FFFFFF}Доступна новая версия скрипта " .. 
                                         " {ed5a5a}Truck Contracts Helper {FFFFFF}(%s).", 
                                         content.full_number
                                     )
                                 )
                             )
-                            chatService.send(
-                                LocalMessage.new(
-                                    " {FFFFFF}Введите команду {ed5a5a}/tch.update {FFFFFF}" .. 
+                            chatService.send
+                            (
+                                LocalMessage.new
+                                (
+                                    " {FFFFFF}Введите команду {ed5a5a}/tch.update{FFFFFF}" .. 
                                     " чтобы начать скачивание по ссылке."
                                 )
                             )

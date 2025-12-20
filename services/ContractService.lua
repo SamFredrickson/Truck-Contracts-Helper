@@ -15,6 +15,7 @@ local RoadTrain = require "tch.entities.vehicles.roadtrain"
 local Volvo = require "tch.entities.vehicles.volvo"
 
 local PortLosSantos = require "tch.entities.coords.portlossantos"
+local OilRefineryOne = require "tch.entities.coords.oilrefineryone"
 local PortSanFierro = require "tch.entities.coords.portsanfierro"
 local AirportSanFierro = require "tch.entities.coords.airportsanfierro"
 local AirportLasVenturas = require "tch.entities.coords.airportlasventuras"
@@ -34,6 +35,7 @@ local trucks = {
     Volvo.new().id
 }
 
+local oilRefineryOne = OilRefineryOne.new()
 local portLosSantos = PortLosSantos.new()
 local portSanFierro = PortSanFierro.new()
 local airportSanFierro = AirportSanFierro.new()
@@ -43,14 +45,15 @@ local airportLosSantos = AirportLosSantos.new()
 local points = 
 {
    legal = {
-        portLosSantos = portLosSantos,
-        portSanFierro = portSanFierro
+    portLosSantos = portLosSantos, 
+    portSanFierro = portSanFierro,
+    oilRefineryOne = oilRefineryOne
    },
    illegal = {
         airportSanFierro = airportSanFierro,
         airportLasVenturas = airportLasVenturas,
         airportLosSantos = airportLosSantos
-   }
+    }
 }
 
 local ContractService = {
@@ -63,27 +66,12 @@ local ContractService = {
             local filters = Filters.new()
             for contract in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
                 local isAllowed = false
-                local id, source, destination, cargo, amountFirst, amountSecond, company 
-                    = contract:match(constants.REGEXP.SINGLE_CONTRACT)
-                
-                local amount = { 
-                    first = amountFirst, 
-                    second = amountSecond 
-                }
-                
+                local singleContractRegexp = constants.REGEXP.SINGLE_CONTRACT;
+                local id, source, destination, cargo, amountFirst, amountSecond, company = contract:match(singleContractRegexp)
+                local amount = { first = amountFirst, second = amountSecond }
                 local priorities = self.getPriorities(source, destination)
                 local sort, top = table.unpack(priorities)
-
-                local entity = Contract.new(
-                    id,
-                    sort,
-                    top,
-                    source,
-                    destination,
-                    cargo,
-                    amount,
-                    company
-                )
+                local entity = Contract.new(id, sort, top, source, destination, cargo, amount, company)
 
                 -- Проверяем является ли контракт скрытым
                 local isSource = 
@@ -93,7 +81,9 @@ local ContractService = {
                             if source:find(filterSource.name) then
                                for _, filterDestination in pairs(filterSource.destinations) do
                                     if not filterDestination.hidden 
-                                    and destination:find(filterDestination.short_name) then return true end
+                                    and destination:find(filterDestination.short_name) then
+                                        return true
+                                    end
                                end
                             end
                         end
@@ -129,7 +119,7 @@ local ContractService = {
                     end
                 )()
 
-                if (isSource and isCompany and isProperTonQuantity) or isTop then 
+                if (isSource and isCompany and isProperTonQuantity) or isTop then
                     result:Push(entity)
                 end
             end
@@ -223,7 +213,6 @@ local ContractService = {
         self.CanUnload = function(contracts)
             local cars = carsService.get()
             local players = playerService.get()
-
             local player = playerService.getByHandle(players, PLAYER_PED)
             local car = carsService.getByDriver(cars, player)
         

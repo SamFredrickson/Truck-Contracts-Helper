@@ -33,17 +33,10 @@ local filters = Filters.new()
 local Settings = {
     new = function()
         local self = Window.new()
-        self.title = u8
-        (
-            string.format
-            (
-                "Главное меню (v%s)", 
-                constants.SCRIPT_INFO.VERSION
-            )
-        )
+        self.title = u8(string.format("Главное меню (v%s)", constants.SCRIPT_INFO.VERSION))
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
-        local size = imgui.ImVec2(620, 450)
+        local size = imgui.ImVec2(620, 520)
         local active = 1
         local tabs = {
             "Основное",
@@ -92,7 +85,7 @@ local Settings = {
                 imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
                 imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
-                imgui.BeginChild("##Buttons", imgui.ImVec2(150, 410), true)
+                imgui.BeginChild("##Buttons", imgui.ImVec2(150, 480), true)
                     for index, name in pairs(tabs) do
                        if active == index then
                             imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.90, 0.26, 0.26, 1.00))
@@ -113,7 +106,7 @@ local Settings = {
                     end
                 imgui.EndChild()
                 imgui.SetCursorPos(imgui.ImVec2(160, 28))
-                if imgui.BeginChild('##Main' .. active, imgui.ImVec2(453, 410), true) then
+                if imgui.BeginChild('##Main' .. active, imgui.ImVec2(453, 480), true) then
                     if active == 1 then
                         imgui.BeginChild('##ClistChild', imgui.ImVec2(275, 400), false)
                             imgui.Text(u8"Цвет ника во время работы:")
