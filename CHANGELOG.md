@@ -1,4 +1,13 @@
 # Список изменений
+## [1.10.0] - 2025-12-20
+
+### Добавлено
+- Новые контракты
+- Уведомление о новой версии скрипта после получения груза
+
+### Изменено
+- Кнопки для взаимодействия с контрактами в их списке
+
 ## [1.9.2] - 2025-11-15
 
 ### Исправлено
@@ -170,3 +179,4 @@
 [1.8.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.8.1/tch-release-1.8.1.rar
 [1.9.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.1/tch-release-1.9.1.rar
 [1.9.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.2/tch-release-1.9.2.rar
+[1.10.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.10.0/tch-release-1.10.0.rar
