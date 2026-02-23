@@ -124,6 +124,7 @@ local ContractService = {
                 end
             end
 
+            if (result:Length() <= 1) then return result end
             local contractsGroup = result:Reduce
             (
                 function(acc, current)
