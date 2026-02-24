@@ -7,7 +7,7 @@ local u8 = encoding.UTF8
 
 local ProfitAndLoss = {
     new = function()
-        local self = Json.new("pl_v2", constants.PROFIT_AND_LOSS)
+        local self = Json.new("pl_v3", constants.PROFIT_AND_LOSS)
         self.save = function()
             file = io.open(self.filepath, "w")
             local json = encodeJson(self.data)

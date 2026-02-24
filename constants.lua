@@ -6,9 +6,9 @@ local u8 = encoding.UTF8
 
 local SCRIPT_INFO = {
     AUTHOR = "SAM",
-    VERSION = "1.10.1",
+    VERSION = "1.11.0",
     MOONLOADER = 026,
-    VERSION_NUMBER = 18,
+    VERSION_NUMBER = 19,
     VERSION_URL = "https://raw.githubusercontent.com/SamFredrickson/Truck-Contracts-Helper/master/version.json",
     CHANGELOG_URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper/blob/master/CHANGELOG.md",
     URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper",
@@ -117,7 +117,8 @@ local PROFIT_AND_LOSS = {
     { name = "Починка механиком", sum = 0, profit = false, enabled = true, sort = 17 },
     { name = "Канистры", sum = 0, profit = false, enabled = true, sort = 18 },
     { name = "Рем. комплекты", sum = 0, profit = false, enabled = true, sort = 19 },
-    { name = "Неизвестный источник", sum = 0, profit = true, enabled = true, sort = 20 }
+    { name = "Бусты", sum = 0, profit = false, enabled = true, sort = 20 },
+    { name = "Неизвестный источник", sum = 0, profit = true, enabled = true, sort = 21 }
 }
 
 local POINTS = {
@@ -572,6 +573,10 @@ local SERVER_MESSAGES = {
     {
         message  = "Штраф в размере {.-}(%d+)$ {.-}будет списан с банковского счёта",
         code = "fine"
+    },
+    {
+        message  = 'Вы успешно аквтивировали бустер {.-}".+" {.-}за {.-}(%d+)',
+        code = "tbooster"
     },
     {
         message = "Освобождаем место под Ваш груз. Пожалуйста подождите (%d+):(%d+)",

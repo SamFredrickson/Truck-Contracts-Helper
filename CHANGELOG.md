@@ -1,4 +1,9 @@
 # Список изменений
+## [1.11.0] - 2025-12-224
+
+### Добавлено
+- Учет покупки бустов в статистику расходов / доходов
+
 ## [1.10.1] - 2026-02-24
 
 ### Исправлено
@@ -186,3 +191,4 @@
 [1.9.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.9.2/tch-release-1.9.2.rar
 [1.10.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.10.0/tch-release-1.10.0.rar
 [1.10.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.10.1/tch-release-1.10.1.rar
+[1.11.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.11.0/tch-release-1.11.0.rar

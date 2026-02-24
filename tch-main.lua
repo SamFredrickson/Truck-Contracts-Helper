@@ -976,6 +976,21 @@ function sampev.onServerMessage(color, text)
 			end
 		end
 
+		-- Учитываем расход с бустов в статистику заработка
+		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("tbooster").message)) then
+			local tboosterExpense = text:match(serverMessageService.findByCode("tbooster").message)
+			local profitAndLoss = ProfitAndLoss.new()
+			local profitAndLossIndex, profitAndLossItem = table.unpack(profitAndLoss.getByName("Бусты"))
+			-- Обновляем конфигурацию
+			config.data.settings.sessionEarnings = config.data.settings.sessionEarnings - tboosterExpense
+			config.data.settings.totalEarnings = config.data.settings.totalEarnings - tboosterExpense
+			profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum - tonumber(tboosterExpense)
+			-- Обновляем значения в окне
+			infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
+			profitAndLoss.save()
+			config.save()
+		end
+
 		-- Учитываем полученный штраф в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("fine").message)) then
 			local fine = text:match(serverMessageService.findByCode("fine").message)
