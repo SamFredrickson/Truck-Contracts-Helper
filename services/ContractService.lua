@@ -20,6 +20,7 @@ local PortSanFierro = require "tch.entities.coords.portsanfierro"
 local AirportSanFierro = require "tch.entities.coords.airportsanfierro"
 local AirportLasVenturas = require "tch.entities.coords.airportlasventuras"
 local AirportLosSantos = require "tch.entities.coords.airportlossantos"
+local PortGarageSanFierro = require "tch.entities.coords.portGarageSanFierro"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -41,6 +42,7 @@ local portSanFierro = PortSanFierro.new()
 local airportSanFierro = AirportSanFierro.new()
 local airportLasVenturas = AirportLasVenturas.new()
 local airportLosSantos = AirportLosSantos.new()
+local portGarageSanFierro = PortGarageSanFierro.new()
 
 local points = 
 {
@@ -52,7 +54,8 @@ local points =
    illegal = {
         airportSanFierro = airportSanFierro,
         airportLasVenturas = airportLasVenturas,
-        airportLosSantos = airportLosSantos
+        airportLosSantos = airportLosSantos,
+        portGarageSanFierro = portGarageSanFierro
     }
 }
 
