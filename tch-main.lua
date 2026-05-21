@@ -77,10 +77,13 @@ local httpService = HttpService.new()
 local pointService = PointsService.new()
 
 local TWO_HOURS = 3600 * 2
+local race = nil
 local isSettingsApplied = false
 local isSuccessfulRenting = false
-local race = nil
 local illegalCargoDialogueShowedAt = nil
+local lastCargoTakenAt = nil
+local autounloading = { notified = false }
+
 local currentBlip = {
 	blip = nil, 
 	coords = nil,
@@ -92,10 +95,6 @@ local unloading = {
 	time = nil,
 	notified = false,
 	tries = 0
-}
-
-local autounloading = {
-	notified = false
 }
 
 imgui.OnInitialize(function()
@@ -305,6 +304,7 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
+					if lastCargoTakenAt and not (os.difftime(os.time(), lastCargoTakenAt) > 30) then return false end
 					local contracts = ContractService.CONTRACTS
 					local canUnload = contractsService.CanUnload(contracts)
 
@@ -540,9 +540,7 @@ function main()
 								LocalMessage.new(" {FFFFFF}У точки загрузки находятся другие {ed5a5a}дальнобойщики."),
 								LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами {ed5a5a}" .. hotkey.buttonText .. "{FFFFFF} или подождите пока точка будет свободна.")
 							}
-							for _, message in pairs(messages) do
-								chatService.send(message)
-							end
+							for _, message in pairs(messages) do chatService.send(message) end
 							autounloading.notified = true
 						end
 
@@ -804,6 +802,7 @@ function sampev.onServerMessage(color, text)
 	if config.data.settings.selectedScriptStatus > 0 then
 		-- Логика при появлении собщения в чате, что контракт отменен
 		if text:find(serverMessageService.findByCode("contract-canceled").message) then
+			lastCargoTakenAt = nil
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			contractsService.hasUnknownActiveContract = false
 			unloading.tries = 0
@@ -895,6 +894,7 @@ function sampev.onServerMessage(color, text)
 		end
 
 		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
+			lastCargoTakenAt = nil
 			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
 			chatService.send(loadCommandMessage)
 		end
@@ -937,6 +937,7 @@ function sampev.onServerMessage(color, text)
 
 		-- Логика при получении документов на груз
 		if text:find(serverMessageService.findByCode("receive-documents").message) then
+			lastCargoTakenAt = os.time()
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			local contract = contractsService.findActive(ContractService.CONTRACTS)
 			if config.data.settings.autohideContractsList then

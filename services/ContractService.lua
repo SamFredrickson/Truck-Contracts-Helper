@@ -20,7 +20,7 @@ local PortSanFierro = require "tch.entities.coords.portsanfierro"
 local AirportSanFierro = require "tch.entities.coords.airportsanfierro"
 local AirportLasVenturas = require "tch.entities.coords.airportlasventuras"
 local AirportLosSantos = require "tch.entities.coords.airportlossantos"
-local PortGarageSanFierro = require "tch.entities.coords.portGarageSanFierro"
+local PortGarageSanFierro = require "tch.entities.coords.portgaragesanfierro"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
