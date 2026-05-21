@@ -1,5 +1,16 @@
 # Список изменений
-## [1.11.0] - 2025-12-224
+## [1.12.0] - 2026-05-21
+
+### Добавлено
+- Точки разгрузки в гараже порта города Сан-Фиерро
+
+### Исправлено
+- Авторазгрузка при взятии контракта с точкой разгрузки
+
+### Добавлено
+- Учет покупки бустов в статистику расходов / доходов
+
+## [1.11.0] - 2025-12-24
 
 ### Добавлено
 - Учет покупки бустов в статистику расходов / доходов
@@ -192,3 +203,4 @@
 [1.10.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.10.0/tch-release-1.10.0.rar
 [1.10.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.10.1/tch-release-1.10.1.rar
 [1.11.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.11.0/tch-release-1.11.0.rar
+[1.12.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.12.0/tch-release-1.12.0.rar
