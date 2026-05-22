@@ -893,12 +893,6 @@ function sampev.onServerMessage(color, text)
 			end
 		end
 
-		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
-			lastCargoTakenAt = nil
-			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
-			chatService.send(loadCommandMessage)
-		end
-
 		-- Логика при успешной доставке нелегального груза
 		if text:find(serverMessageService.findByCode("illegal-delivery-success").message) then
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
@@ -1215,17 +1209,9 @@ function sampev.onServerMessage(color, text)
 		end
 			
 		if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
-			local nickname, message, x, y, z = text:match
-			(
-				serverMessageService
-				.findByCode("truck-driver-chat-new-message-with-coords")
-				.message
-			)
-			local player = playerService.getByHandle
-			(
-				playerService.get(), 
-				PLAYER_PED
-			)
+			local message = serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
+			local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+			local nickname, message, x, y, z = text:match(message)
 			if player.name ~= nickname then
 				currentBlip.isActive = false
 				currentBlip.coords = { x = x, y = y, z = z }
@@ -1233,11 +1219,17 @@ function sampev.onServerMessage(color, text)
 					LocalMessage.new(" Вы получили координаты другого {ed5a5a}дальнобойщика{FFFFFF} по рации.", 300),
 					LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + Y {FFFFFF}чтобы поставить метку.", 300)
 				}
-				for _, message in pairs(messages) do
-					chatService.send(message)
-				end
+				for _, message in pairs(messages) do chatService.send(message) end
 				setAudioStreamState(tickSound.audioStream, AudioStreamState.PLAY)
 			end
+		end
+
+		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then return false end
+		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
+			lastCargoTakenAt = nil
+			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 2000)
+			chatService.send(loadCommandMessage)
+			return false
 		end
 	end
 end
