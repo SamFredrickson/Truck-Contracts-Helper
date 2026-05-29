@@ -1,4 +1,12 @@
 # Список изменений
+## [1.13.0] - 2026-05-30
+
+### Изменено
+- Логика работы пинов, интерфейс, автозагрузка
+
+### Исправлено
+- Вывод серверного сообщения "Не флуди" при автозагрузке
+
 ## [1.12.0] - 2026-05-21
 
 ### Добавлено
@@ -201,3 +209,4 @@
 [1.10.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.10.1/tch-release-1.10.1.rar
 [1.11.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.11.0/tch-release-1.11.0.rar
 [1.12.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.12.0/tch-release-1.12.0.rar
+[1.13.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.0/tch-release-1.13.0.rar
