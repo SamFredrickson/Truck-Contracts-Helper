@@ -28,6 +28,8 @@ local u8 = encoding.UTF8
 local playerService = PlayerService.new()
 local carsService = CarService.new()
 local pointsService = PointsService.new()
+local CONTRACTS = {}
+local PINS = Array({})
 
 local trucks = { 
     Linerunner.new().id, 
@@ -44,8 +46,7 @@ local airportLasVenturas = AirportLasVenturas.new()
 local airportLosSantos = AirportLosSantos.new()
 local portGarageSanFierro = PortGarageSanFierro.new()
 
-local points = 
-{
+local points = {
    legal = {
     portLosSantos = portLosSantos, 
     portSanFierro = portSanFierro,
@@ -67,6 +68,7 @@ local ContractService = {
         self.parse = function(text)
             local result = Array({})
             local filters = Filters.new()
+            local foundContractIdPins = Array({})
             for contract in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
                 local isAllowed = false
                 local singleContractRegexp = constants.REGEXP.SINGLE_CONTRACT;
@@ -83,10 +85,8 @@ local ContractService = {
                         for _, filterSource in pairs(filters.data.sources) do
                             if source:find(filterSource.name) then
                                for _, filterDestination in pairs(filterSource.destinations) do
-                                    if not filterDestination.hidden 
-                                    and destination:find(filterDestination.short_name) then
-                                        return true
-                                    end
+                                    local isDestination = destination:find(filterDestination.short_name)
+                                    if not filterDestination.hidden and isDestination then return true end
                                end
                             end
                         end
@@ -122,12 +122,24 @@ local ContractService = {
                     end
                 )()
 
-                if (isSource and isCompany and isProperTonQuantity) or isTop then
-                    result:Push(entity)
-                end
+                if (isSource and isCompany and isProperTonQuantity) or isTop then result:Push(entity) end
             end
 
             if (result:Length() <= 1) then return result end
+
+             -- Синхронизация пинов
+            for index, pinContract in PINS:Entries() do
+                for contract in result:Values() do
+                    local isDestination = contract.destination:find(pinContract.destination)
+                    local isSource = contract.source:find(pinContract.source)
+                    local isFirstAmount = tonumber(contract.amount.first) <= tonumber(pinContract.amount.first)
+                    local isSecondAmount = tonumber(pinContract.amount.second) == tonumber(contract.amount.second)
+                    local isCompany = pinContract.company == contract.company
+                    local isFound = (isDestination and isSource and isFirstAmount and isSecondAmount and isCompany)
+                    if isFound then PINS[index] = contract contract.IsPinned = true contract.sort = 0 end
+                end
+            end
+
             local contractsGroup = result:Reduce
             (
                 function(acc, current)
@@ -162,59 +174,72 @@ local ContractService = {
             return result
         end
 
-        self.findById = function(id, contracts)
-            for _, contract in pairs(contracts) do
+        self.setContracts = function(contracts)
+            CONTRACTS = contracts
+            return CONTRACTS
+        end
+
+        self.getContracts = function(contracts)
+           return CONTRACTS
+        end
+
+        self.pin = function(contract)
+            PINS = PINS:Filter(function(current) return tonumber(current.id) ~= tonumber(contractId) end)
+            PINS:Push(contract)
+            return PINS
+        end
+
+        self.unpin = function(contractId)
+            PINS = PINS:Filter(function(current) return tonumber(current.id) ~= tonumber(contractId) end)
+            return PINS
+        end
+
+        self.findById = function(id)
+            for _, contract in pairs(CONTRACTS) do
                 local contractId = tonumber(contract.id)
-                if contractId == id then
-                    return contract
-                end
+                if contractId == id then return contract end
             end
             return false
         end
 
-        self.findActive = function(contracts)
-            for _, contract in pairs(contracts) do
-                if contract.IsActive then
-                    return contract
-                end
-            end
+        self.findActive = function()
+            for _, contract in pairs(CONTRACTS) do if contract.IsActive then return contract end end
             return false
         end
 
-        self.CanTake = function(contracts)
+        self.CanTake = function()
             local cars = carsService.get()
             local players = playerService.get()
-
             local player = playerService.getByHandle(players, PLAYER_PED)
             local car = carsService.getByDriver(cars, player)
         
             if car and car.IsTruck() then
-                return #contracts > 0
+                return #CONTRACTS > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
-                and not self.findActive(contracts)
+                and not self.findActive()
             end
         
             return false
         end
 
-        self.CanSearch = function(contracts)
+        self.CanSearch = function()
             local cars = carsService.get()
             local players = playerService.get()
-
             local player = playerService.getByHandle(players, PLAYER_PED)
             local car = carsService.getByDriver(cars, player)
         
             if car and car.IsTruck() then
                 return not sampIsDialogActive()
                 and not sampIsChatInputActive()
-                and not self.findActive(contracts)
+                and not self.findActive()
+                and not self.findAvailableToTake()
             end
         
             return false
         end
 
-        self.CanUnload = function(contracts)
+        self.CanUnload = function()
             local cars = carsService.get()
             local players = playerService.get()
             local player = playerService.getByHandle(players, PLAYER_PED)
@@ -233,10 +258,10 @@ local ContractService = {
             )()
 
             if car and car.IsTruck() then
-                if #contracts > 0
+                if #CONTRACTS > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
-                and self.findActive(contracts)
+                and self.findActive()
                 and carsService.IsCarAttachedToTrailer(cars, car)
                 and isWithinDistance then return true end
             end
@@ -272,13 +297,11 @@ local ContractService = {
             return false
         end
 
-        self.update = function(id, fields, contracts)
-            for index, contract in pairs(contracts) do
+        self.update = function(id, fields)
+            for index, contract in pairs(CONTRACTS) do
                 local contractId = tonumber(contract.id)
                 if contractId == id then
-                    for key, value in pairs(fields) do 
-                        contracts[index][key] = value 
-                    end
+                    for key, value in pairs(fields) do CONTRACTS[index][key] = value end
                     return contract
                 end
             end
@@ -288,49 +311,25 @@ local ContractService = {
         self.getPriorities = function(source, destination)
             local data = pointsService.get()
             for _, value in pairs(data) do
-                if source:find(value.point.source) and destination:find(value.point.destination) then
-                    return { value.point.sort, value.point.top }
-                end
+                local isSource = source:find(value.point.source)
+                local isDestination = destination:find(value.point.destination)
+                if isSource and isDestination then return { value.point.sort, value.point.top } end
             end
         end
 
-        self.getContractByAutoloadPoint = function(point, contracts)
-            if not point or #contracts <= 0 then return false end
-            for _, contract in pairs(contracts) do
-                if point.source:find(contract.source) then return contract end
+        self.findAvailableToTake = function()
+           local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+            for _, point in pairs(constants.AUTOLOAD_POINTS) do
+                if player.IsWithinDistance(point.coords, point.autoTakeDistance) then
+                    for _, contract in pairs(CONTRACTS) do if point.source:find(contract.source) then return contract end end
+                    return false
+                end
             end
             return false
-        end
-
-        self.CanAutotake = function(point)
-            if not point then return false end
-            local cars = carsService.get()
-            local players = playerService.get()
-            local player = playerService.getByHandle(players, PLAYER_PED)
-
-            for _, car in pairs(cars) do
-                if car.IsTrailer() then
-                    local isWithinDistance = car.IsWithinDistance(point.coords, point.autoTakeDistance)
-                    if isWithinDistance then return false end
-                end
-            end
-
-            for _, driver in pairs(players) do
-                local car = carsService.getByDriver(cars, driver)
-                local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoTakeDistance)
-
-                if car
-                and car.IsTruck() 
-                and driver.handle ~= player.handle
-                and isWithinDistance then return false end
-            end
-
-            return true
         end
 
         return self
     end
 }
 
-ContractService.CONTRACTS = {}
 return ContractService

@@ -18,8 +18,13 @@ local Contract = {
         self.amount = amount
         self.company = company
         self.IsActive = IsActive or false
-        self.IsPinned = constants.PINS:Includes(tonumber(self.id))
+        self.IsPinned = false
         self.sort = self.IsPinned and 0 or self.sort
+
+        self.getSourcePoint = function()
+            for _, point in pairs(constants.AUTOLOAD_POINTS) do if point.source:find(self.source) then return point end end
+            return false
+        end
 
         self.toString = function()
             return string.format

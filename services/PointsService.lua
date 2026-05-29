@@ -1,12 +1,14 @@
 local Points = require "tch.common.storage.points"
 local Service = require "tch.services.service"
 local PlayerService = require "tch.services.playerservice"
+local CarService = require "tch.services.carservice"
 local encoding = require "encoding"
 local constants = require "tch.constants"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local playerService = PlayerService.new()
+local carsService = CarService.new()
 
 local PointsService = {
     new = function()
@@ -15,34 +17,17 @@ local PointsService = {
         self.getByDestination = function(destination)
             local result = {}
             for index, point in pairs(Points.new().data) do
-                if point.destination:find(destination) then
-                    table.insert(result, {
-                        id = index, 
-                        point = point 
-                    })
-                end
+                if point.destination:find(destination) then table.insert(result, { id = index, point = point }) end
             end
 
-            table.sort(result, function(a, b)
-                return a.point.sort < b.point.sort
-            end)
-
+            table.sort(result, function(a, b) return a.point.sort < b.point.sort end)
             return result
         end
 
         self.get = function()
             local result = {}
-            for index, point in pairs(Points.new().data) do
-                table.insert(result, {
-                    id = index, 
-                    point = point 
-                })
-            end
-
-            table.sort(result, function(a, b)
-                return a.point.sort < b.point.sort
-            end)
-
+            for index, point in pairs(Points.new().data) do table.insert(result, { id = index, point = point }) end
+            table.sort(result, function(a, b) return a.point.sort < b.point.sort end)
             return result
         end
 
@@ -64,14 +49,25 @@ local PointsService = {
             return false
         end
 
-        self.getPlayerAutoloadPoint = function()
-            local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
-            for _, point in pairs(constants.AUTOLOAD_POINTS) do
-                if player.IsWithinDistance(point.coords, 15) then
-                    return point
+        self.validateSourcePointAvailability = function(point)
+            local cars = carsService.get()
+            local players = playerService.get()
+            local player = playerService.getByHandle(players, PLAYER_PED)
+
+            for _, car in pairs(cars) do
+                if car.IsTrailer() then
+                    local isWithinDistance = car.IsWithinDistance(point.coords, point.autoTakeDistance)
+                    if isWithinDistance then return false end
                 end
             end
-            return false
+
+            for _, driver in pairs(players) do
+                local car = carsService.getByDriver(cars, driver)
+                local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoTakeDistance)
+                if car and car.IsTruck() and driver.handle ~= player.handle and isWithinDistance then return false end
+            end
+
+            return true
         end
 
         return self

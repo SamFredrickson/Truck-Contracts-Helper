@@ -10,14 +10,7 @@ local PlayerService = {
             for _, handle in pairs(getAllChars()) do
                 local isSuccess, id = sampGetPlayerIdByCharHandle(handle)
                 if isSuccess then
-                    local player = Player.new
-                    (
-                        id,
-                        sampGetPlayerNickname(id),
-                        sampGetPlayerHealth(id),
-                        sampGetPlayerArmor(id),
-                        handle
-                    )
+                    local player = Player.new(id, sampGetPlayerNickname(id), sampGetPlayerHealth(id), sampGetPlayerArmor(id), handle)
                     table.insert(result, player)
                 end
             end
@@ -27,9 +20,7 @@ local PlayerService = {
         self.getNpc = function()
             local result = {}
             for _, handle in pairs(getAllChars()) do
-                if select(2, sampGetPlayerIdByCharHandle(handle)) == -1 and handle ~= PLAYER_PED then
-                    table.insert(result, handle)
-                end
+                if select(2, sampGetPlayerIdByCharHandle(handle)) == -1 and handle ~= PLAYER_PED then table.insert(result, handle) end
             end
             return result
         end
@@ -39,13 +30,7 @@ local PlayerService = {
                 if player.handle == handle then
                     local isSuccess, id = sampGetPlayerIdByCharHandle(handle)
                     if isSuccess then
-                        local player = Player.new(
-                            id,
-                            sampGetPlayerNickname(id),
-                            sampGetPlayerHealth(id),
-                            sampGetPlayerArmor(id),
-                            handle
-                        )
+                        local player = Player.new(id, sampGetPlayerNickname(id), sampGetPlayerHealth(id), sampGetPlayerArmor(id), handle)
                         return player
                     end
                 end

@@ -34,26 +34,25 @@ local HttpService = {
                         os.remove(path)
 
                         if content.number > constants.SCRIPT_INFO.VERSION_NUMBER then
-                            chatService.send
-                            (
+                            local messages = {
                                 LocalMessage.new
                                 (
                                     string.format
                                     (
-                                        " {FFFFFF}Доступна новая версия скрипта " .. 
+                                        " {FFFFFF}Доступна новая версия скрипта" .. 
                                         " {ed5a5a}Truck Contracts Helper {FFFFFF}(%s).", 
                                         content.full_number
-                                    )
-                                )
-                            )
-                            chatService.send
-                            (
+                                    ),
+                                    1000
+                                ),
                                 LocalMessage.new
                                 (
                                     " {FFFFFF}Введите команду {ed5a5a}/tch.update{FFFFFF}" .. 
-                                    " чтобы начать скачивание по ссылке."
+                                    " чтобы начать скачивание по ссылке.",
+                                    1000
                                 )
-                            )
+                            }
+                            for _, message in pairs(messages) do chatService.send(message) end
                         end
 
                         return true

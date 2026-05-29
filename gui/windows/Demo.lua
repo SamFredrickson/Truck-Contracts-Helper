@@ -19,11 +19,7 @@ local Demo = {
             end
         )
 
-        sampRegisterChatCommand(
-            'tch.demo',
-            function() self.toggle() end
-        )
-
+        sampRegisterChatCommand("tch.demo", function() self.toggle() end)
         return self
     end
 }

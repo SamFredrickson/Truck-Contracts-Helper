@@ -242,57 +242,68 @@ local AUTOLOAD_POINTS = {
     {
         source = "Лесопилка №1",
         coords = { x = -449.37, y = -66.01, z = 59.42 },
-        autoTakeDistance = 25
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Лесопилка №2",
         coords = { x = -1978.81, y = -2434.78, z = 30.63 },
-        autoTakeDistance = 40
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Строительный завод №1",
         coords = { x = -158.12, y = -289.38, z = 3.91 },
-        autoTakeDistance = 60
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Строительный завод №2",
         coords = { x = 617.18, y = 1224.79, z = 11.72 },
-        autoTakeDistance = 25
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Нефтезавод №1",
         coords = { x = 256.20, y = 1414.57, z = 10.71 },
-        autoTakeDistance = 25
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Нефтезавод №2",
         coords = { x = -1046.84, y = -670.79, z = 32.35 },
-        autoTakeDistance = 25
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Склад угля №1",
         coords = { x = 608.77, y = 847.84, z = -43.15 },
-        autoTakeDistance = 25
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Склад угля №2",
         coords = { x = -1873.02, y = -1720.16, z = 21.75 },
-        autoTakeDistance = 25
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Нефтевышка №1",
-        coords = { x = -1908.1339111328, y = 1379.0545654297, z = 7.1875 },
-        autoTakeDistance = 25
+        coords = { x = -1908.13, y = 1379.05, z = 7.18 },
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Нефтевышка №2",
-        coords = { x = -241.92864990234, y = -1720.7690429688, z = 3.2260446548462 },
-        autoTakeDistance = 25
+        coords = { x = -241.92, y = -1720.76, z = 3.22 },
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     },
     {
         source = "Нефтевышка №3",
-        coords = { x = 2279.1794433594, y = -2395.0749511719, z = 13.546875 },
-        autoTakeDistance = 25
+        coords = { x = 2279.17, y = -2395.07, z = 13.54 },
+        autoTakeDistance = 60,
+        autoLoadDistance = 15
     }
 }
 
@@ -649,6 +660,10 @@ local SERVER_MESSAGES = {
     {
         message = "Вы успешно загрузились. Отправляйтесь на разгрузку",
         code = "successful-loading"
+    },
+    {
+        message = "Вы должны находиться на точке загрузки",
+        code = "wrong-loading-point"
     }
 }
 
