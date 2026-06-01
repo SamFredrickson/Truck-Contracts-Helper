@@ -256,7 +256,10 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
-					if mainWindow.window[0] and mainWindow.hideCursor and contractsService.CanSearch() then
+					if mainWindow.window[0] 
+					and mainWindow.hideCursor 
+					and contractsService.CanSearch() 
+					and not MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT then
 						MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
 						local message = Message.new(constants.COMMANDS.MENU)
 						chatService.send(message)
@@ -480,7 +483,8 @@ function main()
 				and config.data.settings.autoload
 				and isCharInAnyCar(PLAYER_PED)
 				and mainWindow.hideCursor
-				and not contractsService.hasUnknownActiveContract then
+				and not contractsService.hasUnknownActiveContract
+				and not MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT then
 					if not race or race.finishedAt then
 						local contract = contractsService.findAvailableToTake()
 						if not contract then return false end
@@ -651,6 +655,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 			-- проверяем надо ли закрывать главное меню в случае возвращения назад из списка контрактов
 			if MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP then
 				-- обнуляем флаги, чтобы повторный вызов функции не зациклил открытие меню
+				MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT = false
 				MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
 				MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 				sampSendDialogResponse(id, 0, _, _)
@@ -690,6 +695,13 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 			local contractId = tonumber(MenuDialogue.FLAGS.CONTRACT.ID)
 			local contract = contractsService.update(contractId, { IsActive = false })
 			sampSendDialogResponse(id, 1, 1, _)
+
+			if MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT then
+				MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
+				local message = Message.new(constants.COMMANDS.MENU, 3000)
+				chatService.send(message)
+			end
+
 			return false
 		end
 
@@ -733,7 +745,6 @@ end
 
 function sampev.onServerMessage(color, text)
 	if config.data.settings.selectedScriptStatus > 0 then
-		-- Логика при появлении собщения в чате, что контракт отменен
 		if text:find(serverMessageService.findByCode("contract-canceled").message) then
 			lastCargoTakenAt = nil
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
@@ -759,6 +770,7 @@ function sampev.onServerMessage(color, text)
 
 		-- Логика при появлении собщения в чате, что игрок имеет активный контракт
 		if text:find(serverMessageService.findByCode("has-active-contract").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT = false
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = false
 			MenuDialogue.FLAGS.IS_PARSING_CONTRACTS_LAST_STEP = false
@@ -781,6 +793,7 @@ function sampev.onServerMessage(color, text)
 
 		-- Логика при успешной доставки обычного груза
 		if text:find(serverMessageService.findByCode("delivery-success").message) then
+			MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT = false
 			MenuDialogue.FLAGS.CONTRACT.IS_LOADING = false
 			contractsService.hasUnknownActiveContract = false
 			unloading.tries = 0
@@ -816,8 +829,7 @@ function sampev.onServerMessage(color, text)
 			
 			if not contract and MenuDialogue.FLAGS.CONTRACT.IS_MANUAL_LOADING then
 				MenuDialogue.FLAGS.CONTRACT.IS_MANUAL_LOADING = false
-				local message = LocalMessage.new(" Вы слишком далеко от точки загрузки.", 1000, constants.COLORS.DARK_GRAY)
-				chatService.send(message)
+				chatService.send(LocalMessage.new(" Вы слишком далеко от точки загрузки.", 1000, constants.COLORS.DARK_GRAY))
 			end
 		end
 
@@ -1139,12 +1151,13 @@ function sampev.onServerMessage(color, text)
 			end
 		end
 
-		if text:find(serverMessageService.findByCode("wrong-loading-point").message) and contractsService.findAvailableToTake() then
-			local messages = {
-				LocalMessage.new(" Произошла рассинхронизация списка контрактов.", 500, constants.COLORS.DARK_GRAY),
-				LocalMessage.new(" Отмените текущий контракт и отдалитесь от точки загрузки на 50 метров для обновления.", 500, constants.COLORS.DARK_GRAY)
-			}
-			for _, message in pairs(messages) do chatService.send(message) end
+		if text:find(serverMessageService.findByCode("wrong-loading-point").message) then
+			local contract = contractsService.findAvailableToTake()
+			if not contract then return true end
+			chatService.send(LocalMessage.new(" Произошла рассинхронизация списка контрактов. Пожалуйста, подождите...", 500, constants.COLORS.DARK_GRAY))
+			MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT = true
+			MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = true
+			chatService.send(Message.new(constants.COMMANDS.MENU, 1000))
 		end
 
 		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then return false end

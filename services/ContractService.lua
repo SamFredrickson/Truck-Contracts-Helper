@@ -132,10 +132,9 @@ local ContractService = {
                 for contract in result:Values() do
                     local isDestination = contract.destination:find(pinContract.destination)
                     local isSource = contract.source:find(pinContract.source)
-                    local isFirstAmount = tonumber(contract.amount.first) <= tonumber(pinContract.amount.first)
                     local isSecondAmount = tonumber(pinContract.amount.second) == tonumber(contract.amount.second)
                     local isCompany = pinContract.company == contract.company
-                    local isFound = (isDestination and isSource and isFirstAmount and isSecondAmount and isCompany)
+                    local isFound = (isDestination and isSource and isSecondAmount and isCompany)
                     if isFound then PINS[index] = contract contract.IsPinned = true contract.sort = 0 end
                 end
             end
