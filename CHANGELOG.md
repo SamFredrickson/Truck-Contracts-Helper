@@ -1,4 +1,10 @@
 # Список изменений
+## [1.13.1] - 2026-06-01
+
+### Исправлено
+- Неисправность работы автозагрузки при рассинхронизации контрактов
+- Открепление пинов при определенных изменениях количества тонн в контракте
+
 ## [1.13.0] - 2026-05-30
 
 ### Изменено
@@ -210,3 +216,4 @@
 [1.11.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.11.0/tch-release-1.11.0.rar
 [1.12.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.12.0/tch-release-1.12.0.rar
 [1.13.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.0/tch-release-1.13.0.rar
+[1.13.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.1/tch-release-1.13.1.rar
