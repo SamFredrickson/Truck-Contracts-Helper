@@ -1,4 +1,9 @@
 # Список изменений
+## [1.13.2] - 2026-06-09
+
+### Исправлено
+- Уменьшена дистанция автовзятия контракта
+
 ## [1.13.1] - 2026-06-01
 
 ### Исправлено
@@ -217,3 +222,4 @@
 [1.12.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.12.0/tch-release-1.12.0.rar
 [1.13.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.0/tch-release-1.13.0.rar
 [1.13.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.1/tch-release-1.13.1.rar
+[1.13.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.2/tch-release-1.13.2.rar
