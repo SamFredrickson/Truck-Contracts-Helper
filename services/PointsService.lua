@@ -56,14 +56,14 @@ local PointsService = {
 
             for _, car in pairs(cars) do
                 if car.IsTrailer() then
-                    local isWithinDistance = car.IsWithinDistance(point.coords, point.autoTakeDistance)
+                    local isWithinDistance = car.IsWithinDistance(point.coords, point.autoCheckDistance)
                     if isWithinDistance then return false end
                 end
             end
 
             for _, driver in pairs(players) do
                 local car = carsService.getByDriver(cars, driver)
-                local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoTakeDistance)
+                local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoCheckDistance)
                 if car and car.IsTruck() and driver.handle ~= player.handle and isWithinDistance then return false end
             end
 
