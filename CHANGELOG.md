@@ -1,4 +1,10 @@
 # Список изменений
+
+## [1.14.0] - 2026-10-13
+
+### Добавлено
+- Поддержка нового грузовика Kenworth W900
+
 ## [1.13.2] - 2026-06-09
 
 ### Исправлено
@@ -223,3 +229,4 @@
 [1.13.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.0/tch-release-1.13.0.rar
 [1.13.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.1/tch-release-1.13.1.rar
 [1.13.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.2/tch-release-1.13.2.rar
+[1.14.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.14.0/tch-release-1.14.0.rar

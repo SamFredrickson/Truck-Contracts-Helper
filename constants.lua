@@ -12,9 +12,9 @@ local u8 = encoding.UTF8
 
 local SCRIPT_INFO = {
     AUTHOR = "SAM",
-    VERSION = "1.13.2",
+    VERSION = "1.14.0",
     MOONLOADER = 026,
-    VERSION_NUMBER = 23,
+    VERSION_NUMBER = 24,
     VERSION_URL = "https://raw.githubusercontent.com/SamFredrickson/Truck-Contracts-Helper/master/version.json",
     CHANGELOG_URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper/blob/master/CHANGELOG.md",
     URL = "https://github.com/SamFredrickson/Truck-Contracts-Helper",
