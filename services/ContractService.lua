@@ -9,11 +9,6 @@ local encoding = require "encoding"
 local Array = require "tch.common.array"
 require "tch.common.lua-string"
 
-local Linerunner = require "tch.entities.vehicles.linerunner"
-local Tanker = require "tch.entities.vehicles.tanker"
-local RoadTrain = require "tch.entities.vehicles.roadtrain"
-local Volvo = require "tch.entities.vehicles.volvo"
-
 local PortLosSantos = require "tch.entities.coords.portlossantos"
 local OilRefineryOne = require "tch.entities.coords.oilrefineryone"
 local PortSanFierro = require "tch.entities.coords.portsanfierro"
@@ -30,13 +25,6 @@ local carsService = CarService.new()
 local pointsService = PointsService.new()
 local CONTRACTS = {}
 local PINS = Array({})
-
-local trucks = { 
-    Linerunner.new().id, 
-    Tanker.new().id, 
-    RoadTrain.new().id,
-    Volvo.new().id
-}
 
 local oilRefineryOne = OilRefineryOne.new()
 local portLosSantos = PortLosSantos.new()

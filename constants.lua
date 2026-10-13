@@ -1,5 +1,11 @@
 local encoding = require "encoding"
 local Array = require "tch.common.array"
+local Linerunner = require "tch.entities.vehicles.linerunner"
+local Tanker = require "tch.entities.vehicles.tanker"
+local RoadTrain = require "tch.entities.vehicles.roadtrain"
+local Volvo = require "tch.entities.vehicles.volvo"
+local Peterbilt = require "tch.entities.vehicles.peterbilt"
+local Kenworth = require "tch.entities.vehicles.kenworth"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -23,11 +29,21 @@ local COLORS = {
     DARK_GRAY = 0xBABABA
 }
 
+local TRUCKS = {
+    Linerunner.new().id, 
+    Tanker.new().id, 
+    RoadTrain.new().id,
+	Volvo.new().id,
+    Peterbilt.new().id,
+    Kenworth.new().id
+}
+
 local REGEXP = {
     MULTIPLE_CONTRACTS = "({.-}%d+%. {.-}%W+ №%d %-%> %W+..{.-}%W+{.-}%d+ из %d+ т%.	{.-}[%w\128-\255-%s]+)",
     SINGLE_CONTRACT = "{.-}(%d+)%. {.-}(%W+ №%d+) %-%> (.+){.-}(%W+){.-}(%d+) из (%d+) т%.	{.-}([%w\128-\255-%s]+)"
 }
 
+local TRAILERS = { 435, 450, 591, 584 }
 local MAX_TRUCK_DRIVER_LEVEL = 26
 local MIN_CONTRACTS_SIZE = 1
 local MAX_CONTRACTS_SIZE = 16
@@ -999,5 +1015,7 @@ return {
     HOTKEYS = HOTKEYS,
     PROFIT_AND_LOSS = PROFIT_AND_LOSS,
     CONTRACT_LIST_WINDOW_TYPES = CONTRACT_LIST_WINDOW_TYPES,
-    PINS = PINS
+    PINS = PINS,
+    TRUCKS = TRUCKS,
+    TRAILERS = TRAILERS
 }

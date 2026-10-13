@@ -1,20 +1,6 @@
+local constants = require "tch.constants"
 local Player = require "tch.entities.player"
-local Linerunner = require "tch.entities.vehicles.linerunner"
-local Tanker = require "tch.entities.vehicles.tanker"
-local RoadTrain = require "tch.entities.vehicles.roadtrain"
-local Volvo = require "tch.entities.vehicles.volvo"
-local Peterbilt = require "tch.entities.vehicles.peterbilt"
 local Coords = require "tch.entities.coords.coords"
-
-local trucks = { 
-    Linerunner.new().id, 
-    Tanker.new().id, 
-    RoadTrain.new().id,
-	Volvo.new().id,
-    Peterbilt.new().id
-}
-
-local trailers = { 435, 450, 591, 584 }
 
 local Car = {
     new = function(id, name, model, health, speed, maxPassengers, isLocked, handle)
@@ -75,7 +61,7 @@ local Car = {
             return distanceBetweenCoords <= distance
         end
         self.IsTruck = function()
-            for _, truck in pairs(trucks) do
+            for _, truck in pairs(constants.TRUCKS) do
                 if self.model == truck then
                     return true
                 end
@@ -83,7 +69,7 @@ local Car = {
             return false
         end
         self.IsTrailer = function()
-            for _, trailer in pairs(trailers) do
+            for _, trailer in pairs(constants.TRAILERS) do
                 if self.model == trailer then
                     return true
                 end
