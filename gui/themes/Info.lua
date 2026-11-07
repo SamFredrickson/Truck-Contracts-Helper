@@ -31,10 +31,10 @@ local Info = {
         imgui.GetStyle().GrabRounding = 3
         imgui.GetStyle().TabRounding = 3
     
-        -- Палитра: Благородный приглушенно-бордовый фон и мягкие красные акценты
+        -- РџР°Р»РёС‚СЂР°: Р‘Р»Р°РіРѕСЂРѕРґРЅС‹Р№ РїСЂРёРіР»СѓС€РµРЅРЅРѕ-Р±РѕСЂРґРѕРІС‹Р№ С„РѕРЅ Рё РјСЏРіРєРёРµ РєСЂР°СЃРЅС‹Рµ Р°РєС†РµРЅС‚С‹
         imgui.GetStyle().Colors[imgui.Col.Text]                   = ImVec4(0.96, 0.94, 0.94, 1.00)
         imgui.GetStyle().Colors[imgui.Col.TextDisabled]           = ImVec4(0.60, 0.52, 0.53, 1.00)
-        imgui.GetStyle().Colors[imgui.Col.WindowBg]               = ImVec4(0.24, 0.13, 0.14, 0.98) -- Мягкий винный фон
+        imgui.GetStyle().Colors[imgui.Col.WindowBg]               = ImVec4(0.24, 0.13, 0.14, 0.98) -- РњСЏРіРєРёР№ РІРёРЅРЅС‹Р№ С„РѕРЅ
         imgui.GetStyle().Colors[imgui.Col.ChildBg]                = ImVec4(0.00, 0.00, 0.00, 0.00)
         imgui.GetStyle().Colors[imgui.Col.PopupBg]                = ImVec4(0.20, 0.10, 0.11, 0.98)
         imgui.GetStyle().Colors[imgui.Col.Border]                 = ImVec4(0.42, 0.22, 0.24, 1.00)

@@ -31,12 +31,12 @@ local RedTransparent = {
         imgui.GetStyle().GrabRounding = 4
         imgui.GetStyle().TabRounding = 4
     
-        -- Палитра: Полупрозрачный глубокий винный стиль с высокой читаемостью текста
-        imgui.GetStyle().Colors[imgui.Col.Text]                   = ImVec4(0.98, 0.96, 0.96, 1.00) -- Текст должен быть непрозрачным
+        -- РџР°Р»РёС‚СЂР°: РџРѕР»СѓРїСЂРѕР·СЂР°С‡РЅС‹Р№ РіР»СѓР±РѕРєРёР№ РІРёРЅРЅС‹Р№ СЃС‚РёР»СЊ СЃ РІС‹СЃРѕРєРѕР№ С‡РёС‚Р°РµРјРѕСЃС‚СЊСЋ С‚РµРєСЃС‚Р°
+        imgui.GetStyle().Colors[imgui.Col.Text]                   = ImVec4(0.98, 0.96, 0.96, 1.00) -- РўРµРєСЃС‚ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµРїСЂРѕР·СЂР°С‡РЅС‹Рј
         imgui.GetStyle().Colors[imgui.Col.TextDisabled]           = ImVec4(0.65, 0.55, 0.56, 0.60)
-        imgui.GetStyle().Colors[imgui.Col.WindowBg]               = ImVec4(0.22, 0.11, 0.12, 0.45) -- Полупрозрачный матовый винный фон
+        imgui.GetStyle().Colors[imgui.Col.WindowBg]               = ImVec4(0.22, 0.11, 0.12, 0.45) -- РџРѕР»СѓРїСЂРѕР·СЂР°С‡РЅС‹Р№ РјР°С‚РѕРІС‹Р№ РІРёРЅРЅС‹Р№ С„РѕРЅ
         imgui.GetStyle().Colors[imgui.Col.ChildBg]                = ImVec4(0.00, 0.00, 0.00, 0.00)
-        imgui.GetStyle().Colors[imgui.Col.PopupBg]                = ImVec4(0.18, 0.09, 0.10, 0.85) -- Попапы чуть плотнее
+        imgui.GetStyle().Colors[imgui.Col.PopupBg]                = ImVec4(0.18, 0.09, 0.10, 0.85) -- РџРѕРїР°РїС‹ С‡СѓС‚СЊ РїР»РѕС‚РЅРµРµ
         imgui.GetStyle().Colors[imgui.Col.Border]                 = ImVec4(0.46, 0.22, 0.25, 0.40)
         imgui.GetStyle().Colors[imgui.Col.BorderShadow]           = ImVec4(0.00, 0.00, 0.00, 0.00)
         imgui.GetStyle().Colors[imgui.Col.FrameBg]                = ImVec4(0.35, 0.14, 0.16, 0.45)
