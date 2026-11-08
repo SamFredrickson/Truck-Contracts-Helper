@@ -19,20 +19,41 @@ local Json = {
             createDirectory(self.workingDirectory .. "/config/tch")
         end
 
-        local file = io.open(self.filepath, "r")
+        self.save = function()
+            local file, openError = io.open(self.filepath, "w")
+            if not file then return false, openError end
 
-        if file then
-            local json = file:read("*a")
-            self.data = decodeJson(json)
-            file:close()
+            local json = encodeJson(self.data)
+            if not json then
+                file:close()
+                return false, "Failed to encode JSON"
+            end
+
+            local written, writeError = file:write(json)
+            local closed, closeError = file:close()
+            if not written then return false, writeError end
+            if not closed then return false, closeError end
+            return self.data
         end
 
-        if not file then
-            file = io.open(self.filepath, "w")
-            local json = encodeJson(self.defaultJson)
-            file:write(json)
+        local file = io.open(self.filepath, "r")
+        if file then
+            local json = file:read("*a")
             file:close()
+            local ok, decoded = pcall(decodeJson, json)
+            if ok and type(decoded) == "table" then
+                self.data = decoded
+            else
+                self.data = self.defaultJson
+                self.loadError = "Invalid JSON in " .. self.filepath
+            end
+        elseif doesFileExist(self.filepath) then
             self.data = self.defaultJson
+            self.loadError = "Unable to read " .. self.filepath
+        else
+            self.data = self.defaultJson
+            local saved, saveError = self.save()
+            if not saved then self.loadError = saveError end
         end
 
         return self

@@ -171,7 +171,7 @@ local ContractService = {
         end
 
         self.pin = function(contract)
-            PINS = PINS:Filter(function(current) return tonumber(current.id) ~= tonumber(contractId) end)
+            PINS = PINS:Filter(function(current) return tonumber(current.id) ~= tonumber(contract.id) end)
             PINS:Push(contract)
             return PINS
         end
