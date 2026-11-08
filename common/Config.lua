@@ -4,9 +4,12 @@ local inicfg = require "inicfg"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
+local instance
 
 local Config = {
     new = function()
+        if instance then return instance end
+
         local self = {}
         self.workingDirectory = getWorkingDirectory()
 
@@ -30,7 +33,8 @@ local Config = {
             )
         end
 
-        return self
+        instance = self
+        return instance
     end
 }
 
