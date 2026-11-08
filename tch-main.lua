@@ -93,8 +93,14 @@ local autounloading = { notified = false }
 local currentBlip = {
 	blip = nil, 
 	coords = nil,
-	isActive = false
+	activeCoords = nil
 }
+
+local function clearCurrentBlip()
+	if currentBlip.blip then removeBlip(currentBlip.blip) end
+	currentBlip.blip = nil
+	currentBlip.activeCoords = nil
+end
 
 local unloading = {
 	active = false, 
@@ -226,12 +232,12 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords and not currentBlip.isActive then
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords and currentBlip.coords ~= currentBlip.activeCoords then
 					if isKeyDown(18) and isKeyDown(89) then
 						while isKeyDown(18) and isKeyDown(89) do wait(80) end
-						removeBlip(currentBlip.blip)
+						clearCurrentBlip()
 						currentBlip.blip = addSpriteBlipForCoord(currentBlip.coords.x, currentBlip.coords.y, currentBlip.coords.z, 41)
-						currentBlip.isActive = true
+						currentBlip.activeCoords = currentBlip.coords
 						local messages = {
 							LocalMessage.new(" Метка успешно {ed5a5a}поставлена{FFFFFF} на карте."),
 							LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами{ed5a5a} ALT + N {FFFFFF}чтобы убрать метку.")
@@ -240,10 +246,10 @@ function main()
 						setAudioStreamState(markSound.audioStream, AudioStreamState.PLAY)
 					end
 				end
-				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords then
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip.blip then
 					if isKeyDown(18) and isKeyDown(78) then
 						while isKeyDown(18) and isKeyDown(78) do wait(80) end
-						removeBlip(currentBlip.blip)
+						clearCurrentBlip()
 					end
 				end
 			end,
@@ -326,9 +332,9 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.selectedScriptStatus > 0 and currentBlip.coords then
+				if config.data.settings.selectedScriptStatus > 0 and currentBlip.activeCoords then
 					local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
-					if player.IsWithinDistance(currentBlip.coords, 20) then removeBlip(currentBlip.blip) end
+					if player and player.IsWithinDistance(currentBlip.activeCoords, 20) then clearCurrentBlip() end
 				end
 			end
 		):run()
@@ -356,6 +362,7 @@ function main()
 						if not contract then return false end
 						local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
 						local sourcePoint = contract.getSourcePoint()
+						if not player or not sourcePoint then return end
 						local isSourcePointAvailable = pointService.validateSourcePointAvailability(sourcePoint)
 						local isAutoLoadDistance = player.IsWithinDistance(sourcePoint.coords, sourcePoint.autoLoadDistance)
 						if isSourcePointAvailable and isAutoLoadDistance and not MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
@@ -910,9 +917,9 @@ function sampev.onServerMessage(color, text)
 		if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
 			local message = serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
 			local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
-			local nickname, message, x, y, z = text:match(message)
-			if player.name ~= nickname then
-				currentBlip.isActive = false
+			local nickname, _, x, y, z = text:match(message)
+			x, y, z = tonumber(x), tonumber(y), tonumber(z)
+			if player and player.name ~= nickname and x and y and z then
 				currentBlip.coords = { x = x, y = y, z = z }
 				local messages = {
 					LocalMessage.new(" Вы получили координаты другого {ed5a5a}дальнобойщика{FFFFFF} по рации.", 300),

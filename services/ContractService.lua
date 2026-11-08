@@ -56,13 +56,13 @@ local ContractService = {
         self.parse = function(text)
             local result = Array({})
             local filters = Filters.new()
-            local foundContractIdPins = Array({})
-            for contract in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
-                local isAllowed = false
-                local singleContractRegexp = constants.REGEXP.SINGLE_CONTRACT;
-                local id, source, destination, cargo, amountFirst, amountSecond, company = contract:match(singleContractRegexp)
+            local routePoints = pointsService.get()
+            local function appendContract(row)
+                local id, source, destination, cargo, amountFirst, amountSecond, company = row:match(constants.REGEXP.SINGLE_CONTRACT)
+                if not id then return end
+
                 local amount = { first = amountFirst, second = amountSecond }
-                local priorities = self.getPriorities(source, destination)
+                local priorities = self.getPriorities(source, destination, routePoints)
                 local sort, top = table.unpack(priorities)
                 local entity = Contract.new(id, sort, top, source, destination, cargo, amount, company)
 
@@ -113,7 +113,9 @@ local ContractService = {
                 if (isSource and isCompany and isProperTonQuantity) or isTop then result:Push(entity) end
             end
 
-            if (result:Length() <= 1) then return result end
+            for row in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
+                appendContract(row)
+            end
 
              -- Синхронизация пинов
             for index, pinContract in PINS:Entries() do
@@ -126,6 +128,8 @@ local ContractService = {
                     if isFound then PINS[index] = contract contract.IsPinned = true contract.sort = 0 end
                 end
             end
+
+            if result:Length() <= 1 then return result end
 
             local contractsGroup = result:Reduce
             (
@@ -242,8 +246,8 @@ local ContractService = {
                     break
                 end
             end
-            if not isTruck then return false end
 
+            if not isTruck then return false end
             local x, y, z = getCharCoordinates(PLAYER_PED)
             local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
             local function isNearPoint(group)
@@ -277,13 +281,13 @@ local ContractService = {
             return false
         end
 
-        self.getPriorities = function(source, destination)
-            local data = pointsService.get()
-            for _, value in pairs(data) do
+        self.getPriorities = function(source, destination, routePoints)
+            for _, value in ipairs(routePoints or pointsService.get()) do
                 local isSource = source:find(value.point.source)
                 local isDestination = destination:find(value.point.destination)
                 if isSource and isDestination then return { value.point.sort, value.point.top } end
             end
+            return { math.huge, false }
         end
 
         self.findAvailableToTake = function()

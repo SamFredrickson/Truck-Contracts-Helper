@@ -9,6 +9,25 @@ encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local chatService = ChatService.new()
 
+local function isReleaseVersion(content)
+    if type(content) ~= "table"
+    or type(content.number) ~= "number"
+    or content.number < 1
+    or content.number % 1 ~= 0
+    or type(content.full_number) ~= "string"
+    or not content.full_number:match("^v%d+%.%d+%.%d+$")
+    or type(content.release_url) ~= "string" then
+        return false
+    end
+
+    local prefix = constants.SCRIPT_INFO.URL .. "/releases/download/" .. content.full_number .. "/"
+    if content.release_url:sub(1, #prefix) ~= prefix then return false end
+
+    local asset = content.release_url:sub(#prefix + 1)
+    return asset:match("^[A-Za-z0-9][A-Za-z0-9_.-]*%.rar$") ~= nil
+        or asset:match("^[A-Za-z0-9][A-Za-z0-9_.-]*%.zip$") ~= nil
+end
+
 local HttpService = {
     new = function()
         local self = Service.new()
@@ -16,7 +35,8 @@ local HttpService = {
 
         self.getAvailableUpdates = function()
             local path = os.tmpname()
-            if doesFileExist(fpath) then os.remove(fpath) end
+            if not path then return false end
+            if doesFileExist(path) and not os.remove(path) then return false end
             
             downloadUrlToFile
             (
@@ -24,14 +44,20 @@ local HttpService = {
                 path,
                 function(_, status, _, _)
                     if status == moonloader.download_status.STATUSEX_ENDDOWNLOAD then
-                        if not doesFileExist(path) then return false end
                         local file = io.open(path, "r")
-                        if not file then return false end
+                        if not file then
+                            os.remove(path)
+                            return false
+                        end
 
-                        local content = decodeJson(file:read("*a"))
-                        self.version = content
+                        local json = file:read("*a")
                         file:close()
                         os.remove(path)
+                        if not json or json == "" then return false end
+
+                        local ok, content = pcall(decodeJson, json)
+                        if not ok or not isReleaseVersion(content) then return false end
+                        self.version = content
 
                         if content.number > constants.SCRIPT_INFO.VERSION_NUMBER then
                             local messages = {

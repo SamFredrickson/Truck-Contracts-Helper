@@ -1,14 +1,12 @@
 local Points = require "tch.common.storage.points"
 local Service = require "tch.services.service"
-local PlayerService = require "tch.services.playerservice"
-local CarService = require "tch.services.carservice"
-local encoding = require "encoding"
 local constants = require "tch.constants"
 
-encoding.default = "CP1251"
-local u8 = encoding.UTF8
-local playerService = PlayerService.new()
-local carsService = CarService.new()
+local trailerModels = {}
+for _, model in pairs(constants.TRAILERS) do trailerModels[model] = true end
+
+local truckModels = {}
+for _, model in pairs(constants.TRUCKS) do truckModels[model] = true end
 
 local PointsService = {
     new = function()
@@ -50,21 +48,21 @@ local PointsService = {
         end
 
         self.validateSourcePointAvailability = function(point)
-            local cars = carsService.get()
-            local players = playerService.get()
-            local player = playerService.getByHandle(players, PLAYER_PED)
-
-            for _, car in pairs(cars) do
-                if car.IsTrailer() then
-                    local isWithinDistance = car.IsWithinDistance(point.coords, point.autoCheckDistance)
-                    if isWithinDistance then return false end
-                end
+            local coords = point.coords
+            local function isNear(x, y, z)
+                return getDistanceBetweenCoords3d(x, y, z, coords.x, coords.y, coords.z) <= point.autoCheckDistance
             end
 
-            for _, driver in pairs(players) do
-                local car = carsService.getByDriver(cars, driver)
-                local isWithinDistance = driver.IsWithinDistance(point.coords, point.autoCheckDistance)
-                if car and car.IsTruck() and driver.handle ~= player.handle and isWithinDistance then return false end
+            for _, handle in ipairs(getAllVehicles()) do
+                local model = getCarModel(handle)
+                if trailerModels[model] then
+                    if isNear(getCarCoordinates(handle)) then return false end
+                elseif truckModels[model] then
+                    local driver = getDriverOfCar(handle)
+                    if driver and driver ~= -1 and driver ~= PLAYER_PED and sampGetPlayerIdByCharHandle(driver) then
+                        if isNear(getCharCoordinates(driver)) then return false end
+                    end
+                end
             end
 
             return true

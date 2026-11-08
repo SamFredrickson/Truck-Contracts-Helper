@@ -93,13 +93,14 @@ sampRegisterChatCommand
 		(
             "tch.update",
 			function()
-				if not httpService.version then
+				local version = httpService.version
+				if not version then
 					local localMessage = LocalMessage.new("{FFFFFF}Произошла {ed5a5a}ошибка {FFFFFF}при попытке обновления. " .. "Свяжитесь с разработчиком скрипта.")
 					chatService.send(localMessage)
 					return
 				end
 
-				if httpService.version.number == constants.SCRIPT_INFO.VERSION_NUMBER then
+				if version.number <= constants.SCRIPT_INFO.VERSION_NUMBER then
 					local localMessage = LocalMessage.new("{FFFFFF}У вас уже установлена {ed5a5a}" .. "актуальная {FFFFFF}версия скрипта.")
 					chatService.send(localMessage)
 					return
@@ -113,8 +114,8 @@ sampRegisterChatCommand
 							LocalMessage.new(" {FFFFFF}Переход по ссылке для скачивания через {ed5a5a}3 секунды..." )
 						}
 						local commands = {
-							string.format("start %s", httpService.version.release_url),
-							string.format("start %s", constants.SCRIPT_INFO.CHANGELOG_URL)
+							string.format('start "" "%s"', version.release_url),
+							string.format('start "" "%s"', constants.SCRIPT_INFO.CHANGELOG_URL)
 						}
 						for _, message in pairs(messages) do chatService.send(message) end
 						wait(3000)
