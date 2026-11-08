@@ -21,13 +21,13 @@ local ServerMessageService = {
             return result
         end
 
+        local byCode = {}
+        for _, entry in ipairs(self.get()) do
+            byCode[entry.code] = byCode[entry.code] or entry
+        end
+
         self.findByCode = function(code)
-            for _, entry in pairs(self.get()) do
-                if entry.code == code then
-                    return entry
-                end
-            end
-            return false
+            return byCode[code] or false
         end
         
         return self

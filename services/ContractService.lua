@@ -227,60 +227,42 @@ local ContractService = {
         end
 
         self.CanUnload = function()
-            local cars = carsService.get()
-            local players = playerService.get()
-            local player = playerService.getByHandle(players, PLAYER_PED)
-            local car = carsService.getByDriver(cars, player)
-        
-            -- ѕроверка разгрузки обычного груза
-            local isWithinDistance = 
-            (
-                function()
-                    local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
-                    for _, point in pairs(points.legal) do
-                        if player.IsWithinDistance(point, distance) then return true end
-                    end
-                   return false
+            if sampIsDialogActive() or sampIsChatInputActive() or not isCharInAnyCar(PLAYER_PED) then
+                return false
+            end
+
+            local car = storeCarCharIsInNoSave(PLAYER_PED)
+            if getDriverOfCar(car) ~= PLAYER_PED then return false end
+
+            local model = getCarModel(car)
+            local isTruck = false
+            for _, truckModel in pairs(constants.TRUCKS) do
+                if model == truckModel then
+                    isTruck = true
+                    break
                 end
-            )()
-
-            if car and car.IsTruck() then
-                if #CONTRACTS > 0
-                and not sampIsDialogActive()
-                and not sampIsChatInputActive()
-                and self.findActive()
-                and carsService.IsCarAttachedToTrailer(cars, car)
-                and isWithinDistance then return true end
             end
+            if not isTruck then return false end
 
-            -- ѕроверка разгрузки неопределенного груза (если игрок перезагрузил скрипт во врем€ активного контракта)
-            if car and car.IsTruck() then
-                if not sampIsDialogActive()
-                and not sampIsChatInputActive()
-                and carsService.IsCarAttachedToTrailer(cars, car)
-                and isWithinDistance
-                and self.hasUnknownActiveContract then return true end
-            end
-
-            -- ѕроверка разгрузки нелегального груза
-            local isWithinDistance = 
-            (
-                function()
-                    local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
-                    for _, point in pairs(points.illegal) do
-                        if player.IsWithinDistance(point, distance) then return true end
+            local x, y, z = getCharCoordinates(PLAYER_PED)
+            local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
+            local function isNearPoint(group)
+                for _, point in pairs(group) do
+                    if getDistanceBetweenCoords3d(x, y, z, point.x, point.y, point.z) <= distance then
+                        return true
                     end
-                   return false
                 end
-            )()
-
-            if car and car.IsTruck() then
-                if not sampIsDialogActive()
-                and not sampIsChatInputActive()
-                and carsService.IsCarAttachedToTrailer(cars, car)
-                and isWithinDistance then return true end
+                return false
             end
-        
+
+            local hasLegalCargo = self.hasUnknownActiveContract or self.findActive()
+            if not isNearPoint(points.illegal) and not (hasLegalCargo and isNearPoint(points.legal)) then
+                return false
+            end
+
+            for _, handle in ipairs(getAllVehicles()) do
+                if handle ~= car and isTrailerAttachedToCab(handle, car) then return true end
+            end
             return false
         end
 

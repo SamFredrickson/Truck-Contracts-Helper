@@ -82,6 +82,7 @@ local httpService = HttpService.new()
 local pointService = PointsService.new()
 
 local TWO_HOURS = 3600 * 2
+local MAX_UNLOAD_ATTEMPTS = 3
 local race = nil
 local isSettingsApplied = false
 local isSuccessfulRenting = false
@@ -106,17 +107,25 @@ local function applyEarningsChange(amount, categoryName)
 	amount = tonumber(amount)
 	if not amount then return false end
 
-	config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + amount
-	config.data.settings.totalEarnings = config.data.settings.totalEarnings + amount
-
+	local profitAndLoss
+	local category
 	if categoryName then
-		local profitAndLoss = ProfitAndLoss.new()
-		local profitAndLossIndex = table.unpack(profitAndLoss.getByName(categoryName))
-		if profitAndLossIndex then
-			profitAndLoss.data[profitAndLossIndex].sum = profitAndLoss.data[profitAndLossIndex].sum + amount
-			profitAndLoss.save()
+		profitAndLoss = ProfitAndLoss.new()
+		local match = profitAndLoss.getByName(categoryName)
+		if match then category = match[2] end
+	end
+
+	if category then
+		category.sum = category.sum + amount
+		local saved, err = profitAndLoss.save()
+		if not saved then
+			print("[TCH] " .. tostring(err))
+			return false
 		end
 	end
+
+	config.data.settings.sessionEarnings = config.data.settings.sessionEarnings + amount
+	config.data.settings.totalEarnings = config.data.settings.totalEarnings + amount
 
 	infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
 	config.save()
@@ -167,72 +176,27 @@ function main()
 		scheduleService.create
 		(
 			function()
-				if config.data.settings.selectedScriptStatus > 0 then
-					if lastCargoTakenAt and not (os.difftime(os.time(), lastCargoTakenAt) > 30) then return false end
-					local canUnload = contractsService.CanUnload()
+				if config.data.settings.selectedScriptStatus <= 0 or not config.data.settings.autounload then return end
+				if not (race and not race.finishedAt) and not contractsService.hasUnknownActiveContract then return end
 
-					-- Легальный груз
-					if config.data.settings.autounload
-					and canUnload
-					and ((race and race.contract) or contractsService.hasUnknownActiveContract)
-					and unloading.tries < 3 
-					and not unloading.time then
-						unloading.tries = unloading.tries + 1
-						local message = Message.new(constants.COMMANDS.UNLOAD)
-						chatService.send(message)
-						wait(1000)
-					end
+				local now = os.time()
+				if lastCargoTakenAt and now - lastCargoTakenAt <= 30 then return end
+				if unloading.time and now < unloading.time then return end
+				if unloading.notified or not contractsService.CanUnload() then return end
 
-					if config.data.settings.autounload
-					and canUnload
-					and ((race and race.contract) or contractsService.hasUnknownActiveContract)
-					and unloading.time then
-						local difftime = os.difftime(unloading.time, os.time())
-						if difftime < 0 then
-							local message = Message.new(constants.COMMANDS.UNLOAD)
-							chatService.send(message)
-							wait(1000)
-						end
-					end
-
-					if config.data.settings.autounload
-					and canUnload
-					and ((race and race.contract) or contractsService.hasUnknownActiveContract)
-					and unloading.tries >= 3
-					and not unloading.notified
-					and not unloading.time then
-						unloading.notified = true
-						local text = " Контракт больше неактуален или Вы взяли не свой груз"
-						local message = LocalMessage.new(text, 0, constants.COLORS.DARK_GRAY)
-						chatService.send(message)
-						wait(1000)
-					end
-
-					-- Нелегальный груз
-					if config.data.settings.autounload
-					and canUnload
-					and ((race and not race.contract) or contractsService.hasUnknownActiveContract)
-					and unloading.tries < 3 
-					and not unloading.time then
-						unloading.tries = unloading.tries + 1
-						local message = Message.new(constants.COMMANDS.UNLOAD)
-						chatService.send(message)
-						wait(1000)
-					end
-
-					if config.data.settings.autounload
-					and canUnload
-					and ((race and not race.contract) or contractsService.hasUnknownActiveContract)
-					and unloading.time then
-						local difftime = os.difftime(unloading.time, os.time())
-						if difftime < 0 then
-							local message = Message.new(constants.COMMANDS.UNLOAD)
-							chatService.send(message)
-							wait(1000)
-						end
-					end
+				unloading.time = nil
+				if unloading.tries >= MAX_UNLOAD_ATTEMPTS then
+					unloading.notified = true
+					local text = " Контракт больше неактуален или Вы взяли не свой груз"
+					chatService.send(LocalMessage.new(text, 0, constants.COLORS.DARK_GRAY))
+					return
 				end
-			end
+
+				unloading.tries = unloading.tries + 1
+				chatService.send(Message.new(constants.COMMANDS.UNLOAD))
+				wait(1000)
+			end,
+			200
 		):run()
 
 		-- Прослушка комбинации клавиш для показывания курсора мыши
@@ -240,7 +204,7 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
-					local index, hotkey = table.unpack(Hotkeys.new().getByName("cursor"))
+					local hotkey = Hotkeys.getActive("cursor")
 					if hotkey.first and hotkey.second then
 						if isKeyDown(hotkey.first) and isKeyDown(hotkey.second) then
 							while isKeyDown(hotkey.first) and isKeyDown(hotkey.second) do wait(80) end
@@ -333,7 +297,7 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 and config.data.settings.drift then
-					local index, hotkey = table.unpack(Hotkeys.new().getByName("drift"))
+					local hotkey = Hotkeys.getActive("drift")
 					if isCharInAnyCar(PLAYER_PED) then
 						local car = storeCarCharIsInNoSave(PLAYER_PED)
 						local speed = getCarSpeed(car)
@@ -401,7 +365,7 @@ function main()
 			 				wait(2000)
 						end
 						if (not lastCargoTakenAt or os.difftime(os.time(), lastCargoTakenAt) > 30) and (not isSourcePointAvailable and not autounloading.notified) then
-							local index, hotkey = table.unpack(Hotkeys.new().getByName("take-and-load"))
+							local hotkey = Hotkeys.getActive("take-and-load")
 			 				local messages = {LocalMessage.new(" {FFFFFF}У точки загрузки находятся другие {ed5a5a}дальнобойщики."), LocalMessage.new(" {ed5a5a}Воспользуйтесь{FFFFFF} горячими клавишами {ed5a5a}" .. hotkey.buttonText .. "{FFFFFF} или подождите пока точка будет свободна.")}
 			 				for _, message in pairs(messages) do chatService.send(message) end
 			 				autounloading.notified = true
@@ -478,7 +442,7 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
-					local index, hotkey = table.unpack(Hotkeys.new().getByName("take-and-load"))
+					local hotkey = Hotkeys.getActive("take-and-load")
 					if hotkey.first and hotkey.second then
 						if isKeyDown(hotkey.first) and isKeyDown(hotkey.second) then
 							while isKeyDown(hotkey.first) and isKeyDown(hotkey.second) do wait(80) end
@@ -517,7 +481,7 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 then
-					local index, hotkey = table.unpack(Hotkeys.new().getByName("cancel-contract"))
+					local hotkey = Hotkeys.getActive("cancel-contract")
 					if hotkey.first and hotkey.second then
 						if isKeyDown(hotkey.first) and isKeyDown(hotkey.second) then
 							while isKeyDown(hotkey.first) and isKeyDown(hotkey.second) do wait(80) end
@@ -813,7 +777,7 @@ function sampev.onServerMessage(color, text)
 
 		-- Логика при выборе контракта из списка
 		if text:find(serverMessageService.findByCode("delivery-start").message) then
-			local index, hotkey = table.unpack(Hotkeys.new().getByName("cancel-contract"))
+			local hotkey = Hotkeys.getActive("cancel-contract")
 			local message = LocalMessage.new(" {FFFFFF}Если нужно {ed5a5a}отменить{FFFFFF} контракт - воспользуйтесь горячими клавишами {ed5a5a}" .. hotkey.buttonText, 1000)
 			chatService.send(message)
 
@@ -901,7 +865,7 @@ function sampev.onServerMessage(color, text)
 				 handleFinancialServerMessage(text)
 
 		-- Логика при получении сообщения об освобождении места для груза
-		if config.data.settings.autounload and contractsService.CanUnload() and text:find(serverMessageService.findByCode("waiting-for-free-place").message) then
+		if config.data.settings.autounload and text:find(serverMessageService.findByCode("waiting-for-free-place").message) and contractsService.CanUnload() then
 			local minutes, seconds = text:match(serverMessageService.findByCode("waiting-for-free-place").message)
 			local time = ((tonumber(minutes) * 60) + tonumber(seconds))
 			local text = string.format(" {FFFFFF}Авторазгрузка начата! Пожалуйста, подождите {ed5a5a}%s секунд...", time)

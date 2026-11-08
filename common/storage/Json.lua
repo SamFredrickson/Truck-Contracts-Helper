@@ -1,4 +1,15 @@
 local encoding = require "encoding"
+local ffi = require "ffi"
+
+ffi.cdef[[
+    int __stdcall MoveFileExA(const char *source, const char *destination, unsigned long flags);
+    unsigned long __stdcall GetCurrentProcessId(void);
+    unsigned long __stdcall GetLastError(void);
+]]
+
+local kernel32 = ffi.load("kernel32")
+local MOVEFILE_REPLACE_EXISTING = 1
+local tempSuffix = string.format(".%d.tmp", kernel32.GetCurrentProcessId())
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -20,19 +31,28 @@ local Json = {
         end
 
         self.save = function()
-            local file, openError = io.open(self.filepath, "w")
-            if not file then return false, openError end
-
-            local json = encodeJson(self.data)
-            if not json then
-                file:close()
+            local ok, json = pcall(encodeJson, self.data)
+            if not ok or type(json) ~= "string" or json == "" then
                 return false, "Failed to encode JSON"
             end
 
+            local path = self.filepath:gsub("/", "\\")
+            local tempPath = path .. tempSuffix
+            local file, openError = io.open(tempPath, "w")
+            if not file then return false, openError end
+
             local written, writeError = file:write(json)
             local closed, closeError = file:close()
-            if not written then return false, writeError end
-            if not closed then return false, closeError end
+            if not written or not closed then
+                os.remove(tempPath)
+                return false, writeError or closeError
+            end
+
+            if kernel32.MoveFileExA(tempPath, path, MOVEFILE_REPLACE_EXISTING) == 0 then
+                local errorCode = kernel32.GetLastError()
+                os.remove(tempPath)
+                return false, "Unable to replace " .. self.filepath .. " (error " .. errorCode .. ")"
+            end
             return self.data
         end
 
