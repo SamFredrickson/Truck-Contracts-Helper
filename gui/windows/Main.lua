@@ -27,25 +27,50 @@ local Main = {
         local screenX, screenY = getScreenResolution()
         local contractWindowTypeSizes = { { 415, 370 }, { 420, 290 }, { 320, 230 } }
         local position = imgui.ImVec2(config.data.settings.contractsScreenX or screenX - 420, config.data.settings.contractsScreenY or screenY - 410)
+        local lastPosition
+        local positionChanged = false
+
+        local function savePosition()
+            if not positionChanged then return end
+            positionChanged = false
+
+            local settings = config.data.settings
+            local oldX, oldY = settings.contractsScreenX, settings.contractsScreenY
+            if oldX == position.x and oldY == position.y then return end
+            settings.contractsScreenX, settings.contractsScreenY = position.x, position.y
+            if not Window.reportSave(config.save()) then
+                settings.contractsScreenX, settings.contractsScreenY = oldX, oldY
+            end
+        end
+
         imgui.OnFrame
         (
-            function() return self.window[0] end,
+            function()
+                local visible = self.window[0] and config.data.settings.selectedScriptStatus ~= 0
+                if not visible then
+                    savePosition()
+                    lastPosition = nil
+                end
+                return visible
+            end,
             function(player)
-                if config.data.settings.selectedScriptStatus == 0 then return end
                 ((config.data.settings.transparentContracts and self.hideCursor) and RedThemeTransparent or RedTheme).new()
                 self.title = string.format(u8("Список контрактов (%d)"), #contractsService.getContracts())
                 local x, y = table.unpack(contractWindowTypeSizes[config.data.settings.contractWindowTypes + 1])
                 local size = imgui.ImVec2(x, y)
                 imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver)
                 imgui.SetNextWindowSize(size, imgui.Cond.Always)
-                imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
+                imgui.Begin(self.title .. "###TchContracts", self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
                 player.HideCursor = self.hideCursor
-                if not self.hideCursor and imgui.IsMouseDown(0) then
-                    position = imgui.GetWindowPos()
-                    config.data.settings.contractsScreenX = position.x
-                    config.data.settings.contractsScreenY = position.y
-                    config.save()
-                 end
+                local windowPosition = imgui.GetWindowPos()
+                local dragging = not self.hideCursor and imgui.IsMouseDown(0)
+                if (dragging or positionChanged) and lastPosition
+                and (windowPosition.x ~= lastPosition.x or windowPosition.y ~= lastPosition.y) then
+                    position = windowPosition
+                    positionChanged = true
+                end
+                lastPosition = windowPosition
+                if not dragging then savePosition() end
                 for number, contract in ipairs(contractsService.getContracts()) do
                     if imgui.CollapsingHeader(u8(contract.toString())) and config.data.settings.contractWindowTypes ~= 2 then
                         if imgui.Button(string.format(u8"Взять ##%d", contract.id), imgui.ImVec2(120, 0)) and self.window[0] and contractsService.CanTake() then

@@ -11,7 +11,7 @@ local Array = require "tch.common.array"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local config = Config.new()
-local hotKeys = Hotkeys.new()
+
 
 local HotKeysManager = {
     new = function()
@@ -27,6 +27,32 @@ local HotKeysManager = {
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
         local size = imgui.ImVec2(300, 200)
         local forbidden = Array({ "VK_ESCAPE", "VK_RETURN", "VK_BACK", "VK_LBUTTON", "VK_RBUTTON" })
+
+        local function saveHotkey()
+            if self.changed then
+                local hotKeys = Hotkeys.new()
+                if hotKeys.loadError then
+                    return Window.reportSave(false, hotKeys.loadError)
+                end
+
+                local selected = self.previousHotKey[2]
+                local entry = hotKeys.getByName(selected.name)
+                if not entry then return Window.reportSave(false, "Hotkey no longer exists") end
+
+                local hotkey = entry[2]
+                local first = self.first and vkeys.id_to_name(self.first):upper()
+                local second = self.second and vkeys.id_to_name(self.second):upper()
+                hotkey.first = self.first
+                hotkey.second = self.second
+                hotkey.buttonText = second and (first .. " + " .. second) or first or hotkey.buttonText
+                if not Window.reportSave(hotKeys.save()) then return end
+            end
+
+            self.first = nil
+            self.second = nil
+            self.menu.activate()
+            self.deactivate()
+        end
 
         lua_thread.create
         (
@@ -57,21 +83,7 @@ local HotKeysManager = {
                                         self.second = nil
                                     end
                                     if key == "VK_RETURN" then
-                                        local index, hotkey = table.unpack(self.previousHotKey)
-                                        local first = self.first and vkeys.id_to_name(self.first):upper() or false
-                                        local second = self.second and vkeys.id_to_name(self.second):upper() or false
-                                        local format = not second and "%s" or "%s + %s"
-                                        local text = string.format(format, first, second)
-                
-                                        if self.changed then hotKeys.data[index].first = self.first end
-                                        if self.changed then hotKeys.data[index].second = self.second end
-                                        hotKeys.data[index].buttonText = text == "false" and hotkey.buttonText or text
-                
-                                        self.first = nil
-                                        self.second = nil
-                                        self.menu.activate()
-                                        self.deactivate()
-                                        hotKeys.save()
+                                        saveHotkey()
                                     end
                                     if key == "VK_BACK" then
                                         self.first = nil
@@ -136,21 +148,7 @@ local HotKeysManager = {
                 imgui.BeginChild("##HotKeyManagerButtons")
                     imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
                     if imgui.Button(u8("Подтвердить"), imgui.ImVec2(145, 30)) then
-                        local index, hotkey = table.unpack(self.previousHotKey)
-                        local first = self.first and vkeys.id_to_name(self.first):upper() or false
-                        local second = self.second and vkeys.id_to_name(self.second):upper() or false
-                        local format = not second and "%s" or "%s + %s"
-                        local text = string.format(format, first, second)
-
-                        if self.changed then hotKeys.data[index].first = self.first end
-                        if self.changed then hotKeys.data[index].second = self.second end
-                        hotKeys.data[index].buttonText = text == "false" and hotkey.buttonText or text
-
-                        self.first = nil
-                        self.second = nil
-                        self.menu.activate()
-                        self.deactivate()
-                        hotKeys.save()
+                        saveHotkey()
                     end
                     imgui.PopStyleVar()
                     imgui.SameLine()

@@ -131,7 +131,8 @@ sampRegisterChatCommand
             "tch.sos",
 			function(args) 
 				if config.data.settings.selectedScriptStatus > 0 then
-					local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+					local player = playerService.getLocalPlayer()
+					if not player then return end
 					local message = Message.new
 					(
 						string.format(

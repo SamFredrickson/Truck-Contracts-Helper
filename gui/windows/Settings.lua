@@ -23,12 +23,10 @@ encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local config = Config.new()
 
-local hotKeys = Hotkeys.new()
 local hotKeysManager = HotKeysManager.new()
 local pointsService = PointsService.new()
 local driverCoordinatesService = DriverCoordinatesEntryService.new()
 local chatService = ChatService.new()
-local filters = Filters.new()
 
 local Settings = {
     new = function()
@@ -51,12 +49,60 @@ local Settings = {
         local selectedClist = imgui.new.int(config.data.settings.clistChoice)
         local scriptStatuses = imgui.new['const char*'][#constants.SCRIPT_STATUSES](constants.SCRIPT_STATUSES)
         self.selectedScriptStatus = imgui.new.int(config.data.settings.selectedScriptStatus)
-        local company = imgui.new.char[256](u8(filters.data.company))
-        local minTonsQuantity = imgui.new.int(filters.data.minTonsQuantity)
+        local initialFilters = Filters.new()
+        local company = imgui.new.char[256](u8(initialFilters.data.company))
+        local minTonsQuantity = imgui.new.int(initialFilters.data.minTonsQuantity)
         local linesWidth = imgui.new.int(config.data.settings.linesWidth)
 
         local convertedToFloat4 = imgui.ColorConvertU32ToFloat4(config.data.settings.linesColor)
         local color = imgui.new.float[4](convertedToFloat4.x, convertedToFloat4.y, convertedToFloat4.z, convertedToFloat4.w)
+
+        local pendingCamera
+        local pendingMinTons
+
+        local function saveSetting(key, value)
+            local settings = config.data.settings
+            local previous = settings[key]
+            if previous == value then return true end
+            settings[key] = value
+            if Window.reportSave(config.save()) then return true end
+            settings[key] = previous
+            return false
+        end
+
+        local function beginCameraEdit()
+            if not pendingCamera then
+                local settings = config.data.settings
+                pendingCamera = { color = settings.linesColor, width = settings.linesWidth }
+            end
+        end
+
+        local function saveCamera()
+            if not pendingCamera then return end
+            local settings = config.data.settings
+            if (settings.linesColor ~= pendingCamera.color or settings.linesWidth ~= pendingCamera.width)
+            and not Window.reportSave(config.save()) then
+                settings.linesColor, settings.linesWidth = pendingCamera.color, pendingCamera.width
+                local restored = imgui.ColorConvertU32ToFloat4(settings.linesColor)
+                color[0], color[1], color[2], color[3] = restored.x, restored.y, restored.z, restored.w
+                linesWidth[0] = settings.linesWidth
+            end
+            pendingCamera = nil
+        end
+
+        local function saveMinTons(filters)
+            if not pendingMinTons then return end
+            filters = filters or Filters.new()
+            if filters.data.minTonsQuantity ~= minTonsQuantity[0] then
+                local previous = filters.data.minTonsQuantity
+                filters.data.minTonsQuantity = minTonsQuantity[0]
+                if not Window.reportSave(filters.save()) then
+                    filters.data.minTonsQuantity = previous
+                    minTonsQuantity[0] = previous
+                end
+            end
+            pendingMinTons = false
+        end
 
         local isAnyItemActive = false
         local isAnyItemActiveMoreOneSecond = false
@@ -79,8 +125,15 @@ local Settings = {
         )
 
         imgui.OnFrame(
-            function() return self.window[0] end,
+            function()
+                if not self.window[0] then
+                    saveCamera()
+                    saveMinTons()
+                end
+                return self.window[0]
+            end,
             function(player)
+                local filtersDrawn = false
                 RedTheme.new()
                 imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
                 imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
@@ -117,8 +170,7 @@ local Settings = {
                                 clists, 
                                 #constants.COLOR_LIST
                             ) then
-                                config.data.settings.clistChoice = selectedClist[0]
-                                config.save()
+                                if not saveSetting("clistChoice", selectedClist[0]) then selectedClist[0] = config.data.settings.clistChoice end
                             end
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 5))
@@ -131,8 +183,7 @@ local Settings = {
                                 scriptStatuses, 
                                 #constants.SCRIPT_STATUSES
                             ) then
-                                config.data.settings.selectedScriptStatus = self.selectedScriptStatus[0]
-                                config.save()
+                                if not saveSetting("selectedScriptStatus", self.selectedScriptStatus[0]) then self.selectedScriptStatus[0] = config.data.settings.selectedScriptStatus end
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"С помощью статуса работы можно включить / выключить функции скрипта.")
@@ -141,8 +192,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(5, 55))
                         imgui.BeginChild('##UnloadChild', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Авторазгрузка фуры"), imgui.new.bool(config.data.settings.autounload)) then
-                                config.data.settings.autounload = not config.data.settings.autounload
-                                config.save()
+                                saveSetting("autounload", not config.data.settings.autounload)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Автоматически разгружать товар \nпри прибытии в один из портов.")
@@ -151,8 +201,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(5, 85))
                         imgui.BeginChild('##LockUnlockChild', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Автозакрытие фуры"), imgui.new.bool(config.data.settings.autolock)) then
-                                config.data.settings.autolock = not config.data.settings.autolock
-                                config.save()
+                                saveSetting("autolock", not config.data.settings.autolock)
                             end
                             if imgui.IsItemHovered() then
                                imgui.SetTooltip(u8"Автоматически закрывать фуру, \nесли перснонаж сел в нее.")
@@ -161,8 +210,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(195, 55))
                         imgui.BeginChild('##DocumentsChild', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Скрывать окно документов на груз"), imgui.new.bool(config.data.settings.documentsDialogue)) then
-                                config.data.settings.documentsDialogue = not config.data.settings.documentsDialogue
-                                config.save()
+                                saveSetting("documentsDialogue", not config.data.settings.documentsDialogue)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Скрывать окно с информацией о товаре после загрузки.")
@@ -171,8 +219,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(195, 85))
                         imgui.BeginChild('##Drift', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Улучшенная манёвренность (drift)"), imgui.new.bool(config.data.settings.drift)) then
-                                config.data.settings.drift = not config.data.settings.drift
-                                config.save()
+                                saveSetting("drift", not config.data.settings.drift)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"При зажатой клавише \"Shift\" двигает задней \nчастью машины быстрее, чем обычно.")
@@ -181,8 +228,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(5, 115))
                         imgui.BeginChild('##AutohideContractsList', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Автозакрытие списка"), imgui.new.bool(config.data.settings.autohideContractsList)) then
-                                config.data.settings.autohideContractsList = not config.data.settings.autohideContractsList
-                                config.save()
+                                saveSetting("autohideContractsList", not config.data.settings.autohideContractsList)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Прятать список контрактов, если есть активный контракт.")
@@ -191,8 +237,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(195, 115))
                         imgui.BeginChild('##Autoload', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Автозагрузка фуры"), imgui.new.bool(config.data.settings.autoload)) then
-                                config.data.settings.autoload = not config.data.settings.autoload
-                                config.save()
+                                saveSetting("autoload", not config.data.settings.autoload)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Автоматически брать самый выгодный \nконтракт и получать груз на точке загрузки.")
@@ -201,8 +246,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(5, 145))
                         imgui.BeginChild('##Statistics', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Статистика заработка"), imgui.new.bool(config.data.settings.statistics)) then
-                                config.data.settings.statistics = not config.data.settings.statistics
-                                config.save()
+                                saveSetting("statistics", not config.data.settings.statistics)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Автоматически открывать окно со статистикой \nи прочей информацией во время работы.")
@@ -211,8 +255,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(195, 145))
                         imgui.BeginChild('##TransparentContracts', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Прозрачные контракты"), imgui.new.bool(config.data.settings.transparentContracts)) then
-                                config.data.settings.transparentContracts = not config.data.settings.transparentContracts
-                                config.save()
+                                saveSetting("transparentContracts", not config.data.settings.transparentContracts)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши.")
@@ -221,8 +264,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(195, 175))
                         imgui.BeginChild('##TransparentCorpses', imgui.ImVec2(250, 100), false)
                             if imgui.Checkbox(u8(" Прозрачные трупы"), imgui.new.bool(config.data.settings.transparentCorpses)) then
-                                config.data.settings.transparentCorpses = not config.data.settings.transparentCorpses
-                                config.save()
+                                saveSetting("transparentCorpses", not config.data.settings.transparentCorpses)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Отключает столкновение с трупами на дороге.")
@@ -231,8 +273,7 @@ local Settings = {
                         imgui.SetCursorPos(imgui.ImVec2(5, 175))
                         imgui.BeginChild("##CameraLinesCheckbox", imgui.ImVec2(190, 100), false)
                             if imgui.Checkbox(u8(" Подсвечивать камеры"), imgui.new.bool(config.data.settings.cameraLines)) then
-                                config.data.settings.cameraLines = not config.data.settings.cameraLines
-                                config.save()
+                                saveSetting("cameraLines", not config.data.settings.cameraLines)
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Подсвечивать участки камер линиями в пространстве.")
@@ -254,11 +295,12 @@ local Settings = {
                         imgui.BeginChild("##CameraLinesColorEdit4")
                             imgui.PushItemWidth(250)
                             if imgui.ColorEdit4(u8("##color"), color) then
+                                beginCameraEdit()
                                 config.data.settings.linesColor = imgui.ColorConvertFloat4ToU32(
                                     imgui.ImVec4(color[0], color[1], color[2], color[3])
                                 )
-                                config.save()
                             end
+                            imgui.PopItemWidth()
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(195, 235))
                         imgui.BeginChild("##СameraLinesChild")
@@ -270,8 +312,8 @@ local Settings = {
                                 constants.CAMERA_LINES.MIN_WIDTH, 
                                 constants.CAMERA_LINES.MAX_WIDTH
                             ) then
+                                beginCameraEdit()
                                 config.data.settings.linesWidth = linesWidth[0]
-                                config.save()
                             end
                             imgui.PopItemWidth()
                         imgui.EndChild()
@@ -283,8 +325,8 @@ local Settings = {
                                     and constants.CAMERA_LINES.MAX_WIDTH 
                                     or linesWidth[0] + 1
                                 )
+                                beginCameraEdit()
                                 config.data.settings.linesWidth = linesWidth[0]
-                                config.save()
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
@@ -296,8 +338,8 @@ local Settings = {
                                     and constants.CAMERA_LINES.MIN_WIDTH 
                                     or linesWidth[0] - 1
                                 )
+                                beginCameraEdit()
                                 config.data.settings.linesWidth = linesWidth[0]
-                                config.save()
                             end
                             if imgui.IsItemHovered() then
                                 imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
@@ -312,13 +354,12 @@ local Settings = {
                                 contractWindowTypes,
                                 #constants.CONTRACT_LIST_WINDOW_TYPES
                             ) then
-                                config.data.settings.contractWindowTypes = selectedContractWindowTypes[0]
-                                config.save()
+                                if not saveSetting("contractWindowTypes", selectedContractWindowTypes[0]) then selectedContractWindowTypes[0] = config.data.settings.contractWindowTypes end
                             end
                         imgui.EndChild()
-                    imgui.EndChild()
                     end
                     if active == 2 then
+                        local hotkeys = Hotkeys.new().data
                         imgui.SetCursorPos(imgui.ImVec2(10, 5))
                         imgui.BeginChild("##HotKeyAndCommandsIntro")
                             imgui.TextColoredRGB("{AAAAAA}В данном разделе можно узнать существующие команды скрипта и \n{AAAAAA}установить горячие клавиши.")
@@ -334,7 +375,7 @@ local Settings = {
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(190, 240))
                         imgui.BeginChild("##HotKeysButtons")
-                            for index, hotkey in pairs(Hotkeys.new().data) do
+                            for index, hotkey in pairs(hotkeys) do
                                 local text = string.format("%s##%d", u8(hotkey.buttonText), index)
                                 if imgui.Button(text, imgui.ImVec2(250, 25)) then
                                     hotKeysManager.changed = false
@@ -347,7 +388,7 @@ local Settings = {
                         imgui.EndChild()
                         imgui.SetCursorPos(imgui.ImVec2(10, 240))
                         imgui.BeginChild("##HotKeysTexts", imgui.ImVec2(200, 150))
-                            for _, hotkey in pairs(Hotkeys.new().data) do
+                            for _, hotkey in pairs(hotkeys) do
                                 local x, y = table.unpack(hotkey.position)
                                 imgui.SetCursorPosY(y)
                                 imgui.Text(u8(hotkey.text))
@@ -381,22 +422,16 @@ local Settings = {
                                     imgui.NextColumn()
                                     if imgui.Button(u8"Выше##" .. data.id) then
                                         if data.point.sort > constants.MIN_CONTRACTS_SIZE then
-                                                local previous = pointsService.findBySort(data.point.sort - 1)
-                                                local current = data.point
-                                                pointsService.update(data.id, { sort = previous.point.sort })
-                                                pointsService.update(previous.id, { sort = current.sort })
-                                            end
+                                            Window.reportSave(pointsService.swapPriority(data.id, -1))
                                         end
+                                    end
                                     if imgui.IsItemHovered() then
                                         imgui.SetTooltip(u8"Перемещает запись выше по списку.")
                                     end
                                     imgui.SameLine()
                                     if imgui.Button(u8"Ниже##" .. data.id) then
                                         if data.point.sort < constants.MAX_CONTRACTS_SIZE then
-                                            local next = pointsService.findBySort(data.point.sort + 1)
-                                            local current = data.point
-                                            pointsService.update(data.id, { sort = next.point.sort })
-                                            pointsService.update(next.id, { sort = current.sort })
+                                            Window.reportSave(pointsService.swapPriority(data.id, 1))
                                         end
                                     end
                                     if imgui.IsItemHovered() then
@@ -404,7 +439,7 @@ local Settings = {
                                     end
                                     imgui.SameLine()
                                     if imgui.Button(u8"Топ##" .. data.id) then
-                                        pointsService.update(data.id, { top = not data.point.top })
+                                        Window.reportSave(pointsService.update(data.id, { top = not data.point.top }))
                                     end
                                     if imgui.IsItemHovered() then
                                         imgui.SetTooltip(u8"Ставит / убирает метку \"TOP\" у записи.")
@@ -427,11 +462,18 @@ local Settings = {
                                     end
                                 imgui.EndChild()
                                 imgui.SetCursorPos(imgui.ImVec2(175, 35))
+                                filtersDrawn = true
+                                local filters = Filters.new()
+                                if not pendingMinTons then minTonsQuantity[0] = filters.data.minTonsQuantity end
                                 imgui.BeginChild("##CompanyNameField")
                                     imgui.PushItemWidth(270)
                                     if imgui.InputText(u8("##company"), company, ffi.sizeof(company)) then
                                         filters.data.company = u8:decode(ffi.string(company):lower())
-                                        filters.save()
+                                        if not Window.reportSave(filters.save()) then
+                                            filters = Filters.new()
+                                            ffi.fill(company, ffi.sizeof(company))
+                                            ffi.copy(company, u8(filters.data.company):sub(1, ffi.sizeof(company) - 1))
+                                        end
                                     end
                                     imgui.PopItemWidth()
                                 imgui.EndChild()
@@ -452,8 +494,7 @@ local Settings = {
                                         constants.MIN_TONS_QUANTITY, 
                                         constants.MAX_TONS_QUANTITY
                                     ) then
-                                        filters.data.minTonsQuantity = minTonsQuantity[0]
-                                        filters.save()
+                                        pendingMinTons = true
                                     end
                                     imgui.PopItemWidth()
                                 imgui.EndChild()
@@ -465,8 +506,7 @@ local Settings = {
                                         and constants.MAX_TONS_QUANTITY
                                         or minTonsQuantity[0] + 1
                                     )
-                                    filters.data.minTonsQuantity = minTonsQuantity[0]
-                                    filters.save()
+                                    pendingMinTons = true
                                 end
                                 if imgui.IsItemActive() then
                                     isAnyItemActive = true
@@ -476,8 +516,7 @@ local Settings = {
                                             and constants.MAX_TONS_QUANTITY
                                             or minTonsQuantity[0] + 1
                                         )
-                                        filters.data.minTonsQuantity = minTonsQuantity[0]
-                                        filters.save()
+                                        pendingMinTons = true
                                     end
                                 end
                                 if imgui.IsItemActivated() then
@@ -495,8 +534,7 @@ local Settings = {
                                         and constants.MIN_TONS_QUANTITY
                                         or minTonsQuantity[0] - 1
                                     )
-                                    filters.data.minTonsQuantity = minTonsQuantity[0]
-                                    filters.save()
+                                    pendingMinTons = true
                                 end
                                 if imgui.IsItemActive() then
                                     isAnyItemActive = true
@@ -506,8 +544,7 @@ local Settings = {
                                             and constants.MIN_TONS_QUANTITY
                                             or minTonsQuantity[0] - 1
                                         )
-                                        filters.data.minTonsQuantity = minTonsQuantity[0]
-                                        filters.save()
+                                        pendingMinTons = true
                                     end
                                 end
                                 if imgui.IsItemActivated() then
@@ -519,6 +556,7 @@ local Settings = {
                                     imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
                                 end
                                 imgui.EndChild()
+                                if not imgui.IsAnyItemActive() and not imgui.IsMouseDown(0) then saveMinTons(filters) end
                                 imgui.SetCursorPos(imgui.ImVec2(5, 115))
                                 imgui.BeginChild("##OtherFiltersText")
                                     imgui.Text(u8(" Фильтры для всех портов:"))
@@ -531,7 +569,7 @@ local Settings = {
                                         filters.data.sources[index].destinations[1].hidden 
                                             = filters.data.destinations[1].hidden
                                     end
-                                    filters.save()
+                                    Window.reportSave(filters.save())
                                 end
                                 if imgui.IsItemHovered() then
                                     imgui.SetTooltip(u8"Показывать контракты в порт Лос-Сантос.")
@@ -543,14 +581,14 @@ local Settings = {
                                         filters.data.sources[index].destinations[2].hidden 
                                             = filters.data.destinations[2].hidden
                                     end
-                                    filters.save()
+                                    Window.reportSave(filters.save())
                                 end
                                 if imgui.IsItemHovered() then
                                     imgui.SetTooltip(u8"Показывать контракты в порт Сан-Фиерро.")
                                 end
                                 if imgui.Checkbox(u8(" Всегда показывать топовые (рек.)"), imgui.new.bool(filters.data.top)) then
                                     filters.data.top = not filters.data.top
-                                    filters.save()
+                                    Window.reportSave(filters.save())
                                 end
                                 if imgui.IsItemHovered() then
                                     imgui.SetTooltip(u8"Игнорировать все фильтры в данном окне, \nесли контракт является топовым (TOP).")
@@ -568,7 +606,7 @@ local Settings = {
                                         ) then
                                             filters.data.sources[index].destinations[1].hidden 
                                                 = not source.destinations[1].hidden
-                                            filters.save()
+                                            Window.reportSave(filters.save())
                                         end
                                         imgui.SameLine()
                                         imgui.SetCursorPosX(137)
@@ -579,7 +617,7 @@ local Settings = {
                                         ) then
                                             filters.data.sources[index].destinations[2].hidden 
                                                 = not source.destinations[2].hidden
-                                            filters.save()
+                                            Window.reportSave(filters.save())
                                         end
                                     end
                                 imgui.EndChild()
@@ -591,6 +629,7 @@ local Settings = {
                                 end
                                 imgui.EndTabItem()
                             end
+                            imgui.EndTabBar()
                         end
                     end
                     if active == 4 then
@@ -607,7 +646,7 @@ local Settings = {
                                     imgui.BeginChild("##StatisticsChild" .. index, imgui.ImVec2(250, 100), false)
                                         if imgui.Checkbox(u8(item.short_name), imgui.new.bool(statistics.data[index].show)) then
                                             statistics.data[index].show = not statistics.data[index].show 
-                                            statistics.save()
+                                            Window.reportSave(statistics.save())
                                         end
                                     imgui.EndChild()
                                 end
@@ -651,7 +690,7 @@ local Settings = {
                                         imgui.NextColumn()
                                         if imgui.Button(u8(item.enabled and "Деакт.##" or "Акт.##") .. index, imgui.ImVec2(70, 0)) then
                                             profitAndLoss.data[index].enabled = not profitAndLoss.data[index].enabled
-                                            profitAndLoss.save()
+                                            Window.reportSave(profitAndLoss.save())
                                         end
                                         if imgui.IsItemHovered() then
                                             local message = item.enabled 
@@ -662,7 +701,7 @@ local Settings = {
                                         imgui.SameLine()
                                         if imgui.Button(u8"Сброс##" .. index) then
                                             profitAndLoss.data[index].sum = 0
-                                            profitAndLoss.save()
+                                            Window.reportSave(profitAndLoss.save())
                                         end
                                         if imgui.IsItemHovered() then
                                             imgui.SetTooltip(u8("Нажмите, чтобы сбросить текущее состояние до нуля"))
@@ -696,10 +735,15 @@ local Settings = {
                                 imgui.EndChild()
                                 imgui.EndTabItem()
                             end
+                            imgui.EndTabBar()
                         end
                     end
-                    imgui.EndChild()
                 end
+                imgui.EndChild()
+                if active ~= 1 or (not imgui.IsAnyItemActive() and not imgui.IsMouseDown(0)) then
+                    saveCamera()
+                end
+                if not filtersDrawn then saveMinTons() end
                 imgui.End()
             end
         )

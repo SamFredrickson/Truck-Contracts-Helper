@@ -151,11 +151,8 @@ function main()
 		sampAddChatMessage(" {FFFFFF}Меню настроек - {ed5a5a}/tch.menu{FFFFFF}, страница скрипта: {ed5a5a}" .. thisScript().url, 0xFFFFFF)
 		httpService.getAvailableUpdates()
 
-		local cars = carsService.get()
-		local players = playerService.get()
-		local player = playerService.getByHandle(players, PLAYER_PED)
-		local car = carsService.getByDriver(cars, player)
-		local isAttached = car and car.IsTruck() and carsService.IsCarAttachedToTrailer(cars, car)
+		local car = carsService.getDrivenTruck()
+		local isAttached = car and carsService.hasAttachedTrailer(car)
 		if isAttached then contractsService.hasUnknownActiveContract = true end
 
 		registerCommands({config=config, infoWindow=infoWindow, mainWindow=mainWindow, settingsWindow=settingsWindow, imgui=imgui, chatService=chatService, LocalMessage=LocalMessage, contractsService=contractsService, httpService=httpService, constants=constants, playerService=playerService, Message=Message})
@@ -261,12 +258,10 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 and not isSettingsApplied then
-					local cars = carsService.get()
-					local players = playerService.get()
-					local player = playerService.getByHandle(players, PLAYER_PED)
-					local car = carsService.getByDriver(cars, player)
+					local car = carsService.getDrivenTruck()
 
-					if car and car.IsTruck() then
+					if car then
+						local isLocked = getCarDoorLockStatus(car) > 0
 						-- Меняем цвет ника
 						if config.data.settings.clistChoice > 0 then
 							local message = Message.new(string.format(constants.COMMANDS.CLIST, config.data.settings.clistChoice))
@@ -274,7 +269,7 @@ function main()
 							wait(2000)
 						end
 						-- Закрываем машину
-						if config.data.settings.autolock and car.isLocked <= 0 then
+						if config.data.settings.autolock and not isLocked then
 							local message = Message.new(constants.COMMANDS.LOCK)
 							chatService.send(message)
 							wait(2000)
@@ -333,7 +328,7 @@ function main()
 		(
 			function()
 				if config.data.settings.selectedScriptStatus > 0 and currentBlip.activeCoords then
-					local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+					local player = playerService.getLocalPlayer()
 					if player and player.IsWithinDistance(currentBlip.activeCoords, 20) then clearCurrentBlip() end
 				end
 			end
@@ -360,7 +355,7 @@ function main()
 					if race and not race.finishedAt then
 						local contract = contractsService.findActive()
 						if not contract then return false end
-						local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+						local player = playerService.getLocalPlayer()
 						local sourcePoint = contract.getSourcePoint()
 						if not player or not sourcePoint then return end
 						local isSourcePointAvailable = pointService.validateSourcePointAvailability(sourcePoint)
@@ -642,13 +637,7 @@ local function handleFinancialServerMessage(text)
 		-- Учитываем полученный расход с заправки в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("refilled-at-gas-station").message)) then
 			local expense = text:match(serverMessageService.findByCode("refilled-at-gas-station").message)
-			local cars = carsService.get()
-			local players = playerService.get()
-
-			local player = playerService.getByHandle(players, PLAYER_PED)
-			local car = carsService.getByDriver(cars, player)
-
-			if car and car.IsTruck() then
+			if carsService.getDrivenTruck() then
 				applyEarningsChange(-expense, "Заправка на станции")
 			end
 		end
@@ -656,13 +645,7 @@ local function handleFinancialServerMessage(text)
 		-- Учитываем полученный расход с починки в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("repair-accepted").message)) then
 			local expense = text:match(serverMessageService.findByCode("repair-accepted").message)
-			local cars = carsService.get()
-			local players = playerService.get()
-
-			local player = playerService.getByHandle(players, PLAYER_PED)
-			local car = carsService.getByDriver(cars, player)
-
-			if car and car.IsTruck() then
+			if carsService.getDrivenTruck() then
 				applyEarningsChange(-expense, "Починка механиком")
 			end
 		end
@@ -670,13 +653,7 @@ local function handleFinancialServerMessage(text)
 		-- Учитываем полученный расход с покупки рем. комплекта в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("repair-kit-acquired").message)) then
 			local expense = text:match(serverMessageService.findByCode("repair-kit-acquired").message)
-			local cars = carsService.get()
-			local players = playerService.get()
-
-			local player = playerService.getByHandle(players, PLAYER_PED)
-			local car = carsService.getByDriver(cars, player)
-
-			if car and car.IsTruck() then
+			if carsService.getDrivenTruck() then
 				applyEarningsChange(-expense, "Рем. комплекты")
 			end
 		end
@@ -684,13 +661,7 @@ local function handleFinancialServerMessage(text)
 		-- Учитываем полученный расход с покупки канистры в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("gasoline-canister-acquired").message)) then
 			local expense = text:match(serverMessageService.findByCode("gasoline-canister-acquired").message)
-			local cars = carsService.get()
-			local players = playerService.get()
-
-			local player = playerService.getByHandle(players, PLAYER_PED)
-			local car = carsService.getByDriver(cars, player)
-
-			if car and car.IsTruck() then
+			if carsService.getDrivenTruck() then
 				applyEarningsChange(-expense, "Канистры")
 			end
 		end
@@ -698,13 +669,7 @@ local function handleFinancialServerMessage(text)
 		-- Учитываем полученный расход с заправки в статистику заработка
 		if ((not race or (race and race.contract)) and text:find(serverMessageService.findByCode("refill-accepted").message)) then
 			local expense = text:match(serverMessageService.findByCode("refill-accepted").message)
-			local cars = carsService.get()
-			local players = playerService.get()
-
-			local player = playerService.getByHandle(players, PLAYER_PED)
-			local car = carsService.getByDriver(cars, player)
-
-			if car and car.IsTruck() then
+			if carsService.getDrivenTruck() then
 				applyEarningsChange(-expense, "Заправка механиком")
 			end
 		end
@@ -916,7 +881,7 @@ function sampev.onServerMessage(color, text)
 			
 		if text:find(serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message) then
 			local message = serverMessageService.findByCode("truck-driver-chat-new-message-with-coords").message
-			local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+			local player = playerService.getLocalPlayer()
 			local nickname, _, x, y, z = text:match(message)
 			x, y, z = tonumber(x), tonumber(y), tonumber(z)
 			if player and player.name ~= nickname and x and y and z then
@@ -978,12 +943,7 @@ end
 function sampev.onGivePlayerMoney(money)
 	if config.data.settings.selectedScriptStatus > 0 then
 		if ((race and not race.contract) or illegalCargoDialogue.isActive) then 
-			local cars = carsService.get()
-			local players = playerService.get()
-			local player = playerService.getByHandle(players, PLAYER_PED)
-			local car = carsService.getByDriver(cars, player)
-
-			if car and car.IsTruck() then
+			if carsService.getDrivenTruck() then
 				applyEarningsChange(money, "Нелегальный груз")
 			end
 		end

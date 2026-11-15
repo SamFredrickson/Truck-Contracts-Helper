@@ -108,8 +108,9 @@ local Info = {
                    self.entries[entry.id] = entry
                 end
                 
+                local statisticsEntries = Statistics.new().data
                 for _, entry in pairs(self.entries) do
-                    for _, statistics in pairs(Statistics.new().data) do
+                    for _, statistics in pairs(statisticsEntries) do
                         if statistics.code == entry.code and statistics.show then
                             imgui.TextColoredRGB(entry.getValue())
                             imgui.SameLine()

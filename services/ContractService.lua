@@ -199,12 +199,7 @@ local ContractService = {
         end
 
         self.CanTake = function()
-            local cars = carsService.get()
-            local players = playerService.get()
-            local player = playerService.getByHandle(players, PLAYER_PED)
-            local car = carsService.getByDriver(cars, player)
-        
-            if car and car.IsTruck() then
+            if carsService.getDrivenTruck() then
                 return #CONTRACTS > 0
                 and not sampIsDialogActive()
                 and not sampIsChatInputActive()
@@ -215,12 +210,7 @@ local ContractService = {
         end
 
         self.CanSearch = function()
-            local cars = carsService.get()
-            local players = playerService.get()
-            local player = playerService.getByHandle(players, PLAYER_PED)
-            local car = carsService.getByDriver(cars, player)
-        
-            if car and car.IsTruck() then
+            if carsService.getDrivenTruck() then
                 return not sampIsDialogActive()
                 and not sampIsChatInputActive()
                 and not self.findActive()
@@ -231,23 +221,12 @@ local ContractService = {
         end
 
         self.CanUnload = function()
-            if sampIsDialogActive() or sampIsChatInputActive() or not isCharInAnyCar(PLAYER_PED) then
+            if sampIsDialogActive() or sampIsChatInputActive() then
                 return false
             end
 
-            local car = storeCarCharIsInNoSave(PLAYER_PED)
-            if getDriverOfCar(car) ~= PLAYER_PED then return false end
-
-            local model = getCarModel(car)
-            local isTruck = false
-            for _, truckModel in pairs(constants.TRUCKS) do
-                if model == truckModel then
-                    isTruck = true
-                    break
-                end
-            end
-
-            if not isTruck then return false end
+            local car = carsService.getDrivenTruck()
+            if not car then return false end
             local x, y, z = getCharCoordinates(PLAYER_PED)
             local distance = constants.CONFIG.DEFAULT_SETTINGS.unloadDistance
             local function isNearPoint(group)
@@ -264,10 +243,7 @@ local ContractService = {
                 return false
             end
 
-            for _, handle in ipairs(getAllVehicles()) do
-                if handle ~= car and isTrailerAttachedToCab(handle, car) then return true end
-            end
-            return false
+            return carsService.hasAttachedTrailer(car)
         end
 
         self.update = function(id, fields)
@@ -291,7 +267,8 @@ local ContractService = {
         end
 
         self.findAvailableToTake = function()
-           local player = playerService.getByHandle(playerService.get(), PLAYER_PED)
+            local player = playerService.getLocalPlayer()
+            if not player then return false end
             for _, point in pairs(constants.AUTOLOAD_POINTS) do
                 if player.IsWithinDistance(point.coords, point.autoTakeDistance) then
                     for _, contract in pairs(CONTRACTS) do if point.source:find(contract.source) then return contract end end

@@ -12,4 +12,12 @@ local Window = {
     end
 }
 
+function Window.reportSave(saved, err)
+    if saved then return true end
+
+    sampAddChatMessage(" {ed5a5a}[TCH]{FFFFFF} Не удалось сохранить изменения. Подробности в журнале MoonLoader.", -1)
+    print("[TCH] " .. tostring(err or "Unable to save settings"))
+    return false
+end
+
 return Window

@@ -31,9 +31,34 @@ local PointsService = {
 
         self.update = function(id, fields)
             local points = Points.new()
+            if points.loadError then return false, points.loadError end
+            local point = points.data[id]
+            if not point then return false, "Route not found" end
             for key, value in pairs(fields) do
-                points.data[id][key] = value
+                point[key] = value
             end
+            return points.save()
+        end
+
+        self.swapPriority = function(id, offset)
+            local points = Points.new()
+            if points.loadError then return false, points.loadError end
+
+            local current = points.data[id]
+            if not current or type(current.sort) ~= "number" then
+                return false, "Invalid route priority"
+            end
+
+            local neighbor
+            for _, point in pairs(points.data) do
+                if point.sort == current.sort + offset then
+                    if neighbor then return false, "Duplicate route priority" end
+                    neighbor = point
+                end
+            end
+            if not neighbor then return false, "Neighboring route priority not found" end
+
+            current.sort, neighbor.sort = neighbor.sort, current.sort
             return points.save()
         end
 
