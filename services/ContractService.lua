@@ -48,6 +48,60 @@ local points = {
     }
 }
 
+local function eachContractRow(text)
+    local rows = text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS)
+    return function()
+        for row in rows do
+            local id, source, destination, cargo, first, second, company = row:match(constants.REGEXP.SINGLE_CONTRACT)
+            if id then return tonumber(id), source, destination, cargo, first, second, company end
+        end
+    end
+end
+
+local function allowsRoute(filters, source, destination)
+    for _, filterSource in pairs(filters.sources) do
+        if source:find(filterSource.name) then
+            for _, filterDestination in pairs(filterSource.destinations) do
+                if not filterDestination.hidden and destination:find(filterDestination.short_name) then return true end
+            end
+        end
+    end
+    return false
+end
+
+local function restorePins(contracts)
+    for index, pin in PINS:Entries() do
+        local match
+        for _, contract in ipairs(contracts) do
+            if not contract.IsPinned and contract.destination:find(pin.destination)
+            and contract.source:find(pin.source) and tonumber(pin.amount.second) == tonumber(contract.amount.second)
+            and pin.company == contract.company then
+                match = match or contract
+                if contract.id == pin.id then
+                    match = contract
+                    break
+                end
+            end
+        end
+        if match then
+            PINS[index] = match
+            match.IsPinned = true
+            match.sort = 0
+        end
+    end
+end
+
+local function sortContracts(contracts)
+    local originalOrder = {}
+    for i, contract in ipairs(contracts) do originalOrder[contract] = i end
+    table.sort(contracts, function(a, b)
+        if a.sort ~= b.sort then return a.sort < b.sort end
+        local firstA, firstB = tonumber(a.amount.first), tonumber(b.amount.first)
+        if firstA ~= firstB then return firstA < firstB end
+        return originalOrder[a] < originalOrder[b]
+    end)
+end
+
 local ContractService = {
     new = function()
         local self = Service.new()
@@ -55,114 +109,44 @@ local ContractService = {
 
         self.parse = function(text)
             local result = Array({})
-            local filters = Filters.new()
+            local filters = Filters.new().data
             local routePoints = pointsService.get()
-            local function appendContract(row)
-                local id, source, destination, cargo, amountFirst, amountSecond, company = row:match(constants.REGEXP.SINGLE_CONTRACT)
-                if not id then return end
-
-                local amount = { first = amountFirst, second = amountSecond }
-                local priorities = self.getPriorities(source, destination, routePoints)
-                local sort, top = table.unpack(priorities)
-                local entity = Contract.new(id, sort, top, source, destination, cargo, amount, company)
-
-                -- Проверяем является ли контракт скрытым
-                local isSource = 
-                (
-                    function()
-                        for _, filterSource in pairs(filters.data.sources) do
-                            if source:find(filterSource.name) then
-                               for _, filterDestination in pairs(filterSource.destinations) do
-                                    local isDestination = destination:find(filterDestination.short_name)
-                                    if not filterDestination.hidden and isDestination then return true end
-                               end
-                            end
-                        end
-                        return false
-                    end
-                )()
-
-                -- Проверяем на название компании
-                local isCompany = 
-                (
-                    function()
-                        if (filters.data.company):isblank() or (filters.data.company):isempty() then return true end
-                        local companies = Array((filters.data.company):split(",")):Map(function(company) return company:trim() end)
-                        return companies:Includes((entity.company):lower():trim())
-                    end
-                )()
-                
-                -- Проверяем на количество тонн
-                local isProperTonQuantity =
-                (
-                    function()
-                        if tonumber(entity.amount.first) > filters.data.minTonsQuantity then return true end
-                        return false
-                    end
-                )()
-
-                -- Проверяем на метку топ (всегда показывать лучшие контракты)
-                local isTop = 
-                (
-                    function()
-                        if filters.data.top and entity.top then return true end
-                        return false
-                    end
-                )()
-
-                if (isSource and isCompany and isProperTonQuantity) or isTop then result:Push(entity) end
-            end
-
-            for row in text:gmatch(constants.REGEXP.MULTIPLE_CONTRACTS) do
-                appendContract(row)
-            end
-
-             -- Синхронизация пинов
-            for index, pinContract in PINS:Entries() do
-                for contract in result:Values() do
-                    local isDestination = contract.destination:find(pinContract.destination)
-                    local isSource = contract.source:find(pinContract.source)
-                    local isSecondAmount = tonumber(pinContract.amount.second) == tonumber(contract.amount.second)
-                    local isCompany = pinContract.company == contract.company
-                    local isFound = (isDestination and isSource and isSecondAmount and isCompany)
-                    if isFound then PINS[index] = contract contract.IsPinned = true contract.sort = 0 end
+            local companies
+            if not filters.company:isblank() and not filters.company:isempty() then
+                companies = {}
+                for _, company in ipairs(filters.company:split(",")) do
+                    companies[company:trim()] = true
                 end
             end
-
-            if result:Length() <= 1 then return result end
-
-            local contractsGroup = result:Reduce
-            (
-                function(acc, current)
-                    if not acc[current.sort] then acc[current.sort] = Array({}) end
-                    acc[current.sort]:Push(current)
-                    return acc
-                end, 
-                Array({})
-            ) or Array({})
-
-            local contractsGroupKeys =
-            (
-                function()
-                    local result = Array({})
-                    for index, _ in pairs(contractsGroup) do result:Push(index) end
-                    return result:Sort()
+            for id, source, destination, cargo, first, second, company in eachContractRow(text) do
+                local sort, top = table.unpack(self.getPriorities(source, destination, routePoints))
+                if (filters.top and top) or (tonumber(first) > filters.minTonsQuantity
+                and (not companies or companies[company:lower():trim()]) and allowsRoute(filters, source, destination)) then
+                    result:Push(Contract.new(id, sort, top, source, destination, cargo, { first = first, second = second }, company))
                 end
-            )()
-
-            local result = 
-            (
-                function()
-                    local result = Array({})
-                    for _, contractsGroupKey in pairs(contractsGroupKeys) do
-                        local sortedContracts = contractsGroup[contractsGroupKey]:Sort(function(a, b) return tonumber(a.amount.first) < tonumber(b.amount.first) end)
-                        for _, contract in pairs(sortedContracts) do result:Push(contract) end
-                    end
-                    return result
-                end
-            )()
-
+            end
+            restorePins(result)
+            sortContracts(result)
             return result
+        end
+
+        self.findMatchingContract = function(selected)
+            local current = self.findById(tonumber(selected.id))
+            if current and current.source == selected.source and current.destination == selected.destination
+            and current.cargo == selected.cargo and tonumber(current.amount.second) == tonumber(selected.amount.second)
+            and current.company:trim() == selected.company:trim() then
+                return current
+            end
+        end
+
+        self.findDialogRow = function(text, selected)
+            for id, source, destination, cargo, _, second, company in eachContractRow(text) do
+                if id > 0 and id == tonumber(selected.id) and source == selected.source and destination == selected.destination
+                and cargo == selected.cargo and tonumber(second) == tonumber(selected.amount.second)
+                and company:trim() == selected.company:trim() then
+                    return id - 1
+                end
+            end
         end
 
         self.setContracts = function(contracts)

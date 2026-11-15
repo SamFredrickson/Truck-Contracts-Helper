@@ -33,11 +33,35 @@ local HttpService = {
         local self = Service.new()
         self.version = nil
 
+        self.notifyIfUpdateAvailable = function()
+            if self.version and self.version.number > constants.SCRIPT_INFO.VERSION_NUMBER then
+                local messages = {
+                    LocalMessage.new
+                    (
+                        string.format
+                        (
+                            " {FFFFFF}Доступна новая версия скрипта" ..
+                            " {ed5a5a}Truck Contracts Helper {FFFFFF}(%s).",
+                            self.version.full_number
+                        ),
+                        1000
+                    ),
+                    LocalMessage.new
+                    (
+                        " {FFFFFF}Введите команду {ed5a5a}/tch.update{FFFFFF}" ..
+                        " чтобы начать скачивание по ссылке.",
+                        1000
+                    )
+                }
+                for _, message in pairs(messages) do chatService.send(message) end
+            end
+        end
+
         self.getAvailableUpdates = function()
             local path = os.tmpname()
             if not path then return false end
             if doesFileExist(path) and not os.remove(path) then return false end
-            
+
             downloadUrlToFile
             (
                 constants.SCRIPT_INFO.VERSION_URL,
@@ -59,27 +83,7 @@ local HttpService = {
                         if not ok or not isReleaseVersion(content) then return false end
                         self.version = content
 
-                        if content.number > constants.SCRIPT_INFO.VERSION_NUMBER then
-                            local messages = {
-                                LocalMessage.new
-                                (
-                                    string.format
-                                    (
-                                        " {FFFFFF}Доступна новая версия скрипта" .. 
-                                        " {ed5a5a}Truck Contracts Helper {FFFFFF}(%s).", 
-                                        content.full_number
-                                    ),
-                                    1000
-                                ),
-                                LocalMessage.new
-                                (
-                                    " {FFFFFF}Введите команду {ed5a5a}/tch.update{FFFFFF}" .. 
-                                    " чтобы начать скачивание по ссылке.",
-                                    1000
-                                )
-                            }
-                            for _, message in pairs(messages) do chatService.send(message) end
-                        end
+                        self.notifyIfUpdateAvailable()
 
                         return true
                     end

@@ -11,17 +11,6 @@ local Menu = {
         local id, title = 32700, "Дальнобойщик | {AE433D}Меню"
         local self = Dialogue.new(id, title)
         return self
-    end,
-    FLAGS = {
-		IS_PARSING_CONTRACTS_LAST_STEP = false,
-        CONTRACT = {
-            ID = 0,
-            IS_LOADING = false,
-            IS_TAKING = false, 
-            IS_CANCELING = false, 
-        },
-        IS_PARSING_CONTRACTS = false,
-        IS_UNLOADING = false
-	}
+    end
 }
 return Menu

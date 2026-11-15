@@ -16,6 +16,13 @@ local ProfitAndLoss = {
             end
             return false
         end
+        self.sumEnabled = function()
+            local sum = 0
+            for _, item in pairs(self.data) do
+                if item.enabled then sum = sum + item.sum end
+            end
+            return sum
+        end
         return self
     end
 }

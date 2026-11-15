@@ -3,9 +3,7 @@ local encoding = require "encoding"
 
 local constants = require "tch.constants"
 local Window = require "tch.gui.windows.window"
-local Message = require "tch.entities.chat.message"
 local LocalMessage = require "tch.entities.chat.localmessage"
-local MenuDialogue = require "tch.samp.dialogues.menu"
 local ContractService = require "tch.services.contractservice"
 local ChatService = require "tch.services.chatservice"
 local RedThemeTransparent = require "tch.gui.themes.redtransparent"
@@ -21,7 +19,7 @@ local chatService = ChatService.new()
 local contractsService = ContractService.new()
 
 local Main = {
-    new = function()
+    new = function(requestContract)
         local self = Window.new()
         self.hideCursor = true
         local screenX, screenY = getScreenResolution()
@@ -74,16 +72,11 @@ local Main = {
                 for number, contract in ipairs(contractsService.getContracts()) do
                     if imgui.CollapsingHeader(u8(contract.toString())) and config.data.settings.contractWindowTypes ~= 2 then
                         if imgui.Button(string.format(u8"Взять ##%d", contract.id), imgui.ImVec2(120, 0)) and self.window[0] and contractsService.CanTake() then
-                            MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
-                            MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-                            chatService.send(Message.new(constants.COMMANDS.MENU))
+                            requestContract(contract, false)
                         end
                         imgui.SameLine()
                         if imgui.Button(string.format(u8"Взять и загрузить ##%d", contract.id, imgui.ImVec2(130, 0))) and self.window[0] and contractsService.CanTake() then
-                            MenuDialogue.FLAGS.CONTRACT.IS_TAKING = true
-                            MenuDialogue.FLAGS.CONTRACT.IS_MANUAL_LOADING = true
-                            MenuDialogue.FLAGS.CONTRACT.ID = contract.id
-                            chatService.send(Message.new(constants.COMMANDS.MENU))
+                            requestContract(contract, true)
                         end
                         imgui.SameLine()
                         local buttonName = contract.IsPinned and u8("Открепить") or u8("Закрепить")

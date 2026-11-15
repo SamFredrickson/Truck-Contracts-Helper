@@ -30,6 +30,12 @@ local ServerMessageService = {
             return byCode[code] or false
         end
         
+        self.match = function(text, code)
+            local entry = byCode[code]
+            if not entry then return nil end
+            return text:match(entry.message)
+        end
+
         return self
     end
 }
