@@ -1,13 +1,33 @@
 local Car = require "tch.entities.car"
 local Service = require "tch.services.service"
+local constants = require "tch.constants"
 local encoding = require "encoding"
 
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 
+local truckModels = {}
+for _, model in pairs(constants.TRUCKS) do truckModels[model] = true end
+
 local CarService = {
     new = function()
         local self = Service.new()
+
+        self.getDrivenTruck = function()
+            if not isCharInAnyCar(PLAYER_PED) then return nil end
+
+            local handle = storeCarCharIsInNoSave(PLAYER_PED)
+            if getDriverOfCar(handle) == PLAYER_PED and truckModels[getCarModel(handle)] then
+                return handle
+            end
+        end
+
+        self.hasAttachedTrailer = function(car)
+            for _, handle in ipairs(getAllVehicles()) do
+                if handle ~= car and isTrailerAttachedToCab(handle, car) then return true end
+            end
+            return false
+        end
 
         self.get = function()
             local result = {}

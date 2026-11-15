@@ -21,15 +21,21 @@ local ServerMessageService = {
             return result
         end
 
+        local byCode = {}
+        for _, entry in ipairs(self.get()) do
+            byCode[entry.code] = byCode[entry.code] or entry
+        end
+
         self.findByCode = function(code)
-            for _, entry in pairs(self.get()) do
-                if entry.code == code then
-                    return entry
-                end
-            end
-            return false
+            return byCode[code] or false
         end
         
+        self.match = function(text, code)
+            local entry = byCode[code]
+            if not entry then return nil end
+            return text:match(entry.message)
+        end
+
         return self
     end
 }

@@ -9,14 +9,6 @@ local Filters = {
     new = function()
         local self = Json.new("filters_v2", constants.CONTRACT_FILTERS)
 
-        self.save = function()
-            file = io.open(self.filepath, "w")
-            local json = encodeJson(self.data)
-            file:write(json)
-            file:close()
-            return self.data
-        end
-
         return self
     end
 }

@@ -8,13 +8,6 @@ local u8 = encoding.UTF8
 local ProfitAndLoss = {
     new = function()
         local self = Json.new("pl_v3", constants.PROFIT_AND_LOSS)
-        self.save = function()
-            file = io.open(self.filepath, "w")
-            local json = encodeJson(self.data)
-            file:write(json)
-            file:close()
-            return self.data
-        end
         self.getByName = function(name)
             for index, item in pairs(self.data) do
                 if item.name == name then
@@ -22,6 +15,13 @@ local ProfitAndLoss = {
                 end
             end
             return false
+        end
+        self.sumEnabled = function()
+            local sum = 0
+            for _, item in pairs(self.data) do
+                if item.enabled then sum = sum + item.sum end
+            end
+            return sum
         end
         return self
     end

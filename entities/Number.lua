@@ -6,8 +6,9 @@ local Number = {
         self.dot_value = function()
             local formatted = self.number
             while true do  
-                formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1.%2')
-                if (k==0) then
+                local replacements
+                formatted, replacements = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1.%2')
+                if (replacements == 0) then
                     break
                 end
             end

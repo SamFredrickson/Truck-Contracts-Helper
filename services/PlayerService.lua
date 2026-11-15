@@ -5,6 +5,12 @@ local PlayerService = {
     new = function()
         local self = Service.new()
 
+        self.getLocalPlayer = function()
+            local isSuccess, id = sampGetPlayerIdByCharHandle(PLAYER_PED)
+            if not isSuccess then return false end
+            return Player.new(id, sampGetPlayerNickname(id), sampGetPlayerHealth(id), sampGetPlayerArmor(id), PLAYER_PED)
+        end
+
         self.get = function()
             local result = {}
             for _, handle in pairs(getAllChars()) do
