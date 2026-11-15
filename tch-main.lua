@@ -84,6 +84,7 @@ local pointService = PointsService.new()
 local TWO_HOURS = 3600 * 2
 local MAX_UNLOAD_ATTEMPTS = 3
 local race = nil
+local connectionGeneration = 0
 local isSettingsApplied = false
 local isSuccessfulRenting = false
 local illegalCargoDialogueShowedAt = nil
@@ -108,6 +109,44 @@ local unloading = {
 	notified = false,
 	tries = 0
 }
+
+local function sendContractCommandAfterDelay(command, delay)
+	local generation = connectionGeneration
+	lua_thread.create(function()
+		wait(delay)
+		if generation == connectionGeneration then
+			chatService.send(Message.new(command))
+		end
+	end)
+end
+
+local function resetContractSession()
+	connectionGeneration = connectionGeneration + 1
+	race = nil
+	lastCargoTakenAt = nil
+	isSuccessfulRenting = false
+	illegalCargoDialogueShowedAt = nil
+	illegalCargoDialogue.isActive = false
+	contractsService.setContracts({})
+	contractsService.hasUnknownActiveContract = false
+	unloading.tries = 0
+	unloading.time = nil
+	unloading.notified = false
+	autounloading.notified = false
+
+	local flags = MenuDialogue.FLAGS
+	flags.IS_PARSING_CONTRACTS = false
+	flags.IS_PARSING_CONTRACTS_LAST_STEP = false
+	flags.CONTRACT.ID = 0
+	flags.CONTRACT.IS_TAKING = false
+	flags.CONTRACT.IS_LOADING = false
+	flags.CONTRACT.IS_CANCELING = false
+	flags.CONTRACT.IS_WRONG_LOADING_POINT = false
+	flags.CONTRACT.IS_MANUAL_LOADING = false
+
+	infoWindow.information.race.setValue("—")
+	infoWindow.information.raceTime.setValue(Time.new(0).toString())
+end
 
 local function applyEarningsChange(amount, categoryName)
 	amount = tonumber(amount)
@@ -558,8 +597,7 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 
 			if MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT then
 				MenuDialogue.FLAGS.IS_PARSING_CONTRACTS = true
-				local message = Message.new(constants.COMMANDS.MENU, 3000)
-				chatService.send(message)
+				sendContractCommandAfterDelay(constants.COMMANDS.MENU, 3000)
 			end
 
 			return false
@@ -596,7 +634,8 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 			illegalCargoDialogue.isActive = true
 		end
 
-		if not title:find(illegalCargoDialogue.title) and os.difftime(os.time(), illegalCargoDialogueShowedAt) > 10 then
+		if illegalCargoDialogueShowedAt and not title:find(illegalCargoDialogue.title)
+		and os.difftime(os.time(), illegalCargoDialogueShowedAt) > 10 then
 			illegalCargoAvailableAt = nil
 			illegalCargoDialogue.isActive = false
 		end
@@ -757,7 +796,7 @@ function sampev.onServerMessage(color, text)
 			if contract and MenuDialogue.FLAGS.CONTRACT.IS_MANUAL_LOADING then
 				MenuDialogue.FLAGS.CONTRACT.IS_MANUAL_LOADING = false
 				chatService.send(LocalMessage.new(" {FFFFFF}Автозагрузка начата! Пожалуйста, {ed5a5a}подождите..."))
-				chatService.send(Message.new(constants.COMMANDS.LOAD, 1000))
+				sendContractCommandAfterDelay(constants.COMMANDS.LOAD, 1000)
 			end
 			
 			if not contract and MenuDialogue.FLAGS.CONTRACT.IS_MANUAL_LOADING then
@@ -901,14 +940,13 @@ function sampev.onServerMessage(color, text)
 			chatService.send(LocalMessage.new(" Произошла рассинхронизация списка контрактов. Пожалуйста, подождите...", 500, constants.COLORS.DARK_GRAY))
 			MenuDialogue.FLAGS.CONTRACT.IS_WRONG_LOADING_POINT = true
 			MenuDialogue.FLAGS.CONTRACT.IS_CANCELING = true
-			chatService.send(Message.new(constants.COMMANDS.MENU, 1000))
+			sendContractCommandAfterDelay(constants.COMMANDS.MENU, 1000)
 		end
 
 		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_TAKING then return false end
 		if text:find(serverMessageService.findByCode("flood").message) and MenuDialogue.FLAGS.CONTRACT.IS_LOADING then
 			lastCargoTakenAt = nil
-			local loadCommandMessage = Message.new(constants.COMMANDS.LOAD, 1000)
-			chatService.send(loadCommandMessage)
+			sendContractCommandAfterDelay(constants.COMMANDS.LOAD, 1000)
 			return false
 		end
 	end
@@ -931,10 +969,9 @@ function sampev.onSendExitVehicle(vehicleId, isPassenger)
 end
 
 function sampev.onInitGame()
-    config.data.settings.sessionEarnings = 0
+	resetContractSession()
 	config.data.settings.sessionRaceQuantity = 0
 	config.data.settings.sessionExperience = 0
-	infoWindow.information.sessionEarnings.setValue(Number.new(config.data.settings.sessionEarnings).format(0, "", "{F2545B}"))
 	infoWindow.information.sessionExperience.setValue(Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}"))
 	infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)
 	config.save()
@@ -949,11 +986,12 @@ function sampev.onGivePlayerMoney(money)
 		end
 
 		-- Проверка на аренду фуры
+		local generation = connectionGeneration
 		lua_thread.create
 		(
 			function()
 				wait(1000)
-				if not isSuccessfulRenting then return end
+				if generation ~= connectionGeneration or not isSuccessfulRenting then return end
 				isSuccessfulRenting = false
 				applyEarningsChange(money)
 				return
