@@ -1,5 +1,17 @@
 # Список изменений
 
+## [1.15.0] - 2026-11-15
+
+### Изменено
+- Обновлена красная палитра интерфейса.
+- Поиск, взятие и отмена контрактов через /tmenu теперь выполняются по очереди. Рейс начинается после подтверждения сервера.
+- Снижена нагрузка на игру при проверке тягача и на диск при чтении статистики и сохранении настроек.
+
+### Исправлено
+- После /rec сбрасываются старый контракт и отложенные команды. Заработок за сессию сохраняется при /rec и перезапуске TCH, а при новом запуске GTA начинается с нуля.
+- Исправлены дубли закреплённых контрактов и обработка ошибок чтения и записи настроек.
+- Приоритеты двух маршрутов сохраняются одной операцией.
+
 ## [1.14.0] - 2026-10-13
 
 ### Добавлено
@@ -230,3 +242,4 @@
 [1.13.1]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.1/tch-release-1.13.1.rar
 [1.13.2]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.13.2/tch-release-1.13.2.rar
 [1.14.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.14.0/tch-release-1.14.0.rar
+[1.15.0]: https://github.com/SamFredrickson/Truck-Contracts-Helper/releases/download/v1.15.0/tch-release-1.15.0.rar
