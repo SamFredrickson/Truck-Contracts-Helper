@@ -11,6 +11,7 @@ return function(dependencies)
 	local constants=dependencies.constants
 	local playerService=dependencies.playerService
 	local Message=dependencies.Message
+	local updating = false
 
 sampRegisterChatCommand
 		(
@@ -93,36 +94,43 @@ sampRegisterChatCommand
 		(
             "tch.update",
 			function()
-				local version = httpService.version
-				if not version then
-					local localMessage = LocalMessage.new("{FFFFFF}Произошла {ed5a5a}ошибка {FFFFFF}при попытке обновления. " .. "Свяжитесь с разработчиком скрипта.")
-					chatService.send(localMessage)
-					return
-				end
-
-				if version.number <= constants.SCRIPT_INFO.VERSION_NUMBER then
-					local localMessage = LocalMessage.new("{FFFFFF}У вас уже установлена {ed5a5a}" .. "актуальная {FFFFFF}версия скрипта.")
-					chatService.send(localMessage)
-					return
-				end
-
-				lua_thread.create
-				(
-					function()
-						local messages = {
-							LocalMessage.new(" {FFFFFF}Не забудьте распаковать {ed5a5a}архив {FFFFFF}в папке " .. " {ed5a5a}moonloader {FFFFFF}с заменой старых файлов." ),
-							LocalMessage.new(" {FFFFFF}Переход по ссылке для скачивания через {ed5a5a}3 секунды..." )
-						}
-						local commands = {
-							string.format('start "" "%s"', version.release_url),
-							string.format('start "" "%s"', constants.SCRIPT_INFO.CHANGELOG_URL)
-						}
-						for _, message in pairs(messages) do chatService.send(message) end
-						wait(3000)
-						for _, command in pairs(commands) do os.execute(command) end
+				if updating then return end
+				updating = true
+				chatService.send(LocalMessage.new(" {FFFFFF}Проверяю версию TCH…"))
+				httpService.getAvailableUpdates(function(version)
+					if not version then
+						updating = false
+						local localMessage = LocalMessage.new(" {FFFFFF}Не удалось проверить версию TCH. Попробуйте {ed5a5a}/tch.update{FFFFFF} ещё раз.")
+						chatService.send(localMessage)
 						return
 					end
-				)
+
+					if version.number <= constants.SCRIPT_INFO.VERSION_NUMBER then
+						updating = false
+						local localMessage = LocalMessage.new("{FFFFFF}У вас уже установлена {ed5a5a}" .. "актуальная {FFFFFF}версия скрипта.")
+						chatService.send(localMessage)
+						return
+					end
+
+					lua_thread.create
+					(
+						function()
+							local messages = {
+								LocalMessage.new(" {FFFFFF}Не забудьте распаковать {ed5a5a}архив {FFFFFF}в папке " .. " {ed5a5a}moonloader {FFFFFF}с заменой старых файлов." ),
+								LocalMessage.new(" {FFFFFF}Переход по ссылке для скачивания через {ed5a5a}3 секунды..." )
+							}
+							local commands = {
+								string.format('start "" "%s"', version.release_url),
+								string.format('start "" "%s"', constants.SCRIPT_INFO.CHANGELOG_URL)
+							}
+							for _, message in pairs(messages) do chatService.send(message) end
+							wait(3000)
+							for _, command in ipairs(commands) do os.execute(command) end
+							updating = false
+							return
+						end
+					)
+				end)
 			end
         )
 

@@ -8,6 +8,7 @@ local encoding = require "encoding"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
 local chatService = ChatService.new()
+local UPDATE_CHECK_TIMEOUT = 15000
 
 local function isReleaseVersion(content)
     if type(content) ~= "table"
@@ -32,6 +33,7 @@ local HttpService = {
     new = function()
         local self = Service.new()
         self.version = nil
+        local pendingCheck
 
         self.notifyIfUpdateAvailable = function()
             if self.version and self.version.number > constants.SCRIPT_INFO.VERSION_NUMBER then
@@ -57,38 +59,60 @@ local HttpService = {
             end
         end
 
-        self.getAvailableUpdates = function()
-            local path = os.tmpname()
-            if not path then return false end
-            if doesFileExist(path) and not os.remove(path) then return false end
+        self.getAvailableUpdates = function(onComplete)
+            if pendingCheck then
+                if onComplete then pendingCheck.callbacks[#pendingCheck.callbacks + 1] = onComplete end
+                return
+            end
 
-            downloadUrlToFile
-            (
-                constants.SCRIPT_INFO.VERSION_URL,
-                path,
-                function(_, status, _, _)
-                    if status == moonloader.download_status.STATUSEX_ENDDOWNLOAD then
-                        local file = io.open(path, "r")
-                        if not file then
-                            os.remove(path)
-                            return false
-                        end
+            local ok, path = pcall(os.tmpname)
+            if not ok or not path or (doesFileExist(path) and not os.remove(path)) then
+                if onComplete then onComplete(nil) end
+                return
+            end
 
-                        local json = file:read("*a")
-                        file:close()
-                        os.remove(path)
-                        if not json or json == "" then return false end
+            local check = { callbacks = {} }
+            if onComplete then check.callbacks[1] = onComplete end
+            pendingCheck = check
 
-                        local ok, content = pcall(decodeJson, json)
-                        if not ok or not isReleaseVersion(content) then return false end
-                        self.version = content
-
-                        self.notifyIfUpdateAvailable()
-
-                        return true
-                    end
+            local function finish(version)
+                pendingCheck = nil
+                os.remove(path)
+                if version then self.version = version end
+                if #check.callbacks == 0 then
+                    if version then self.notifyIfUpdateAvailable() end
+                else
+                    for _, callback in ipairs(check.callbacks) do callback(version) end
                 end
-            )
+            end
+
+            local started, downloadId = pcall(downloadUrlToFile, constants.SCRIPT_INFO.VERSION_URL, path, function(_, status)
+                if status ~= moonloader.download_status.STATUSEX_ENDDOWNLOAD then return end
+                if pendingCheck ~= check then
+                    os.remove(path)
+                    return
+                end
+
+                local file = io.open(path, "r")
+                if not file then
+                    finish(nil)
+                    return
+                end
+                local json = file:read("*a")
+                file:close()
+                local decoded, content = pcall(decodeJson, json)
+                finish(decoded and isReleaseVersion(content) and content or nil)
+            end)
+
+            if pendingCheck ~= check then return end
+            if not started or downloadId == false then
+                finish(nil)
+                return
+            end
+            lua_thread.create(function()
+                wait(UPDATE_CHECK_TIMEOUT)
+                if pendingCheck == check then finish(nil) end
+            end)
         end
 
         return self
