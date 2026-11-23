@@ -684,25 +684,41 @@ function sampev.onShowDialog(id, style, title, button1, button2, text)
 	end
 end
 
+local function clearCanceledContract(operation)
+	local recover = recoveringLoadingPoint and operation and operation.kind == "cancel"
+	if operation and operation.kind == "cancel" then finishMenu() end
+	local contract = contractsService.findActive()
+	if contract then contract.IsActive = false end
+
+	resetCargoProgress()
+	clearRace()
+
+	if recover then recoveringLoadingPoint = requestMenu("search", nil, nil, false, 3000) end
+	if config.data.settings.autohideContractsList then
+		mainWindow.hideCursor = true
+		mainWindow.activate()
+	end
+end
+
+local function isNoActiveContractMessage(text)
+	local message = text:gsub("{%x%x%x%x%x%x}", ""):gsub("^%s*", ""):gsub("^%[Ошибка%]%s*", "")
+	return serverMessageService.match(message, "hasnt-active-contract")
+		or serverMessageService.match(message, "hasnt-active-contract-short")
+end
+
 function sampev.onServerMessage(color, text)
 	if config.data.settings.selectedScriptStatus > 0 then
 		if serverMessageService.match(text, "contract-canceled") then
-			local operation = currentMenu()
-			local recover = recoveringLoadingPoint and operation and operation.kind == "cancel"
-			if operation and operation.kind == "cancel" then finishMenu() end
-			local contract = contractsService.findActive()
-			if contract then contract.IsActive = false end
-			resetCargoProgress()
-			clearRace()
-			if recover then
-				recoveringLoadingPoint = requestMenu("search", nil, nil, false, 3000)
+			clearCanceledContract(currentMenu())
+		elseif isLoading or (menuOperation and menuOperation.kind == "cancel") then
+			if isNoActiveContractMessage(text) then
+				local operation = currentMenu()
+				if isLoading or (operation and operation.kind == "cancel" and operation.stage ~= "scheduled") then
+					if queuedMenuOperation and queuedMenuOperation.kind == "cancel" then queuedMenuOperation = nil end
+					clearCanceledContract(operation)
+					return
+				end
 			end
-
-			if config.data.settings.autohideContractsList then
-				mainWindow.hideCursor = true
-				mainWindow.activate()
-			end
-
 		end
 
 		-- Логика при появлении собщения в чате, что игрок имеет активный контракт
