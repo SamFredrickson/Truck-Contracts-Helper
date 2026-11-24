@@ -1,4 +1,5 @@
 local imgui = require "mimgui"
+local Palette = require "tch.gui.themes.palette"
 local new = imgui.new
 
 local Window = {
@@ -15,7 +16,7 @@ local Window = {
 function Window.reportSave(saved, err)
     if saved then return true end
 
-    sampAddChatMessage(" {ed5a5a}[TCH]{FFFFFF} Не удалось сохранить изменения. Подробности в журнале MoonLoader.", -1)
+    sampAddChatMessage(Palette.recolor(" {ed5a5a}[TCH]{FFFFFF} Не удалось сохранить изменения. Подробности в журнале MoonLoader.", true), -1)
     print("[TCH] " .. tostring(err or "Unable to save settings"))
     return false
 end

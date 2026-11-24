@@ -29,8 +29,7 @@ local Contract = {
         self.toString = function()
             return string.format
             (
-                (config.data.settings.contractWindowTypes + 1) == 3 and "%s%d. %s -> %s" or "%s%d. %s -> %s[%d / %d]",
-                self.IsPinned and "[PIN] " or self.top and "[TOP] " or "",
+                (config.data.settings.contractWindowTypes + 1) == 3 and "%d. %s -> %s" or "%d. %s -> %s [%d / %d]",
                 self.id, 
                 self.source, 
                 self.destination,

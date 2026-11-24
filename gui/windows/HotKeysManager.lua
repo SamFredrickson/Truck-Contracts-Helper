@@ -1,4 +1,5 @@
 local imgui = require "mimgui"
+local Scale = require "tch.gui.scale"
 local encoding = require "encoding"
 local Window = require "tch.gui.windows.window"
 local constants = require "tch.constants"
@@ -25,7 +26,7 @@ local HotKeysManager = {
 
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
-        local size = imgui.ImVec2(300, 200)
+        local lastScale
         local forbidden = Array({ "VK_ESCAPE", "VK_RETURN", "VK_BACK", "VK_LBUTTON", "VK_RBUTTON" })
 
         local function saveHotkey()
@@ -44,7 +45,7 @@ local HotKeysManager = {
                 local second = self.second and vkeys.id_to_name(self.second):upper()
                 hotkey.first = self.first
                 hotkey.second = self.second
-                hotkey.buttonText = second and (first .. " + " .. second) or first or hotkey.buttonText
+                hotkey.buttonText = second and (first .. " + " .. second) or first or ""
                 if not Window.reportSave(hotKeys.save()) then return end
             end
 
@@ -86,6 +87,7 @@ local HotKeysManager = {
                                         saveHotkey()
                                     end
                                     if key == "VK_BACK" then
+                                        self.changed = true
                                         self.first = nil
                                         self.second = nil
                                     end
@@ -102,8 +104,15 @@ local HotKeysManager = {
             function() return self.window[0] end,
             function(player)
                 RedTheme.new()
-                imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-                imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
+                local size = Scale.windowSize(300, 200)
+                local scale = Scale.percent()
+                if lastScale ~= scale then
+                    local screenX, screenY = getScreenResolution()
+                    position = imgui.ImVec2(screenX / 2, screenY / 2)
+                    imgui.SetNextWindowPos(position, imgui.Cond.Always, imgui.ImVec2(0.5, 0.5))
+                end
+                lastScale = scale
+                imgui.SetNextWindowSize(size, imgui.Cond.Always)
 
                 imgui.Begin
                 (
@@ -111,21 +120,21 @@ local HotKeysManager = {
                     self.window, 
                     imgui.WindowFlags.NoResize 
                     + imgui.WindowFlags.NoCollapse
-                    + imgui.WindowFlags.NoScrollbar
-                    + imgui.WindowFlags.NoScrollWithMouse
+                    + imgui.WindowFlags.HorizontalScrollbar
                     + imgui.WindowFlags.NoMove
                 )
-                imgui.SetCursorPos(imgui.ImVec2(10, 30))
+                imgui.SetCursorPos(Scale.vec(10, 30))
                 imgui.BeginChild("##HotKeysManagerIntro")
                     imgui.TextColoredRGB("{FFECD1}Нажмите комбинацию или одну клавишу для \n{FFECD1}установки. {FFECD1}Backspace - {EE4B2B}отмена{FFECD1}, {FFECD1}Enter - {50C878}подтве\n{50C878}рдить")
                 imgui.EndChild()
 
                 if not self.first and not self.second then
-                    imgui.SetCursorPos(imgui.ImVec2(10, 105))
+                    imgui.SetCursorPos(Scale.vec(10, 105))
                     imgui.BeginChild("##HotKeysManagerCombination")
                         imgui.PushFont(bigFontSize)
                         local text = select(2, table.unpack(self.previousHotKey)).buttonText
-                        imgui.TextColoredRGB(text)
+                        if self.changed then text = "" end
+                        imgui.TextColoredRGB(text ~= "" and text or "Не назначено")
                         imgui.PopFont()
                     imgui.EndChild()
                 end
@@ -136,7 +145,7 @@ local HotKeysManager = {
                     local format = not second and "%s" or "%s + %s"
                     local text = string.format(format, first, second)
 
-                    imgui.SetCursorPos(imgui.ImVec2(10, 105))
+                    imgui.SetCursorPos(Scale.vec(10, 105))
                     imgui.BeginChild("##HotKeysManagerCombination")
                         imgui.PushFont(bigFontSize)
                         imgui.TextColoredRGB(text)
@@ -144,16 +153,16 @@ local HotKeysManager = {
                     imgui.EndChild()
                 end
                 
-                imgui.SetCursorPos(imgui.ImVec2(5, 165))
+                imgui.SetCursorPos(Scale.vec(5, 165))
                 imgui.BeginChild("##HotKeyManagerButtons")
-                    imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
-                    if imgui.Button(u8("Подтвердить"), imgui.ImVec2(145, 30)) then
+                    imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, Scale.px(6))
+                    if imgui.Button(u8("Подтвердить"), Scale.vec(145, 30)) then
                         saveHotkey()
                     end
                     imgui.PopStyleVar()
                     imgui.SameLine()
-                    imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
-                    if imgui.Button(u8("Отменить"), imgui.ImVec2(140, 30)) then
+                    imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, Scale.px(6))
+                    if imgui.Button(u8("Отменить"), Scale.vec(140, 30)) then
                         self.menu.activate()
                         self.deactivate()
                         self.first = nil

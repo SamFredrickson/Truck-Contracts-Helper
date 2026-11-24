@@ -53,6 +53,7 @@ local Config = {
         local sessionId = getGameSessionId()
         if sessionId and self.data.settings.sessionEarningsGame ~= sessionId then
             self.data.settings.sessionEarnings = 0
+            self.data.settings.sessionRaceQuantity = 0
             self.data.settings.sessionEarningsGame = sessionId
         end
 

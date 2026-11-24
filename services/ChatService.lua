@@ -1,4 +1,5 @@
 local Service = require "tch.services.service"
+local Palette = require "tch.gui.themes.palette"
 
 local ChatService = {
     new = function()
@@ -26,12 +27,12 @@ local ChatService = {
             if delay then
                 lua_thread.create(function()
                     wait(delay)
-                    sampAddChatMessage(text, color or -1)
+                    sampAddChatMessage(Palette.recolor(text, true), color or -1)
                     return
                 end)
                 return
             end
-            sampAddChatMessage(text, color or -1)
+            sampAddChatMessage(Palette.recolor(text, true), color or -1)
         end
 
         return self

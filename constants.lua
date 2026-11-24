@@ -55,6 +55,8 @@ local CONFIG = {
     DEFAULT_SETTINGS = {
         truckRentedChoice = 0,
         selectedScriptStatus = 1,
+        theme = "red",
+        uiScale = 100,
         clistChoice = 16,
         documentsDialogue = false,
         autounload = true,
@@ -70,6 +72,7 @@ local CONFIG = {
         sessionExperience = 0,
         lastIllegalCargoUnloadedAt = 0,
         statistics = true,
+        infoPanelAlignment = 0,
         contractsScreenX = nil,
         contractsScreenY = nil,
         transparentContracts = true,
@@ -83,7 +86,8 @@ local CONFIG = {
         linesColor = 0xFFFF0000,
         linesWidth = 1,
         transparentCorpses = true,
-        contractWindowTypes = 0
+        compactContractsWidth = 320,
+        contractWindowTypes = 1
     }
 }
 
@@ -484,6 +488,24 @@ local HOTKEYS = {
         second = 67,
         single = false,
         position = { 10, 93 }
+    },
+    {
+        name = "toggle-contracts",
+        text = "Список контрактов (/tch.list)",
+        buttonText = "",
+        first = false,
+        second = false,
+        single = false,
+        position = { 10, 123 }
+    },
+    {
+        name = "toggle-settings",
+        text = "Меню настроек (/tch.menu)",
+        buttonText = "",
+        first = false,
+        second = false,
+        single = false,
+        position = { 10, 153 }
     }
 }
 
