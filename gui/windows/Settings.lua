@@ -1,8 +1,12 @@
 local imgui = require "mimgui"
+local Scale = require "tch.gui.scale"
+local Navigation = require "tch.gui.navigation"
+local ContractIcons = require "tch.gui.contracticons"
 local ffi = require 'ffi'
 local encoding = require "encoding"
 local Config = require "tch.common.config"
 local Statistics = require "tch.common.storage.statistics"
+local InfoPanel = require "tch.gui.windows.info"
 local ProfitAndLoss = require "tch.common.storage.profitandloss"
 local Filters = require "tch.common.storage.filters"
 local Hotkeys = require "tch.common.storage.hotkeys"
@@ -14,6 +18,8 @@ local LocalMessage = require "tch.entities.chat.localmessage"
 local ChatService = require "tch.services.chatservice"
 local PointsService = require "tch.services.pointsservice"
 local RedTheme = require "tch.gui.themes.red"
+local Theme = require "tch.gui.themes.theme"
+local Palette = require "tch.gui.themes.palette"
 local constants = require "tch.constants"
 
 encoding.default = "CP1251"
@@ -27,14 +33,40 @@ local chatService = ChatService.new()
 local Settings = {
     new = function()
         local self = Window.new()
+        self.isEditingHotkey = function() return hotKeysManager.window[0] end
         self.title = u8(string.format("Главное меню (v%s)", constants.SCRIPT_INFO.VERSION))
         local screenX, screenY = getScreenResolution()
         local position = imgui.ImVec2(screenX / 2, screenY / 2)
-        local size = imgui.ImVec2(620, 520)
+        local lastScale
+        local lastWindowHeight
+        local generalContentHeight
+        local contractsContentHeight
+        local statisticsContentHeight
+        local statisticsDisplayActive = true
         local active = 1
+        local themeLabels = {}
+        local themeIndex = 0
+        for i, palette in ipairs(Palette.options) do
+            themeLabels[i] = u8(palette.name)
+            if palette.id == Palette.current().id then themeIndex = i - 1 end
+        end
+        local themeNames = imgui.new['const char*'][#themeLabels](themeLabels)
+        local selectedTheme = imgui.new.int(themeIndex)
+        local scaleLabels, scaleIndex = {}, 0
+        for i, percent in ipairs(Scale.options) do
+            scaleLabels[i] = percent .. "%"
+            if percent == Scale.percent() then scaleIndex = i - 1 end
+        end
+        local scaleNames = imgui.new['const char*'][#scaleLabels](scaleLabels)
+        local selectedScale = imgui.new.int(scaleIndex)
+        local infoAlignmentLabels = { u8("Слева"), u8("По центру"), u8("Справа") }
+        local initialInfoAlignment = tonumber(config.data.settings.infoPanelAlignment) or 0
+        if initialInfoAlignment ~= 1 and initialInfoAlignment ~= 2 then initialInfoAlignment = 0 end
+        local selectedInfoAlignment = imgui.new.int(initialInfoAlignment)
+        local pendingScale
         local tabs = {
             "Основное",
-            "Команды и горячие \n         клавиши",
+            "Команды и\nклавиши",
             "Контракты",
             "Статистика"
         }
@@ -55,6 +87,7 @@ local Settings = {
 
         local pendingCamera
         local pendingMinTons
+        local resetProfitEntry
 
         local function saveSetting(key, value)
             local settings = config.data.settings
@@ -100,245 +133,158 @@ local Settings = {
             pendingMinTons = false
         end
 
-        local isAnyItemActive = false
-        local isAnyItemActiveMoreOneSecond = false
-        local currentTime = nil
-
-        -- Создаем поток для проверки на зажатие кнопок плюса или минуса в течении двух секунд
-        -- чтобы избежать итерацию при единичном нажатии клавиши мыши.
-        lua_thread.create
-        (
-            function()
-                while true do
-                    wait(0)
-                    if isAnyItemActive then
-                        currentTime = currentTime or os.time()
-                        local difftime = os.difftime(os.time(), currentTime)
-                        if difftime >= 2 then isAnyItemActiveMoreOneSecond = true end
-                    end
+        local function drawGeneralSettings()
+            local function hint(text)
+                if not imgui.IsItemHovered() then return end
+                imgui.BeginTooltip()
+                local screenWidth = getScreenResolution()
+                imgui.PushTextWrapPos(math.min(Scale.px(280), screenWidth - 20))
+                imgui.TextUnformatted(u8(text))
+                imgui.PopTextWrapPos()
+                imgui.EndTooltip()
+            end
+            local function checkbox(key, label, tooltip)
+                if imgui.Checkbox(u8(label .. "##General" .. key), imgui.new.bool(config.data.settings[key])) then
+                    saveSetting(key, not config.data.settings[key])
+                end
+                hint(tooltip)
+            end
+            local function columns(id)
+                local halfWidth = imgui.GetContentRegionAvail().x / 2
+                imgui.Columns(2, id, false)
+                imgui.SetColumnWidth(0, halfWidth)
+            end
+            local function field(label, control)
+                columns("GeneralField" .. label)
+                local y = imgui.GetCursorPosY()
+                imgui.SetCursorPosY(y + Scale.px(4))
+                imgui.Text(u8(label))
+                imgui.NextColumn()
+                imgui.PushItemWidth(-1)
+                control()
+                imgui.PopItemWidth()
+                imgui.Columns(1)
+            end
+            columns("GeneralWorkStatus")
+            imgui.Text(u8("Статус скрипта"))
+            imgui.PushItemWidth(-1)
+            if imgui.Combo("##ScriptStatus", self.selectedScriptStatus, scriptStatuses, #constants.SCRIPT_STATUSES) then
+                if not saveSetting("selectedScriptStatus", self.selectedScriptStatus[0]) then
+                    self.selectedScriptStatus[0] = config.data.settings.selectedScriptStatus
                 end
             end
-        )
+            hint("Включает или приостанавливает работу скрипта.")
+            imgui.PopItemWidth()
+            imgui.NextColumn()
+            imgui.Text(u8("Цвет ника во время работы"))
+            imgui.PushItemWidth(-1)
+            if imgui.Combo("##Clist", selectedClist, clists, #constants.COLOR_LIST) then
+                if not saveSetting("clistChoice", selectedClist[0]) then selectedClist[0] = config.data.settings.clistChoice end
+            end
+            hint("Цвет ника, который применяется, когда вы садитесь за руль фуры.")
+            imgui.PopItemWidth()
+            imgui.Columns(1)
+            columns("GeneralWorkOptions")
+            checkbox("autoload", "Автозагрузка фуры", "Берёт доступный контракт у точки загрузки и загружает фуру. Если контракт уже взят, начинает загрузку при подъезде к его точке.")
+            checkbox("autolock", "Запирать фуру", "Автоматически запирает двери фуры, когда вы садитесь за руль.")
+            checkbox("autohideContractsList", "Скрывать список", "Автоматически скрывает список контрактов, когда вы берёте контракт.")
+            checkbox("statistics", "Нижняя панель", "Показывает маршрут, таймеры и статистику внизу экрана. Состав и положение панели настраиваются в разделе «Статистика».")
+            checkbox("cameraLines", "Подсветка камер", "Показывает линии зон контроля дорожных камер. Цвет и толщину линий можно настроить ниже.")
+            imgui.NextColumn()
+            checkbox("autounload", "Авторазгрузка фуры", "Начинает разгрузку, когда фура с грузом находится у подходящей точки разгрузки в порту.")
+            checkbox("documentsDialogue", "Скрывать документы", "Скрывает серверный диалог с документами на груз после загрузки фуры.")
+            checkbox("drift", "Манёвренность (drift)", "Помогает быстрее поворачивать машину при движении. Удерживайте клавишу дрифта, назначенную в разделе «Команды и клавиши».")
+            checkbox("transparentContracts", "Прозрачный список", "Делает фон списка контрактов полупрозрачным, когда курсор управления списком выключен.")
+            checkbox("transparentCorpses", "Проезд сквозь тела", "Позволяет проезжать сквозь тела погибших персонажей, чтобы они не мешали движению.")
+            imgui.Columns(1)
 
-        local function drawGeneralSettings()
-            imgui.BeginChild('##ClistChild', imgui.ImVec2(275, 400), false)
-                imgui.Text(u8"Цвет ника во время работы:")
-                if imgui.Combo
-                (
-                    "##Clist",
-                    selectedClist,
-                    clists,
-                    #constants.COLOR_LIST
-                ) then
-                    if not saveSetting("clistChoice", selectedClist[0]) then selectedClist[0] = config.data.settings.clistChoice end
+            imgui.Spacing()
+            imgui.Separator()
+            imgui.Spacing()
+            field("Тема интерфейса", function()
+                if imgui.Combo("##InterfaceTheme", selectedTheme, themeNames, #themeLabels) then
+                    if saveSetting("theme", Palette.options[selectedTheme[0] + 1].id) then Theme.apply()
+                    else selectedTheme[0] = themeIndex end
+                    themeIndex = selectedTheme[0]
                 end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 5))
-            imgui.BeginChild('##ScriptStatus', imgui.ImVec2(385, 400), false)
-                imgui.Text(u8"Статус работы скрипта:")
-                if imgui.Combo
-                (
-                    "##ScriptStatus",
-                    self.selectedScriptStatus,
-                    scriptStatuses,
-                    #constants.SCRIPT_STATUSES
-                ) then
-                    if not saveSetting("selectedScriptStatus", self.selectedScriptStatus[0]) then self.selectedScriptStatus[0] = config.data.settings.selectedScriptStatus end
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"С помощью статуса работы можно включить / выключить функции скрипта.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 55))
-            imgui.BeginChild('##UnloadChild', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Авторазгрузка фуры"), imgui.new.bool(config.data.settings.autounload)) then
-                    saveSetting("autounload", not config.data.settings.autounload)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Автоматически разгружать товар \nпри прибытии в один из портов.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 85))
-            imgui.BeginChild('##LockUnlockChild', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Автозакрытие фуры"), imgui.new.bool(config.data.settings.autolock)) then
-                    saveSetting("autolock", not config.data.settings.autolock)
-                end
-                if imgui.IsItemHovered() then
-                   imgui.SetTooltip(u8"Автоматически закрывать фуру, \nесли перснонаж сел в нее.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 55))
-            imgui.BeginChild('##DocumentsChild', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Скрывать окно документов на груз"), imgui.new.bool(config.data.settings.documentsDialogue)) then
-                    saveSetting("documentsDialogue", not config.data.settings.documentsDialogue)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Скрывать окно с информацией о товаре после загрузки.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 85))
-            imgui.BeginChild('##Drift', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Улучшенная манёвренность (drift)"), imgui.new.bool(config.data.settings.drift)) then
-                    saveSetting("drift", not config.data.settings.drift)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"При зажатой клавише \"Shift\" двигает задней \nчастью машины быстрее, чем обычно.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 115))
-            imgui.BeginChild('##AutohideContractsList', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Автозакрытие списка"), imgui.new.bool(config.data.settings.autohideContractsList)) then
-                    saveSetting("autohideContractsList", not config.data.settings.autohideContractsList)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Прятать список контрактов, если есть активный контракт.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 115))
-            imgui.BeginChild('##Autoload', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Автозагрузка фуры"), imgui.new.bool(config.data.settings.autoload)) then
-                    saveSetting("autoload", not config.data.settings.autoload)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Автоматически брать самый выгодный \nконтракт и получать груз на точке загрузки.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 145))
-            imgui.BeginChild('##Statistics', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Статистика заработка"), imgui.new.bool(config.data.settings.statistics)) then
-                    saveSetting("statistics", not config.data.settings.statistics)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Автоматически открывать окно со статистикой \nи прочей информацией во время работы.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 145))
-            imgui.BeginChild('##TransparentContracts', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Прозрачные контракты"), imgui.new.bool(config.data.settings.transparentContracts)) then
-                    saveSetting("transparentContracts", not config.data.settings.transparentContracts)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Делать список контрактов прозрачным при неактивном курсоре мыши.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 175))
-            imgui.BeginChild('##TransparentCorpses', imgui.ImVec2(250, 100), false)
-                if imgui.Checkbox(u8(" Прозрачные трупы"), imgui.new.bool(config.data.settings.transparentCorpses)) then
-                    saveSetting("transparentCorpses", not config.data.settings.transparentCorpses)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Отключает столкновение с трупами на дороге.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 175))
-            imgui.BeginChild("##CameraLinesCheckbox", imgui.ImVec2(190, 100), false)
-                if imgui.Checkbox(u8(" Подсвечивать камеры"), imgui.new.bool(config.data.settings.cameraLines)) then
-                    saveSetting("cameraLines", not config.data.settings.cameraLines)
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Подсвечивать участки камер линиями в пространстве.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 210))
-            imgui.BeginChild("##CameraLinesColorText")
-                imgui.Text(u8(" Цвет линий"))
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 240))
-            imgui.BeginChild("##CameraLinesWidthText")
-                imgui.Text(u8(" Ширина линий"))
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(5, 270))
-            imgui.BeginChild("##ContractWindowTypesText")
-                imgui.Text(u8(" Список контрактов"))
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 205))
-            imgui.BeginChild("##CameraLinesColorEdit4")
-                imgui.PushItemWidth(250)
-                if imgui.ColorEdit4(u8("##color"), color) then
-                    beginCameraEdit()
-                    config.data.settings.linesColor = imgui.ColorConvertFloat4ToU32(
-                        imgui.ImVec4(color[0], color[1], color[2], color[3])
-                    )
-                end
-                imgui.PopItemWidth()
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 235))
-            imgui.BeginChild("##СameraLinesChild")
-                imgui.PushItemWidth(200)
-                if imgui.SliderInt
-                (
-                    "##cameraLinesWidth",
-                    linesWidth,
-                    constants.CAMERA_LINES.MIN_WIDTH,
-                    constants.CAMERA_LINES.MAX_WIDTH
-                ) then
-                    beginCameraEdit()
-                    config.data.settings.linesWidth = linesWidth[0]
-                end
-                imgui.PopItemWidth()
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(400, 235))
-            imgui.BeginChild("##CameraLinesButtons")
-                if imgui.Button("+ ##CameraLinesPlusButton", imgui.ImVec2(20, 0)) then
-                    linesWidth[0] = (
-                        linesWidth[0] >= constants.CAMERA_LINES.MAX_WIDTH
-                        and constants.CAMERA_LINES.MAX_WIDTH
-                        or linesWidth[0] + 1
-                    )
-                    beginCameraEdit()
-                    config.data.settings.linesWidth = linesWidth[0]
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
-                end
-                imgui.SameLine()
-                if imgui.Button("- ##CameraLinesMinusButton", imgui.ImVec2(20, 0)) then
-                    linesWidth[0] = (
-                        linesWidth[0] <= constants.CAMERA_LINES.MIN_WIDTH
-                        and constants.CAMERA_LINES.MIN_WIDTH
-                        or linesWidth[0] - 1
-                    )
-                    beginCameraEdit()
-                    config.data.settings.linesWidth = linesWidth[0]
-                end
-                if imgui.IsItemHovered() then
-                    imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
-                end
-            imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(195, 265))
-            imgui.BeginChild("##ContractWindowTypesChild", imgui.ImVec2(385, 55), false)
-                if imgui.Combo
-                (
-                    "##ContractWindowTypesList",
-                    selectedContractWindowTypes,
-                    contractWindowTypes,
-                    #constants.CONTRACT_LIST_WINDOW_TYPES
-                ) then
+                hint("Меняет цвета окон, кнопок и текста скрипта. Выбранная тема сохраняется.")
+            end)
+            field("Масштаб интерфейса", function()
+                if imgui.Combo("##InterfaceScale", selectedScale, scaleNames, #scaleLabels) then pendingScale = Scale.options[selectedScale[0] + 1] end
+                hint("Меняет размер текста и элементов интерфейса. 100% — обычный размер; большее значение увеличивает окна и нижнюю панель.")
+            end)
+            field("Размер списка контрактов", function()
+                if imgui.Combo("##ContractWindowTypesList", selectedContractWindowTypes, contractWindowTypes, #constants.CONTRACT_LIST_WINDOW_TYPES) then
                     if not saveSetting("contractWindowTypes", selectedContractWindowTypes[0]) then selectedContractWindowTypes[0] = config.data.settings.contractWindowTypes end
                 end
-            imgui.EndChild()
-        end
+                hint("Маленький — компактные строки с меню действий по нажатию. Средний и большой — раскрывающиеся пункты с кнопками.")
+            end)
 
+            imgui.Spacing()
+            imgui.Separator()
+            imgui.Spacing()
+            local cameraEnabled = config.data.settings.cameraLines
+            if not cameraEnabled then imgui.PushStyleVarFloat(imgui.StyleVar.Alpha, imgui.GetStyle().Alpha * 0.45) end
+            field("Цвет линий", function()
+                if cameraEnabled then
+                    if imgui.ColorEdit4("##color", color) then
+                        beginCameraEdit()
+                        config.data.settings.linesColor = imgui.ColorConvertFloat4ToU32(imgui.ImVec4(color[0], color[1], color[2], color[3]))
+                    end
+                    hint("Задаёт цвет и прозрачность линий камер. A: 0 — невидимые линии, 255 — полностью непрозрачные.")
+                else
+                    imgui.TextColored(Theme.color("muted"), string.format("R:%d  G:%d  B:%d  A:%d", math.floor(color[0]*255+0.5), math.floor(color[1]*255+0.5), math.floor(color[2]*255+0.5), math.floor(color[3]*255+0.5)))
+                end
+            end)
+            field("Толщина линий", function()
+                if cameraEnabled then
+                    imgui.PushItemWidth(math.max(Scale.px(50), imgui.GetContentRegionAvail().x - Scale.px(56)))
+                    if imgui.SliderInt("##cameraLinesWidth", linesWidth, constants.CAMERA_LINES.MIN_WIDTH, constants.CAMERA_LINES.MAX_WIDTH) then
+                        beginCameraEdit()
+                        config.data.settings.linesWidth = linesWidth[0]
+                    end
+                    imgui.PopItemWidth()
+                    hint("Меняет толщину линий дорожных камер.")
+                    imgui.SameLine()
+                    if imgui.Button("+##CameraLinesPlusButton", Scale.vec(22, 0)) then
+                        beginCameraEdit()
+                        linesWidth[0] = math.min(constants.CAMERA_LINES.MAX_WIDTH, linesWidth[0] + 1)
+                        config.data.settings.linesWidth = linesWidth[0]
+                    end
+                    imgui.SameLine()
+                    if imgui.Button("-##CameraLinesMinusButton", Scale.vec(22, 0)) then
+                        beginCameraEdit()
+                        linesWidth[0] = math.max(constants.CAMERA_LINES.MIN_WIDTH, linesWidth[0] - 1)
+                        config.data.settings.linesWidth = linesWidth[0]
+                    end
+                else
+                    imgui.TextColored(Theme.color("muted"), tostring(linesWidth[0]))
+                end
+            end)
+            if not cameraEnabled then imgui.PopStyleVar() end
+            generalContentHeight = (imgui.GetCursorPosY() + Scale.px(12)) / Scale.factor()
+        end
         local function drawHotkeys()
             local hotkeys = Hotkeys.new().data
-            imgui.SetCursorPos(imgui.ImVec2(10, 5))
+            imgui.SetCursorPos(Scale.vec(10, 5))
             imgui.BeginChild("##HotKeyAndCommandsIntro")
                 imgui.TextColoredRGB("{AAAAAA}В данном разделе можно узнать существующие команды скрипта и \n{AAAAAA}установить горячие клавиши.")
             imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(10, 45))
+            imgui.SetCursorPos(Scale.vec(10, 45))
             imgui.BeginChild("##Commands")
                 imgui.TextColoredRGB("{F4CBC6}Доступные команды: ")
                 for _, command in pairs(constants.SCRIPT_COMMANDS) do imgui.TextColoredRGB(command) end
             imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(10, 218))
+            imgui.SetCursorPos(Scale.vec(10, 218))
             imgui.BeginChild("##HotKeysTitle")
                 imgui.TextColoredRGB("{F4CBC6}Доступные горячие клавиши: ")
             imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(190, 240))
+            imgui.SetCursorPos(Scale.vec(190, 240))
             imgui.BeginChild("##HotKeysButtons")
-                for index, hotkey in pairs(hotkeys) do
-                    local text = string.format("%s##%d", u8(hotkey.buttonText), index)
-                    if imgui.Button(text, imgui.ImVec2(250, 25)) then
+                for index, hotkey in ipairs(hotkeys) do
+                    local caption = hotkey.buttonText ~= "" and hotkey.buttonText or "Не назначено"
+                    local text = string.format("%s##%d", u8(caption), index)
+                    if imgui.Button(text, Scale.vec(250, 25)) then
                         hotKeysManager.changed = false
                         hotKeysManager.menu = self
                         hotKeysManager.previousHotKey = { index, hotkey }
@@ -347,11 +293,11 @@ local Settings = {
                     end
                 end
             imgui.EndChild()
-            imgui.SetCursorPos(imgui.ImVec2(10, 240))
-            imgui.BeginChild("##HotKeysTexts", imgui.ImVec2(200, 150))
-                for _, hotkey in pairs(hotkeys) do
+            imgui.SetCursorPos(Scale.vec(10, 240))
+            imgui.BeginChild("##HotKeysTexts", Scale.vec(180, 190))
+                for _, hotkey in ipairs(hotkeys) do
                     local x, y = table.unpack(hotkey.position)
-                    imgui.SetCursorPosY(y)
+                    imgui.SetCursorPosY(Scale.px(y))
                     imgui.Text(u8(hotkey.text))
                 end
             imgui.EndChild()
@@ -361,235 +307,189 @@ local Settings = {
             local filtersDrawn = false
             if imgui.BeginTabBar("Contract Tabs") then
                 if imgui.BeginTabItem(u8"Сортировка") then
-                    imgui.Columns(4)
-                    imgui.CenterColumnText(u8'Место') imgui.SetColumnWidth(-1, 225)
+                    imgui.Columns(2)
+                    imgui.CenterColumnText(u8'Место') imgui.SetColumnWidth(-1, Scale.px(370))
                     imgui.NextColumn()
-                    imgui.CenterColumnText(u8'Топ') imgui.SetColumnWidth(-1, 40)
-                    imgui.NextColumn()
-                    imgui.CenterColumnText(u8'Сорт.') imgui.SetColumnWidth(-1, 40)
-                    imgui.NextColumn()
-                    imgui.CenterColumnText(u8'Опции')
+                    imgui.CenterColumnText(u8'Сорт.')
                     imgui.Columns(1)
                     imgui.Separator()
-                    for index, data in pairs(pointsService.get()) do
+                    local pendingMove
+                    for _, data in ipairs(pointsService.get()) do
                         imgui.Separator()
-                        imgui.Columns(4)
-                        imgui.Spacing()
-                        imgui.CenterColumnText(string.format("%s -> %s", u8(data.point.source), u8(data.point.destination)))
-                        imgui.NextColumn()
-                        imgui.Spacing()
-                        imgui.CenterColumnText(u8(data.point.top and "Да" or "Нет"))
+                        imgui.Columns(2)
+                        imgui.BeginGroup()
+                        imgui.Button("##MoveRoute" .. data.id, Scale.vec(20, 22))
+                        local first, last = imgui.GetItemRectMin(), imgui.GetItemRectMax()
+                        local draw = imgui.GetWindowDrawList()
+                        local handleColor = imgui.ColorConvertFloat4ToU32(Theme.color("muted"))
+                        for line = -1, 1 do
+                            local y = (first.y + last.y) / 2 + Scale.px(line * 3)
+                            draw:AddLine(imgui.ImVec2(first.x + Scale.px(5), y),
+                                imgui.ImVec2(last.x - Scale.px(5), y), handleColor, Scale.px(1))
+                        end
+                        if imgui.IsItemHovered() then
+                            imgui.SetTooltip(u8"Зажмите и перетащите маршрут на нужное место в списке.")
+                        end
+                        if imgui.BeginDragDropSource() then
+                            local payload = ffi.new("int[1]", data.id)
+                            imgui.SetDragDropPayload("TCH_ROUTE_ORDER", payload, ffi.sizeof(payload))
+                            imgui.Text(u8(data.point.source .. " -> " .. data.point.destination))
+                            imgui.EndDragDropSource()
+                        end
+                        imgui.SameLine()
+                        if imgui.Button("##TopRoute" .. data.id, Scale.vec(20, 22)) then
+                            local selected = not data.point.top
+                            if Window.reportSave(pointsService.update(data.id, { top = selected })) then
+                                data.point.top = selected
+                            end
+                        end
+                        local starMin = imgui.GetItemRectMin()
+                        ContractIcons.star(imgui.ImVec2(starMin.x + Scale.px(2), starMin.y), Scale.px(22), data.point.top)
+                        if imgui.IsItemHovered() then
+                            imgui.SetTooltip(u8(data.point.top and "Убрать маршрут из приоритетных." or "Сделать маршрут приоритетным."))
+                        end
+                        imgui.SameLine()
+                        imgui.Text(u8(data.point.source .. " -> " .. data.point.destination))
+                        imgui.EndGroup()
+                        local rowMin, rowMax = imgui.GetItemRectMin(), imgui.GetItemRectMax()
+                        if imgui.BeginDragDropTarget() then
+                            local payload = imgui.AcceptDragDropPayload("TCH_ROUTE_ORDER",
+                                imgui.DragDropFlags.AcceptBeforeDelivery + imgui.DragDropFlags.AcceptNoDrawDefaultRect)
+                            if payload ~= nil and payload.DataSize == ffi.sizeof("int") then
+                                local sourceId = tonumber(ffi.cast("int*", payload.Data)[0])
+                                if sourceId ~= data.id then
+                                    local after = imgui.GetMousePos().y >= (rowMin.y + rowMax.y) / 2
+                                    local y = after and rowMax.y or rowMin.y
+                                    draw:AddLine(imgui.ImVec2(rowMin.x, y), imgui.ImVec2(rowMax.x, y),
+                                        imgui.ColorConvertFloat4ToU32(Theme.color("accent")), Scale.px(2))
+                                    if payload.Delivery then pendingMove = { sourceId, data.id, after } end
+                                end
+                            end
+                            imgui.EndDragDropTarget()
+                        end
                         imgui.NextColumn()
                         imgui.Spacing()
                         imgui.CenterColumnText(tostring(data.point.sort))
-                        imgui.NextColumn()
-                        if imgui.Button(u8"Выше##" .. data.id) then
-                            if data.point.sort > constants.MIN_CONTRACTS_SIZE then
-                                Window.reportSave(pointsService.swapPriority(data.id, -1))
-                            end
-                        end
-                        if imgui.IsItemHovered() then
-                            imgui.SetTooltip(u8"Перемещает запись выше по списку.")
-                        end
-                        imgui.SameLine()
-                        if imgui.Button(u8"Ниже##" .. data.id) then
-                            if data.point.sort < constants.MAX_CONTRACTS_SIZE then
-                                Window.reportSave(pointsService.swapPriority(data.id, 1))
-                            end
-                        end
-                        if imgui.IsItemHovered() then
-                            imgui.SetTooltip(u8"Перемещает запись ниже по списку.")
-                        end
-                        imgui.SameLine()
-                        if imgui.Button(u8"Топ##" .. data.id) then
-                            Window.reportSave(pointsService.update(data.id, { top = not data.point.top }))
-                        end
-                        if imgui.IsItemHovered() then
-                            imgui.SetTooltip(u8"Ставит / убирает метку \"TOP\" у записи.")
-                        end
                         imgui.Columns(1)
                     end
+                    if pendingMove then Window.reportSave(pointsService.move(unpack(pendingMove))) end
+                    contractsContentHeight = (imgui.GetCursorPosY() + Scale.px(12)) / Scale.factor()
                     imgui.EndTabItem()
                 end
                 if imgui.BeginTabItem(u8("Фильтрация")) then
-                    imgui.SetCursorPos(imgui.ImVec2(5, 40))
-                    imgui.BeginChild("##CompanyName")
-                        imgui.Text(u8(" Транспортная компания:"))
-                        if imgui.IsItemHovered() then
-                            imgui.SetTooltip
-                            (
-                                u8"Если поле заполнено, то показывает только те контракты, которые принадлежат указанным в списке ТК." ..
-                                u8"\nДля отображения контрактов сразу нескольких ТК необходимо указать список их названий через запятую: dealers, kontora." ..
-                                u8"\nВажно: если название ТК на русском, то оно должно идеально совпадать с тем, что в списке контрактов, включая регистр."
-                             )
-                        end
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(175, 35))
                     filtersDrawn = true
                     local filters = Filters.new()
+                    local changed = false
                     if not pendingMinTons then minTonsQuantity[0] = filters.data.minTonsQuantity end
-                    imgui.BeginChild("##CompanyNameField")
-                        imgui.PushItemWidth(270)
-                        if imgui.InputText(u8("##company"), company, ffi.sizeof(company)) then
-                            filters.data.company = u8:decode(ffi.string(company):lower())
-                            if not Window.reportSave(filters.save()) then
-                                filters = Filters.new()
-                                ffi.fill(company, ffi.sizeof(company))
-                                ffi.copy(company, u8(filters.data.company):sub(1, ffi.sizeof(company) - 1))
-                            end
-                        end
-                        imgui.PopItemWidth()
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(5, 70))
-                    imgui.BeginChild("##MinTonsQuantityText")
-                        imgui.Text(u8(" Минимальное кол-во тонн:"))
-                        if imgui.IsItemHovered() then
-                            imgui.SetTooltip(u8"Скрывать контракты у которых остаток \nменьше либо равен выбранному значению.")
-                        end
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(175, 65))
-                    imgui.BeginChild("##MinTonsQuantitySlider")
-                        imgui.PushItemWidth(220)
-                        if imgui.SliderInt
-                        (
-                            "##tonsQuantity",
-                            minTonsQuantity,
-                            constants.MIN_TONS_QUANTITY,
-                            constants.MAX_TONS_QUANTITY
-                        ) then
-                            pendingMinTons = true
-                        end
-                        imgui.PopItemWidth()
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(400, 65))
-                    imgui.BeginChild("##MinTonsQuantityButtons")
-                    if imgui.Button("+ ##MinTonsQuantityPlusButton", imgui.ImVec2(20, 0)) then
-                        minTonsQuantity[0] = (
-                            minTonsQuantity[0] >= constants.MAX_TONS_QUANTITY
-                            and constants.MAX_TONS_QUANTITY
-                            or minTonsQuantity[0] + 1
-                        )
+                    imgui.Text(u8("Компании"))
+                    imgui.PushItemWidth(Scale.width(-1))
+                    if imgui.InputText("##company", company, ffi.sizeof(company)) then
+                        filters.data.company = u8:decode(ffi.string(company):lower())
+                        changed = true
+                    end
+                    if imgui.IsItemHovered() then
+                        imgui.SetTooltip(u8"Оставьте поле пустым, чтобы показывать все компании.\nНесколько названий разделяйте запятыми.\nРусские названия должны совпадать с серверными, включая регистр.")
+                    end
+                    imgui.PopItemWidth()
+                    imgui.TextColoredRGB("{AAAAAA}Например: dealers, kontora")
+                    imgui.Spacing()
+                    imgui.Text(u8("Остаток груза, т"))
+                    imgui.SameLine()
+                    imgui.PushItemWidth(Scale.px(140))
+                    if imgui.InputInt("##tonsQuantity", minTonsQuantity, 1, 10) then
+                        minTonsQuantity[0] = math.max(constants.MIN_TONS_QUANTITY,
+                            math.min(constants.MAX_TONS_QUANTITY, minTonsQuantity[0]))
                         pendingMinTons = true
                     end
-                    if imgui.IsItemActive() then
-                        isAnyItemActive = true
-                        if isAnyItemActiveMoreOneSecond then
-                            minTonsQuantity[0] = (
-                                minTonsQuantity[0] >= constants.MAX_TONS_QUANTITY
-                                and constants.MAX_TONS_QUANTITY
-                                or minTonsQuantity[0] + 1
-                            )
-                            pendingMinTons = true
-                        end
-                    end
-                    if imgui.IsItemActivated() then
-                        isAnyItemActiveMoreOneSecond = false
-                        isAnyItemActive = false
-                        currentTime = nil
-                    end
-                    if imgui.IsItemHovered() then
-                        imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить прибавление \nили воспользуйтесь единичным нажатием.")
-                    end
-                    imgui.SameLine()
-                    if imgui.Button("- ##MinTonsQuantityMinusButton", imgui.ImVec2(20, 0)) then
-                        minTonsQuantity[0] = (
-                            minTonsQuantity[0] <= constants.MIN_TONS_QUANTITY
-                            and constants.MIN_TONS_QUANTITY
-                            or minTonsQuantity[0] - 1
-                        )
-                        pendingMinTons = true
-                    end
-                    if imgui.IsItemActive() then
-                        isAnyItemActive = true
-                        if isAnyItemActiveMoreOneSecond then
-                            minTonsQuantity[0] = (
-                            minTonsQuantity[0] <= constants.MIN_TONS_QUANTITY
-                                and constants.MIN_TONS_QUANTITY
-                                or minTonsQuantity[0] - 1
-                            )
-                            pendingMinTons = true
-                        end
-                    end
-                    if imgui.IsItemActivated() then
-                        isAnyItemActiveMoreOneSecond = false
-                        isAnyItemActive = false
-                        currentTime = nil
-                    end
-                    if imgui.IsItemHovered() then
-                        imgui.SetTooltip(u8"Удерживайте в течении двух секунд, чтобы ускорить вычитание \nили воспользуйтесь единичным нажатием.")
-                    end
-                    imgui.EndChild()
-                    if not imgui.IsAnyItemActive() and not imgui.IsMouseDown(0) then saveMinTons(filters) end
-                    imgui.SetCursorPos(imgui.ImVec2(5, 115))
-                    imgui.BeginChild("##OtherFiltersText")
-                        imgui.Text(u8(" Фильтры для всех портов:"))
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(175, 96))
-                    imgui.BeginChild('##AllowedDestinations')
-                    if imgui.Checkbox(u8(" Порт Лос-Сантос "), imgui.new.bool(not filters.data.destinations[1].hidden)) then
-                        filters.data.destinations[1].hidden = not filters.data.destinations[1].hidden
-                        for index, source in pairs(filters.data.sources) do
-                            filters.data.sources[index].destinations[1].hidden
-                                = filters.data.destinations[1].hidden
-                        end
-                        Window.reportSave(filters.save())
-                    end
-                    if imgui.IsItemHovered() then
-                        imgui.SetTooltip(u8"Показывать контракты в порт Лос-Сантос.")
-                    end
-                    imgui.SameLine()
-                    if imgui.Checkbox(u8(" Порт Сан-Фиерро"), imgui.new.bool(not filters.data.destinations[2].hidden)) then
-                        filters.data.destinations[2].hidden = not filters.data.destinations[2].hidden
-                        for index, source in pairs(filters.data.sources) do
-                            filters.data.sources[index].destinations[2].hidden
-                                = filters.data.destinations[2].hidden
-                        end
-                        Window.reportSave(filters.save())
-                    end
-                    if imgui.IsItemHovered() then
-                        imgui.SetTooltip(u8"Показывать контракты в порт Сан-Фиерро.")
-                    end
-                    if imgui.Checkbox(u8(" Всегда показывать топовые (рек.)"), imgui.new.bool(filters.data.top)) then
+                    imgui.PopItemWidth()
+                    imgui.TextColoredRGB("{AAAAAA}Показывать контракты с остатком больше указанного.")
+                    if imgui.Checkbox(u8("Приоритетные — независимо от фильтров"), imgui.new.bool(filters.data.top)) then
                         filters.data.top = not filters.data.top
-                        Window.reportSave(filters.save())
+                        changed = true
                     end
                     if imgui.IsItemHovered() then
-                        imgui.SetTooltip(u8"Игнорировать все фильтры в данном окне, \nесли контракт является топовым (TOP).")
+                        imgui.SetTooltip(u8"Маршруты с золотой звездой показываются независимо\nот компании, остатка груза и галочек в таблицах ниже.")
                     end
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(175, 155))
-                    imgui.BeginChild("##SourceCheckboxes")
-                        for index, source in pairs(filters.data.sources) do
-                            local portLosSantos = string.format(" %s##%d", source.destinations[1].name, index)
-                            local portSanFierro = string.format(" %s##%d", source.destinations[2].name, index)
-                            if imgui.Checkbox
-                            (
-                                u8(portLosSantos),
-                                imgui.new.bool(not source.destinations[1].hidden)
-                            ) then
-                                filters.data.sources[index].destinations[1].hidden
-                                    = not source.destinations[1].hidden
-                                Window.reportSave(filters.save())
-                            end
-                            imgui.SameLine()
-                            imgui.SetCursorPosX(137)
-                            if imgui.Checkbox
-                            (
-                                u8(portSanFierro),
-                                imgui.new.bool(not source.destinations[2].hidden)
-                            ) then
-                                filters.data.sources[index].destinations[2].hidden
-                                    = not source.destinations[2].hidden
-                                Window.reportSave(filters.save())
-                            end
+                    imgui.Spacing()
+                    if imgui.Button(u8("Включить все##Routes")) then
+                        for _, source in ipairs(filters.data.sources) do
+                            for _, destination in ipairs(source.destinations) do destination.hidden = false end
                         end
-                    imgui.EndChild()
-                    for index, source in pairs(filters.data.sources) do
-                        imgui.SetCursorPos(imgui.ImVec2(source.x, source.y))
-                        imgui.BeginChild("##SourceNames" .. index, imgui.ImVec2(145, 0), false)
-                            imgui.Text(u8(source.name))
-                        imgui.EndChild()
+                        for _, destination in ipairs(filters.data.destinations) do destination.hidden = false end
+                        changed = true
                     end
+                    imgui.SameLine()
+                    if imgui.Button(u8("Выключить все##Routes")) then
+                        for _, source in ipairs(filters.data.sources) do
+                            for _, destination in ipairs(source.destinations) do destination.hidden = true end
+                        end
+                        for _, destination in ipairs(filters.data.destinations) do destination.hidden = true end
+                        changed = true
+                    end
+                    local groups = {}
+                    for index, source in ipairs(filters.data.sources) do
+                        -- Group by actual destinations, preserving saved row indices and flags.
+                        local key = source.destinations[1].name .. "|" .. source.destinations[2].name
+                        local group
+                        for _, item in ipairs(groups) do if item.key == key then group = item; break end end
+                        if not group then
+                            group = { key = key, rows = {}, destinations = source.destinations }
+                            groups[#groups + 1] = group
+                        end
+                        group.rows[#group.rows + 1] = { index = index, source = source }
+                    end
+                    for groupIndex, group in ipairs(groups) do
+                        imgui.Spacing()
+                        imgui.Separator()
+                        imgui.Columns(3, "FilterRoutes" .. groupIndex, false)
+                        imgui.SetColumnWidth(0, Scale.px(225))
+                        imgui.SetColumnWidth(1, Scale.px(100))
+                        imgui.Text(u8("Точка загрузки"))
+                        imgui.NextColumn()
+                        for column, destination in ipairs(group.destinations) do
+                            local allEnabled = true
+                            for _, row in ipairs(group.rows) do
+                                if row.source.destinations[column].hidden then allEnabled = false; break end
+                            end
+                            local name = destination.short_name:gsub("Нефтезавод", "НПЗ")
+                            if imgui.Checkbox(u8(name .. "##All" .. groupIndex .. "_" .. column), imgui.new.bool(allEnabled)) then
+                                for _, row in ipairs(group.rows) do
+                                    row.source.destinations[column].hidden = allEnabled
+                                end
+                                -- Retain the existing summary fields for port filters.
+                                for _, summary in ipairs(filters.data.destinations) do
+                                    if summary.name == destination.short_name then summary.hidden = allEnabled end
+                                end
+                                changed = true
+                            end
+                            if imgui.IsItemHovered() then
+                                imgui.SetTooltip(u8("Включить или выключить все маршруты в " .. destination.name .. " в этой таблице."))
+                            end
+                            imgui.NextColumn()
+                        end
+                        imgui.Columns(1)
+                        imgui.Separator()
+                        for _, row in ipairs(group.rows) do
+                            imgui.Columns(3, "FilterRoutes" .. groupIndex, false)
+                            imgui.Text(u8(row.source.name))
+                            imgui.NextColumn()
+                            for column, destination in ipairs(row.source.destinations) do
+                                if imgui.Checkbox("##RouteFilter" .. row.index .. "_" .. column, imgui.new.bool(not destination.hidden)) then
+                                    destination.hidden = not destination.hidden
+                                    changed = true
+                                end
+                                imgui.NextColumn()
+                            end
+                            imgui.Columns(1)
+                        end
+                    end
+                    if changed and not Window.reportSave(filters.save()) then
+                        filters = Filters.new()
+                        ffi.fill(company, ffi.sizeof(company))
+                        ffi.copy(company, u8(filters.data.company):sub(1, ffi.sizeof(company) - 1))
+                    end
+                    if not imgui.IsAnyItemActive() and not imgui.IsMouseDown(0) then saveMinTons(filters) end
+                    contractsContentHeight = (imgui.GetCursorPosY() + Scale.px(12)) / Scale.factor()
                     imgui.EndTabItem()
                 end
                 imgui.EndTabBar()
@@ -600,100 +500,198 @@ local Settings = {
         local function drawStatistics()
             if imgui.BeginTabBar("Statistics") then
                 if imgui.BeginTabItem(u8("Параметры отображения")) then
-                    imgui.SetCursorPos(imgui.ImVec2(10, 35))
-                    imgui.BeginChild("##StatisticsExplanationText")
-                        imgui.TextColoredRGB("{AAAAAA}В данном разделе вы можете настроить отображение элементов \n{AAAAAA}на панели в нижней части экрана.")
-                    imgui.EndChild()
-                    local statistics = Statistics.new()
-                    for index, item in pairs(statistics.data) do
-                        local x, y = table.unpack(item.position)
-                        imgui.SetCursorPos(imgui.ImVec2(x, y))
-                        imgui.BeginChild("##StatisticsChild" .. index, imgui.ImVec2(250, 100), false)
-                            if imgui.Checkbox(u8(item.short_name), imgui.new.bool(statistics.data[index].show)) then
-                                statistics.data[index].show = not statistics.data[index].show
-                                Window.reportSave(statistics.save())
-                            end
-                        imgui.EndChild()
+                    statisticsDisplayActive = true
+                    imgui.TextColored(Theme.color("accent"), u8("Показатели нижней панели"))
+                    imgui.Spacing()
+                    imgui.Text(u8("Положение панели"))
+                    for index, label in ipairs(infoAlignmentLabels) do
+                        if index > 1 then imgui.SameLine() end
+                        local selected = selectedInfoAlignment[0] == index - 1
+                        if selected then imgui.PushStyleColor(imgui.Col.Button, Theme.color("active")) end
+                        if imgui.Button(label .. "##PanelAlignment" .. index, Scale.vec(135, 26)) then
+                            if saveSetting("infoPanelAlignment", index - 1) then selectedInfoAlignment[0] = index - 1 end
+                        end
+                        if selected then imgui.PopStyleColor(1) end
                     end
+                    imgui.Spacing()
+                    imgui.Separator()
+                    local statistics = Statistics.new()
+                    local visible = {}
+                    local function checkbox(code, label)
+                        for _, item in ipairs(statistics.data) do
+                            if item.code == code then
+                                if imgui.Checkbox(u8(label .. "##PanelField" .. code), imgui.new.bool(item.show)) then
+                                    local previous = item.show
+                                    item.show = not previous
+                                    if not Window.reportSave(statistics.save()) then item.show = previous end
+                                end
+                                visible[code] = item.show
+                                return
+                            end
+                        end
+                    end
+                    imgui.Columns(2, "PanelFieldGroups", false)
+                    imgui.TextColored(Theme.color("accent"), u8("Рейс и таймеры"))
+                    checkbox("race", "Текущий маршрут")
+                    checkbox("race-time", "Время в рейсе")
+                    checkbox("illegal-cargo-time", "Таймер нелегалки")
+                    imgui.NextColumn()
+                    imgui.TextColored(Theme.color("accent"), u8("Статистика сессии"))
+                    checkbox("session-earnings", "Заработано за сессию")
+                    checkbox("session-races", "Рейсов за сессию")
+                    checkbox("session-experience", "Опыт за сессию")
+                    imgui.Columns(1)
+                    imgui.Spacing()
+                    imgui.TextColored(Theme.color("accent"), u8("Общие показатели"))
+                    checkbox("total-earnings", "Общий заработок")
+                    checkbox("experience-to-level", "Опыт до следующего уровня")
+                    imgui.Spacing()
+                    imgui.Separator()
+                    imgui.TextColored(Theme.color("muted"), u8("Предпросмотр — текущие значения"))
+                    local width = imgui.GetContentRegionAvail().x
+                    local padding, gap = Scale.px(8), Scale.px(14)
+                    local lineHeight = imgui.GetTextLineHeight() + Scale.px(6)
+                    local items, x, row, usedWidth = {}, 0, 0, 0
+                    for _, entry in ipairs(InfoPanel.previewEntries()) do
+                        if visible[entry.code] then
+                            local label = entry.label ~= "" and entry.label .. " " or ""
+                            local labelWidth = imgui.CalcTextSize(u8(label)).x
+                            local itemWidth = labelWidth + imgui.CalcTextSize(u8(entry.value)).x + Scale.px(2)
+                            if x > 0 and x + itemWidth > width - padding * 2 then x, row = 0, row + 1 end
+                            items[#items + 1] = { x = x, row = row, label = label, labelWidth = labelWidth,
+                                value = entry.value, role = entry.role }
+                            usedWidth = math.max(usedWidth, x + itemWidth)
+                            x = x + itemWidth + gap
+                        end
+                    end
+                    if #items == 0 then
+                        imgui.TextColored(Theme.color("muted"), u8("Выберите хотя бы один показатель."))
+                    else
+                        local height = (row + 1) * lineHeight + padding * 2 - Scale.px(6)
+                        local start = imgui.GetCursorScreenPos()
+                        local draw = imgui.GetWindowDrawList()
+                        draw:AddRectFilled(start, imgui.ImVec2(start.x + width, start.y + height),
+                            imgui.ColorConvertFloat4ToU32(Theme.color("surface")), Scale.px(3))
+                        local offset = selectedInfoAlignment[0] == 1 and 0.5 or (selectedInfoAlignment[0] == 2 and 1 or 0)
+                        local inset = math.max(0, width - padding * 2 - usedWidth) * offset
+                        for _, item in ipairs(items) do
+                            local ix, iy = start.x + padding + inset + item.x, start.y + padding + item.row * lineHeight
+                            draw:AddText(imgui.ImVec2(ix, iy), imgui.ColorConvertFloat4ToU32(Theme.color("muted")), u8(item.label))
+                            draw:AddText(imgui.ImVec2(ix + item.labelWidth, iy), imgui.ColorConvertFloat4ToU32(Theme.color(item.role)), u8(item.value))
+                        end
+                        imgui.Dummy(imgui.ImVec2(width, height))
+                    end
+                    statisticsContentHeight = (imgui.GetCursorPosY() + Scale.px(12)) / Scale.factor()
                     imgui.EndTabItem()
                 end
                 if imgui.BeginTabItem(u8("Доходы / Расходы")) then
-                    imgui.SetCursorPos(imgui.ImVec2(10, 35))
-                    imgui.BeginChild("##StatisticsPlExplanationText")
-                        imgui.TextColoredRGB("{AAAAAA}В данном разделе вы сможете ознакомиться с более детальной \n{AAAAAA}статистикой {3e9c35}доходов{AAAAAA} и {b4140e}расходов{AAAAAA}.")
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(10, 85))
-                    imgui.BeginChild("##StatisticsPlExplanationText")
-                        imgui.TextColoredRGB("{ffcc00}(!) Чтобы сбросить общий заработок полностью необходимо обнулить \n{ffcc00}или {3e9c35}деактивировать{ffcc00} каждый элемент в таблице {3e9c35}доходов{ffcc00} и {b4140e}расходов{ffcc00}.")
-                    imgui.EndChild()
-                    imgui.SetCursorPos(imgui.ImVec2(0, 115))
-                    imgui.BeginChild("##StatisticsPlTable")
-                        imgui.Separator()
-                        imgui.Columns(3)
-                        imgui.CenterColumnText(u8("Название"))
-                        imgui.NextColumn()
-                        imgui.CenterColumnText(u8("Доход / Расход"))
-                        imgui.NextColumn()
-                        imgui.CenterColumnText(u8("Опции"))
-                        imgui.NextColumn()
-                        imgui.Columns(1)
-                        imgui.Separator()
-                        local profitAndLoss = ProfitAndLoss.new()
-                        for index, item in pairs(profitAndLoss.data) do
-                            local sum = string.format
-                            (
-                                "%s%s$",
-                                "{32CD32}",
-                                Number.new(item.sum).format(0, "", "{F2545B}")
-                            )
-                            imgui.Columns(3)
-                            imgui.Spacing()
-                            imgui.Text(u8(item.name)) imgui.SetColumnWidth(-1, 165)
-                            imgui.NextColumn()
-                            imgui.Spacing()
-                            imgui.CenterColumnTextRgb(sum)
-                            imgui.NextColumn()
-                            if imgui.Button(u8(item.enabled and "Деакт.##" or "Акт.##") .. index, imgui.ImVec2(70, 0)) then
-                                profitAndLoss.data[index].enabled = not profitAndLoss.data[index].enabled
-                                Window.reportSave(profitAndLoss.save())
-                            end
-                            if imgui.IsItemHovered() then
-                                local message = item.enabled
-                                and "Нажмите, если не хотите включать этот пункт в общий заработок"
-                                or "Нажмите, если хотите включать этот пункт в общий заработок"
-                                imgui.SetTooltip(u8(message))
-                            end
-                            imgui.SameLine()
-                            if imgui.Button(u8"Сброс##" .. index) then
-                                profitAndLoss.data[index].sum = 0
-                                Window.reportSave(profitAndLoss.save())
-                            end
-                            if imgui.IsItemHovered() then
-                                imgui.SetTooltip(u8("Нажмите, чтобы сбросить текущее состояние до нуля"))
-                            end
-                            imgui.Columns(1)
-                            imgui.Separator()
+                    statisticsDisplayActive = false
+                    imgui.TextColoredRGB("{AAAAAA}В общий заработок входят только включённые статьи.")
+                    imgui.Spacing()
+                    local profitAndLoss = ProfitAndLoss.new()
+                    local function money(sum)
+                        return (sum < 0 and "-" or "") .. Number.new(math.abs(sum)).format(0, "", "") .. "$"
+                    end
+                    local function sumColor(item)
+                        return Theme.color(not item.enabled and "muted" or (item.sum < 0 and "error" or "success"))
+                    end
+                    local headingX = imgui.GetCursorPosX()
+                    local headingWidth = imgui.GetContentRegionAvail().x - imgui.GetStyle().ScrollbarSize
+                    imgui.SetCursorPosX(headingX + Scale.px(66))
+                    imgui.Text(u8("Статья"))
+                    imgui.SameLine()
+                    imgui.SetCursorPosX(headingX + headingWidth - Scale.px(6) - imgui.CalcTextSize(u8("Сумма")).x)
+                    imgui.Text(u8("Сумма"))
+                    imgui.Separator()
+                    local listHeight = math.max(Scale.px(60), imgui.GetContentRegionAvail().y - Scale.px(40))
+                    imgui.BeginChild("##StatisticsPlRows", imgui.ImVec2(0, listHeight), false,
+                        imgui.WindowFlags.AlwaysVerticalScrollbar)
+                    local rowHeight = math.max(Scale.px(28), imgui.GetFrameHeight() + Scale.px(4))
+                    for index, item in ipairs(profitAndLoss.data) do
+                        local x, y = imgui.GetCursorPosX(), imgui.GetCursorPosY()
+                        local width = imgui.GetContentRegionAvail().x
+                        local screen = imgui.GetCursorScreenPos()
+                        local draw = imgui.GetWindowDrawList()
+                        if index % 2 == 0 then
+                            draw:AddRectFilled(screen, imgui.ImVec2(screen.x + width, screen.y + rowHeight),
+                                imgui.ColorConvertFloat4ToU32(Theme.color("surface", 0.45)))
                         end
-
-                        local sum = profitAndLoss.sumEnabled()
-                        local formattedSum = string.format
-                        (
-                            "%s%s$",
-                            "{32CD32}",
-                            Number.new(sum).format(0, "", "{F2545B}")
-                        )
-                        imgui.Columns(3)
-                        imgui.Spacing()
-                        imgui.Text(u8("Общий заработок")) imgui.SetColumnWidth(-1, 165)
-                        imgui.NextColumn()
-                        imgui.Spacing()
-                        imgui.CenterColumnTextRgb(formattedSum)
-                        imgui.NextColumn()
-                        imgui.Spacing()
-                        imgui.CenterColumnTextRgb(u8("-"))
-                        imgui.Columns(1)
-                        imgui.Separator()
+                        if imgui.Checkbox("##EnableProfit" .. index, imgui.new.bool(item.enabled)) then
+                            local previous = item.enabled
+                            item.enabled = not previous
+                            if not Window.reportSave(profitAndLoss.save()) then item.enabled = previous end
+                        end
+                        if imgui.IsItemHovered() then
+                            imgui.SetTooltip(u8(item.enabled and "Не учитывать эту статью в общем заработке." or "Учитывать эту статью в общем заработке."))
+                        end
+                        imgui.SetCursorPos(imgui.ImVec2(x + Scale.px(66), y + Scale.px(4)))
+                        imgui.TextColored(Theme.color(item.enabled and "text" or "muted"), u8(item.name))
+                        local value = money(item.sum)
+                        local valueWidth = imgui.CalcTextSize(value).x
+                        imgui.SetCursorPos(imgui.ImVec2(x + width - Scale.px(6) - valueWidth, y + Scale.px(4)))
+                        imgui.TextColored(sumColor(item), value)
+                        imgui.SetCursorPos(imgui.ImVec2(x + Scale.px(32), y))
+                        if imgui.Button("##ResetProfit" .. index, Scale.vec(24, 24)) then
+                            resetProfitEntry = item.name
+                            imgui.OpenPopup("##ConfirmProfitReset")
+                        end
+                        local first, last = imgui.GetItemRectMin(), imgui.GetItemRectMax()
+                        local cx, cy = (first.x + last.x) / 2, (first.y + last.y) / 2
+                        local iconColor = imgui.ColorConvertFloat4ToU32(Theme.color("muted"))
+                        local radius = Scale.px(6)
+                        local previous
+                        for step = 0, 16 do
+                            local angle = -math.pi / 3 + step * math.pi * 1.65 / 16
+                            local point = imgui.ImVec2(cx + math.cos(angle) * radius, cy + math.sin(angle) * radius)
+                            if previous then draw:AddLine(previous, point, iconColor, Scale.px(1.4)) end
+                            previous = point
+                        end
+                        draw:AddTriangleFilled(imgui.ImVec2(cx + Scale.px(2), cy - Scale.px(7)),
+                            imgui.ImVec2(cx + Scale.px(7), cy - Scale.px(7)),
+                            imgui.ImVec2(cx + Scale.px(5), cy - Scale.px(2)), iconColor)
+                        if imgui.IsItemHovered() then imgui.SetTooltip(u8("Обнулить сумму: " .. item.name)) end
+                        imgui.SetCursorPos(imgui.ImVec2(x, y + rowHeight))
+                        imgui.Dummy(imgui.ImVec2(width, 0))
+                    end
+                    if imgui.BeginPopupModal("##ConfirmProfitReset", nil, imgui.WindowFlags.AlwaysAutoResize) then
+                        imgui.Text(u8("Обнулить сумму статьи?"))
+                        imgui.TextColored(Theme.color("accent"), u8(resetProfitEntry or ""))
+                        imgui.Text(u8("Текущая сумма будет сброшена до нуля."))
+                        if imgui.Button(u8("Обнулить"), Scale.vec(110, 0)) then
+                            -- Read again so confirmation cannot overwrite newer game earnings.
+                            local latest = ProfitAndLoss.new()
+                            local match = latest.getByName(resetProfitEntry)
+                            if match then
+                                local entry = match[2]
+                                local previous = entry.sum
+                                entry.sum = 0
+                                if Window.reportSave(latest.save()) then
+                                    profitAndLoss = latest
+                                    resetProfitEntry = nil
+                                    imgui.CloseCurrentPopup()
+                                else
+                                    entry.sum = previous
+                                end
+                            else
+                                resetProfitEntry = nil
+                                imgui.CloseCurrentPopup()
+                            end
+                        end
+                        imgui.SameLine()
+                        if imgui.Button(u8("Отмена"), Scale.vec(110, 0)) then
+                            resetProfitEntry = nil
+                            imgui.CloseCurrentPopup()
+                        end
+                        imgui.EndPopup()
+                    end
                     imgui.EndChild()
+                    imgui.Separator()
+                    imgui.Text(u8("Итого"))
+                    imgui.SameLine()
+                    local total = profitAndLoss.sumEnabled()
+                    local formatted = money(total)
+                    imgui.SetCursorPosX(imgui.GetWindowWidth() - Scale.px(12) - imgui.CalcTextSize(formatted).x)
+                    imgui.TextColored(Theme.color(total < 0 and "error" or "success"), formatted)
                     imgui.EndTabItem()
                 end
                 imgui.EndTabBar()
@@ -713,31 +711,35 @@ local Settings = {
             function(player)
                 local filtersDrawn = false
                 RedTheme.new()
-                imgui.SetNextWindowPos(position, imgui.Cond.FirstUseEver, imgui.ImVec2(0.5, 0.5))
-                imgui.SetNextWindowSize(size, imgui.Cond.FirstUseEver)
-                imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse)
-                imgui.BeginChild("##Buttons", imgui.ImVec2(150, 480), true)
-                    for index, name in pairs(tabs) do
-                       if active == index then
-                            imgui.PushStyleColor(imgui.Col.Button, imgui.ImVec4(0.90, 0.26, 0.26, 1.00))
-                            imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
-                            if imgui.Button(u8(name), imgui.ImVec2(140, 45)) then
-                                active = index
-                            end
-                            imgui.PopStyleVar()
-                            imgui.PopStyleColor(1)
-                       end
-                       if active ~= index then
-                            imgui.PushStyleVarFloat(imgui.StyleVar.FrameRounding, 6)
-                            if imgui.Button(u8(name), imgui.ImVec2(140, 45)) then
-                                active = index
-                            end
-                            imgui.PopStyleVar()
-                       end
+                local height = 520
+                if active == 1 then
+                    height = math.max(420, (generalContentHeight or 450) + 40)
+                elseif active == 4 and statisticsDisplayActive then
+                    height = math.max(360, (statisticsContentHeight or 380) + 40)
+                elseif active == 3 then
+                    local contentHeight = contractsContentHeight
+                        or (constants.MAX_CONTRACTS_SIZE * 34 + 105)
+                    height = math.max(height, contentHeight + 40)
+                end
+                local size = Scale.windowSize(620, height)
+                local scale = Scale.percent()
+                if lastScale ~= scale or lastWindowHeight ~= size.y then
+                    local screenX, screenY = getScreenResolution()
+                    position = imgui.ImVec2(screenX / 2, screenY / 2)
+                    imgui.SetNextWindowPos(position, imgui.Cond.Always, imgui.ImVec2(0.5, 0.5))
+                end
+                lastScale = scale
+                lastWindowHeight = size.y
+                imgui.SetNextWindowSize(size, imgui.Cond.Always)
+                imgui.Begin(self.title, self.window, imgui.WindowFlags.NoResize + imgui.WindowFlags.NoCollapse + imgui.WindowFlags.HorizontalScrollbar)
+                imgui.BeginChild("##Buttons", imgui.ImVec2(Scale.px(150), math.max(100, size.y - Scale.px(40))), true)
+                    for index, name in ipairs(tabs) do
+                        if Navigation.button(index, u8(name), active == index) then active = index end
                     end
                 imgui.EndChild()
-                imgui.SetCursorPos(imgui.ImVec2(160, 28))
-                if imgui.BeginChild('##Main' .. active, imgui.ImVec2(453, 480), true) then
+                imgui.SetCursorPos(Scale.vec(160, 28))
+                local remainingHeight = math.max(100, imgui.GetWindowHeight() - Scale.px(40))
+                if imgui.BeginChild('##Main' .. active, imgui.ImVec2(Scale.px(453), remainingHeight), true) then
                     filtersDrawn = drawTab[active]()
                 end
                 imgui.EndChild()
@@ -746,6 +748,11 @@ local Settings = {
                 end
                 if not filtersDrawn then saveMinTons() end
                 imgui.End()
+                if pendingScale then
+                    if not saveSetting("uiScale", pendingScale) then selectedScale[0] = scaleIndex end
+                    scaleIndex = selectedScale[0]
+                    pendingScale = nil
+                end
             end
         )
         return self

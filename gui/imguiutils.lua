@@ -1,4 +1,5 @@
 local imgui = require "mimgui"
+local Palette = require "tch.gui.themes.palette"
 local encoding = require "encoding"
 encoding.default = "CP1251"
 local u8 = encoding.UTF8
@@ -24,7 +25,7 @@ end
 local function renderColoredText(text, centered)
     local defaultColor = imgui.GetStyle().Colors[1]
 
-    for w in text:gmatch('[^\r\n]+') do
+    for w in Palette.recolor(text):gmatch('[^\r\n]+') do
         if centered then
             local plainText = w:gsub('{.-}', '')
             local textWidth = imgui.CalcTextSize(u8(plainText)).x

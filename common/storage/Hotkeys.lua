@@ -23,6 +23,22 @@ local defaultHotkeys = indexHotkeys(constants.HOTKEYS)
 local Hotkeys = {
     new = function()
         local self = Json.new("hotkeys2", constants.HOTKEYS)
+        local existing = indexHotkeys(self.data)
+        for _, default in ipairs(constants.HOTKEYS) do
+            if not existing[default.name] then
+                local copy = {}
+                for key, value in pairs(default) do
+                    if type(value) == "table" then
+                        local nested = {}
+                        for k, v in pairs(value) do nested[k] = v end
+                        copy[key] = nested
+                    else
+                        copy[key] = value
+                    end
+                end
+                table.insert(self.data, copy)
+            end
+        end
         local save = self.save
         self.save = function()
             local saved, err = save()

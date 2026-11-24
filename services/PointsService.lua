@@ -40,6 +40,31 @@ local PointsService = {
             return points.save()
         end
 
+        self.move = function(id, targetId, after)
+            local points = Points.new()
+            if points.loadError then return false, points.loadError end
+            if not points.data[id] or not points.data[targetId] then return false, "Route not found" end
+            if id == targetId then return true end
+            local ordered, priorities = {}, {}
+            for key, point in pairs(points.data) do
+                if type(point.sort) ~= "number" or priorities[point.sort] then
+                    return false, "Invalid route priority"
+                end
+                priorities[point.sort] = true
+                ordered[#ordered + 1] = { id = key, point = point }
+            end
+            table.sort(ordered, function(a, b) return a.point.sort < b.point.sort end)
+            local sourceIndex
+            for index, item in ipairs(ordered) do if item.id == id then sourceIndex = index; break end end
+            local source = table.remove(ordered, sourceIndex)
+            local targetIndex
+            for index, item in ipairs(ordered) do if item.id == targetId then targetIndex = index; break end end
+            local insertIndex = targetIndex + (after and 1 or 0)
+            if insertIndex == sourceIndex then return true end
+            table.insert(ordered, insertIndex, source)
+            for index, item in ipairs(ordered) do item.point.sort = index end
+            return points.save()
+        end
         self.swapPriority = function(id, offset)
             local points = Points.new()
             if points.loadError then return false, points.loadError end

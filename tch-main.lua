@@ -10,6 +10,7 @@ local MainWindow = require "tch.gui.windows.main"
 local SettingsWindow = require "tch.gui.windows.settings"
 local InfoWindow = require "tch.gui.windows.info"
 local Red = require "tch.gui.themes.red"
+local Palette = require "tch.gui.themes.palette"
 
 local MenuDialogue = require "tch.samp.dialogues.menu"
 local ContractsDialogue = require "tch.samp.dialogues.contracts"
@@ -143,6 +144,14 @@ local function waitForHotkeyRelease(hotkey)
 	local generation = connectionGeneration
 	repeat wait(80) until not isPressed()
 	return generation == connectionGeneration
+end
+
+local function handleWindowHotkey(name, action)
+	local function inputIsBusy()
+		return settingsWindow.isEditingHotkey() or sampIsDialogActive() or sampIsChatInputActive()
+	end
+	if inputIsBusy() or not waitForHotkeyRelease(Hotkeys.getActive(name)) then return end
+	if not inputIsBusy() then action() end
 end
 
 local function advanceMenu(operation, stage)
@@ -292,7 +301,7 @@ function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
         while not isSampAvailable() do wait(100) end
 
-		sampAddChatMessage(" {FFFFFF}Меню настроек - {ed5a5a}/tch.menu{FFFFFF}, страница скрипта: {ed5a5a}" .. thisScript().url, 0xFFFFFF)
+		sampAddChatMessage(Palette.recolor(" {FFFFFF}Меню настроек - {ed5a5a}/tch.menu{FFFFFF}, страница скрипта: {ed5a5a}" .. thisScript().url, true), 0xFFFFFF)
 		httpService.getAvailableUpdates()
 
 		local car = carsService.getDrivenTruck()
@@ -592,6 +601,17 @@ function main()
 			end,
 			40
 		):run()
+
+		local windowHotkeys = {
+			{ "toggle-contracts", function()
+				if config.data.settings.selectedScriptStatus > 0 then mainWindow.toggle() end
+			end },
+			{ "toggle-settings", function() settingsWindow.toggle() end }
+		}
+		for _, binding in ipairs(windowHotkeys) do
+			local name, action = binding[1], binding[2]
+			scheduleService.create(function() handleWindowHotkey(name, action) end, 40):run()
+		end
 
 		while true do
 			wait(-1)
@@ -904,7 +924,6 @@ end
 
 function sampev.onInitGame()
 	resetContractSession()
-	config.data.settings.sessionRaceQuantity = 0
 	config.data.settings.sessionExperience = 0
 	infoWindow.information.sessionExperience.setValue(Number.new(config.data.settings.sessionExperience).format(0, "", "{F2545B}"))
 	infoWindow.information.raceQuantity.setValue(config.data.settings.sessionRaceQuantity)

@@ -65,7 +65,7 @@ sampRegisterChatCommand
 					return false
 				end
 				contractsService.pin(contract)
-				chatService.send(LocalMessage.new("  онтракт успешно {ed5a5a}закреплен{FFFFFF}. »зменени€ {ed5a5a}вступ€т{FFFFFF} в силу после автообновлени€ списка"))
+				chatService.send(LocalMessage.new(string.format("  онтракт {ed5a5a}%d. %s -> %s{FFFFFF} успешно {ed5a5a}закреплен{FFFFFF}. »зменени€ {ed5a5a}вступ€т{FFFFFF} в силу после автообновлени€ списка", contract.id, contract.source, contract.destination)))
 				return true
 			end
         )
@@ -85,7 +85,7 @@ sampRegisterChatCommand
 					return false
 				end
 				contractsService.unpin(contractId)
-				chatService.send(LocalMessage.new("  онтракт успешно {ed5a5a}откреплен{FFFFFF}. »зменени€ {ed5a5a}вступ€т{FFFFFF} в силу после автообновлени€ "))
+				chatService.send(LocalMessage.new(string.format("  онтракт {ed5a5a}%d. %s -> %s{FFFFFF} успешно {ed5a5a}откреплен{FFFFFF}. »зменени€ {ed5a5a}вступ€т{FFFFFF} в силу после автообновлени€ ", contract.id, contract.source, contract.destination)))
 				return true
 			end
         )
